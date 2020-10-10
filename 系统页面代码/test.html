@@ -1,0 +1,434 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+<html><head><title>项目地图</title></head><body>
+<div class="wrap">
+<div class="cloudcenter">
+<!DOCTYPE>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<meta http-equiv="Content-Type" content="text/html; charset=gbk" />
+<title>定位页面</title>
+<style type="text/css">
+* {
+	margin:0;
+	padding:0;
+	font-size:12px;
+	line-height:180%;
+}
+.btn-block {
+-webkit-border-radius: 0;
+-moz-border-radius: 0;
+-pie-border-radius: 0;
+border-radius: 0;
+color: white;
+display: inline-block;
+height: auto;
+line-height: 100%;
+padding: 8px;
+margin: 5px auto;
+font-size: 12px;
+font-family: "微软雅黑";
+position: relative;
+border: 1px solid #004A7E;
+-moz-border-radius: 3px;
+-webkit-border-radius: 3px;
+}
+
+.bg-gradient-darkblue {
+font-family: "微软雅黑", "黑体";
+background: #025995;
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #0582B7), color-stop(29%, #0478AF), color-stop(85%, #025C98), color-stop(100%, #035995));
+-pie-background: linear-gradient(top, #0582b7 0, #035995);
+behavior: url(/common/assets/css/pie/PIE.html);
+}
+
+img {
+	border:none;
+	vertical-align:middle
+}
+html {
+	height:100%
+}
+body {
+	height:100%;
+	margin:0px;
+	padding:0px
+}
+#container {
+	height:100%
+}
+
+.box3title h2 {
+height: 35px;
+width:97%;
+line-height: 35px;
+text-align: left;
+background: #CCC;
+text-indent: 12px;
+color: #333;
+}
+
+input[type=text] {
+	padding:5px;
+	width:120px;
+        height:16px;
+}
+</style>
+<script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.6&key=9f4e97c24e89ae646d883d5b4a2b0c02&plugin=AMap.Geocoder"></script>
+<cc>
+CCService cs = new CCService(userInfo);
+String roleid = userInfo.getRoleId();//当前登录用户简档id
+
+String sql = "select a.id,ifnull(c.name,'') as cname,a.name as name,ifnull(qyqc,'') as qyqc from account a left join ccuser c on a.ownerid = c.id where a.is_deleted = 0";//sql语句
+List<CCObject> list = cs.cqlQuery("account",sql);
+</cc>
+</head>
+<body style="background:white">
+<script>
+ function showDiv() {
+ 	if (navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i)) {
+ 	        document.getElementById("customer").style.display = "";
+ 	} else {
+ 		javascript:openLookup('/platform/lookup/lookup.action?lkfm=editPage&lknm=ffe201100003451XKACg&lktp=' + getElementByIdCS('ffe201100003451XKACg_lktp').value,670,'1','&lksrch=' + escapeUTF(getElementByIdCS('ffe201100003451XKACg_lkid').value.substring(0, 80)));
+ 	}
+ }
+ function evaluates(name,id){
+         document.getElementById("ffe201100003451XKACg").value = name;
+         document.getElementById("ffe201100003451XKACg_lkid").value = id;
+         document.getElementById("customer").style.display = "none";
+ }
+</script>
+<div id="customer" style="display:none;background:#e7e7e7;width:100%;border:1px solid  #ccc;position:absolute;left:-3px;top:20px;z-index:9999">
+      <table class="cloudbiaoge" border="0" cellspacing="0" cellpadding="0">
+          <tr class="bgtitle">
+                <td  class="">客户名称</td>
+		
+		<td  class="">企业全称</td>
+		
+		<td  class="">所有人</td>
+          </tr>
+        <cc>
+         for(CCObject item:list){
+        </cc>
+         <tr>
+                <td class="dataCell"><a href="javascript:void(0);" onclick="evaluates('<cc:outprint>item.get("name")</cc:outprint>','<cc:outprint>item.get("id")</cc:outprint>')"><cc:outprint>item.get("name")</cc:outprint></a></td>
+                <td class="dataCell"><cc:outprint>item.get("qyqc")</cc:outprint></td>
+                <td class="dataCell"><cc:outprint>item.get("cname")</cc:outprint></td>
+         </tr>
+         <cc>
+         }
+         </cc>
+      </table>
+</div>
+<div id="container" style="height:814px;overflow:hidden;position:relative;left:-13px;width:102%" ></div>
+<div id="leftdiv" style="background:#e7e7e7;width:300px;border:1px solid  #ccc;position:absolute; top:17px; left:-8px;z-index:999;filter:alpha(opacity:30); opacity:0.8;  -moz-opacity:0.8;-khtml-opacity: 0.8">
+ <form id="showForm" name="showForm" method="post">
+    <div style="overflow:hidden; margin-bottom:10px;float:left">
+      <table width="100%">
+        <tbody>
+          <tr>
+            <cc>if(!"2018C2126CE0247K1ptb".equals(roleid) && !"2018ECE189F37793pj1C".equals(roleid)){</cc>
+            <td align="center" width="20%">
+              <p><input class='kbox' id= "wdxm" type="checkbox" onclick="showTubiao('wdxm')" />自有项目</p></td>
+               <cc>}</cc>
+           <cc>if("2017C22944AA867gtbJ8".equals(roleid) || "2018C2126CE0247K1ptb".equals(roleid) || "2017F9C39CFBFCCslc6i".equals(roleid)){</cc> 
+            <td align="center" width="20%">
+              <p><input class='kbox' id = "tzxm" type="checkbox" onclick="showTubiao('tzxm')" />拓展项目</p></td>
+                <cc>}</cc>
+            <td align="center" width="20%">
+              <p><input class='kbox' id = "scqtxm" type="checkbox" onclick="showTubiao('scqtxm')" />市场其它项目</p></td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+  <div class="box3title" style="padding-left:0px">
+    <h2>客户迁徙轨迹查询</h2>
+  </div>
+  <div class="listBody" style="padding-top:10px; margin-bottom:10px;">
+    <table>
+      <tr>
+        <td width="3%">&nbsp;</td>
+        <td align="left" valign="middle" style="line-height:35px;white-space:nowrap;">选择客户 ：
+<input autocomplete="off" type='text' name='ffe201100003451XKACg' id='ffe201100003451XKACg' value='' onchange="getElementByIdCS('ffe201100003451XKACg_lkid').value='';getElementByIdCS('ffe201100003451XKACg_mod').value='1';"/>
+<input type='hidden' name='ffe201100003451XKACg_lkid' id='ffe201100003451XKACg_lkid' value='' />
+<input type='hidden' name='ffe201100003451XKACg_lkold' id='ffe201100003451XKACg_lkold' name='ffe201100003451XKACg' value='' />
+<input type='hidden' name='ffe201100003451XKACg_lktp' id='ffe201100003451XKACg_lktp' value='001' />
+<input type='hidden' name='ffe201100003451XKACg_lspf' id='ffe201100003451XKACg_lspf' value='0' />
+<input type='hidden' name='ffe201100003451XKACg_lspfsub' id='ffe201100003451XKACg_lspfsub' value='0' />
+<input type='hidden' name='ffe201100003451XKACg_mod' id='ffe201100003451XKACg_mod' value='0' />
+<a href="javascript:void(0);" onclick="showDiv()">[查找] </a>
+<span class='errorMsg' name='errorMsg' id='ffe201100003451XKACg_errorMsg'></span>
+      </tr>
+    </table>
+<table>
+ <tr>   <td><input value="轨迹查询" style="cursor:pointer" onmouseover = "this.style.curson='hand'" class="btn-block bg-gradient-darkblue"  type="button" onClick="searchYggj()">
+          &nbsp;&nbsp;
+          <input value="清空" style="cursor:pointer" onmouseover = "this.style.curson='hand'" class="btn-block bg-gradient-darkblue" type="button" onClick="clearMaps()">
+          </td></tr>
+</table>
+  </div>
+   
+  </form>
+</div>
+
+ <!-- ********************页脚开始******************** -->
+ 
+	<div>&nbsp;</div>
+    <div class="cloudfooter" style="background: #0c84ae!important;position:fixed;left:0;bottom:-10px;"><p>© 2008-2018 cloudcc.com,inc. 公司版权所有。保留所有权利。客户服务热线：400-642-2008</p></div>
+
+
+ <!-- ********************页脚结束******************** -->
+</body>
+</html>
+<script>
+      var myIcon = "";
+      var title = "";
+      var j = 0;
+      var coordinate = new Array();
+      var geocoder = new AMap.Geocoder({
+            city: "0755",
+            radius: 1000 
+        });
+      //初始化地图，将标准地图控件添加到地图中
+      var map = new AMap.Map('container', {
+            center: [114.060075,22.549316],
+            zoom: 10
+      });
+      map.plugin(["AMap.ToolBar"], function() {
+            map.addControl(new AMap.ToolBar());
+        });
+
+//layers: [new AMap.TileLayer.Satellite()],
+
+    function geocoders(weizhi,xmmc,myIcon) {
+        //地理编码,返回地理编码结果
+        geocoder.getLocation(weizhi, function(status, result) { 
+            if (status === 'complete' && result.info === 'OK') {
+                geocoder_CallBack(result,weizhi,xmmc,myIcon);
+            }
+        });
+    }
+    function geocoder_CallBack(data,place,xmmc,myIcon){
+        //地理编码结果数组
+        var geocode = data.geocodes;
+        for (var i = 0; i < geocode.length; i++) {
+            marker = new AMap.Marker({
+            icon:myIcon,
+            position:[geocode[i].location.getLng(),geocode[i].location.getLat()],
+            map:map,
+            title:title
+        });
+            marker.setLabel({
+                offset: new AMap.Pixel(25,5),
+                content: xmmc
+                });
+        };
+        map.setFitView();
+    } 
+   function geocoderspolyline(weizhi,px) {
+        //地理编码,返回地理编码结果
+        geocoder.getLocation(weizhi, function(status, result) { 
+            if (status === 'complete' && result.info === 'OK') {
+                polyline_CallBack(result,weizhi,px);
+            }
+        });
+    }
+   
+   function polyline_CallBack(data,place,px){
+        //地理编码结果数组
+        var geocode = data.geocodes;
+        for (var i = 0; i < geocode.length; i++) {
+            marker = new AMap.Marker({
+            position:[geocode[i].location.getLng(),geocode[i].location.getLat()],
+            map:map
+        });
+           coordinate.push({"address":new AMap.LngLat(geocode[i].location.getLng(),geocode[i].location.getLat()),paixu:px});
+           marker.setLabel({
+                offset: new AMap.Pixel(25,5),
+                content: 1+px+". "+place
+                });
+        };
+        map.setFitView();
+        if(coordinate.length==j){
+           var compare = function (obj1, obj2) {
+           var val1 = obj1.paixu;
+           var val2 = obj2.paixu;
+           if (val1 < val2) {
+               return -1;
+           } else if (val1 > val2) {
+               return 1;
+           } else {
+               return 0;
+           }            
+           } 
+           coordinate.sort(compare);
+           createpolyline();
+        }
+    } 
+    function createpolyline(){
+      var address = [];
+      for(var i = 0;i<coordinate.length;i++){
+          address.push(coordinate[i].address);
+      }
+      var polyline = new AMap.Polyline({
+        path: address,          //设置线覆盖物路径
+        strokeColor: "#3366FF", //线颜色
+        strokeOpacity: 1,       //线透明度
+        strokeWeight: 5,        //线宽
+        strokeStyle: "solid",   //线样式
+        strokeDasharray: [10, 5] //补充线样式
+      });
+      polyline.setMap(map); 
+      coordinate = [];
+    }
+
+    function showTubiao(obj){
+         if(obj=="wdxm"){
+             var checkbox = document.getElementById("wdxm");
+             if(checkbox.checked){
+                Ext.Ajax.request({
+			url:"/customize/page/9291p1140/hqbz.jsp",
+			timeout:5000,
+                        async:false,
+			success:function(response){
+		             var dp = response.responseText;
+                             var data = eval('('+dp+')');
+                             var url = "/images/cloudcc/v5/ygx.png";
+                             title = "自有项目";
+                             
+                              for ( var i = 0; i < data.length; i++ ){
+						 var item = data[i];
+						 var weizhi = item.weizhi;
+						 var xmmc = item.xmmc;
+                                                 var px = item.px;
+                                                 if(px=="1"){
+                                                       myIcon = "/staticResource.action?m=getResource&resourceId=1523864942601kiqsHvYq";
+                                                 }else if(px=="2"){
+                                                       myIcon = "/staticResource.action?m=getResource&resourceId=15268724109003rkDckd2";
+                                                 }
+                                                 geocoders(weizhi,xmmc,myIcon);
+			      }
+			},
+			failure: function () {
+				alert("查询失败");
+			},
+			params: {'wdxm':'1'}
+                 });
+            }else{
+                    var markerss = map.getAllOverlays('marker');
+                    for(var i = 0;i<markerss.length;i++){
+                          if(markerss[i].getTitle()=="自有项目"){
+                               markerss[i].setMap(null);
+                          }
+                    }
+            }
+         }else if(obj=="tzxm"){
+             var checkbox = document.getElementById("tzxm");
+             if(checkbox.checked){
+		 Ext.Ajax.request({
+					url:"/customize/page/9291p1140/hqbz.jsp",
+					timeout:5000,
+					success:function(response){
+					     var dp = response.responseText;
+					     var data = eval('('+dp+')');
+                                             title = "拓展项目";
+                                             myIcon = "/staticResource.action?m=getResource&resourceId=1523870699019SkmePJkR";
+					     for ( var i = 0; i < data.length; i++ ){
+						 var item = data[i];
+						 var weizhi = item.weizhi;
+						 var xmmc = item.xmmc;
+						 geocoders(weizhi,xmmc,myIcon);
+			                     }
+					},
+					failure: function () {
+						alert("查询失败");
+					},
+					params: {'tzxm':'1'}
+		     });
+               }else{
+                    var markerss = map.getAllOverlays('marker');
+                    for(var i = 0;i<markerss.length;i++){
+                          if(markerss[i].getTitle()=="拓展项目"){
+                               markerss[i].setMap(null);
+                          }
+                    }
+            }
+         }else if(obj=="scqtxm"){
+             var checkbox = document.getElementById("scqtxm");
+             if(checkbox.checked){
+                Ext.Ajax.request({
+					url:"/customize/page/9291p1140/hqbz.jsp",
+					timeout:5000,
+					success:function(response){
+					     var dp = response.responseText;
+					     var data = eval('('+dp+')');
+                                             title = "市场其他项目";
+                                             myIcon = "/staticResource.action?m=getResource&resourceId=1523870709711M1QuX82w";
+					     for ( var i = 0; i < data.length; i++ ){
+						 var item = data[i];
+						 var weizhi = item.weizhi;
+						 var xmmc = item.xmmc;
+                                                 geocoders(weizhi,xmmc,myIcon);
+			                      }	
+					},
+					failure: function () {
+						alert("查询失败");
+					},
+					params: {'scqtxm':'1'}
+		}); 
+                  }else{
+                    var markerss = map.getAllOverlays('marker');
+                    for(var i = 0;i<markerss.length;i++){
+                          if(markerss[i].getTitle()=="市场其他项目"){
+                               markerss[i].setMap(null);
+                          }
+                    }    
+              }
+         }
+     } 
+     function clearMaps(){
+          map.clearMap();
+          $('.kbox').each(function(){
+                 $(this).attr("checked",false);
+          })
+     }     
+     
+     function searchYggj(){//客户迁移轨迹查询
+		var yg = document.getElementById("ffe201100003451XKACg_lkid").value;
+		if(yg==""||yg==null||yg=="undefined"){
+			  alert("请选择客户");return;
+		}
+              
+		Ext.Ajax.request({
+					url:"/customize/page/9291p1140/hqbz.jsp",
+					timeout:50000,
+					success:function(response){
+					     var dp = response.responseText;
+					     var data = eval('('+dp+')');
+                                             j = data.length;
+                                             if(data.length==0){
+                                                    alert("没有查询到当前客户的轨迹");return;
+                                             }
+                                             for ( var i = 0; i < data.length; i++ ){
+						 var item = data[i];
+						 var weizhi = item.weizhi;
+						 var xmmc = item.xmmc;
+                                                 var px = item.px;
+                                                 geocoderspolyline(weizhi,px);
+                                                 
+			                     }
+					},
+					failure: function () {
+						alert("查询失败");
+					},
+					params: {'khgj':'1','khid':yg}
+				 });
+    }
+</script>
+</div>
+</div>
+</body>
+</html>

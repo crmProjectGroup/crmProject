@@ -1,0 +1,91 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc>  
+
+     CCService cs = new CCService(userInfo);
+
+     String wdxm = request.getParameter("wdxm");//我的项目
+
+     String tzxm = request.getParameter("tzxm");//拓展项目
+
+     String scqtxm = request.getParameter("scqtxm");//市场其他项目
+    
+     String khgj = request.getParameter("khgj");//客户轨迹
+
+     String khid = request.getParameter("khid")==null?"":request.getParameter("khid")+"";//客户ID
+
+     JSONArray rtnMsg = new JSONArray();
+
+     String msg = "";
+
+     if("1".equals(wdxm)){
+		//查询自有项目的记录信息
+		       List<CCObject> xmlist = cs.cqlQuery("Project","select id,lpdz,name,(CASE WHEN xmzt ='代理中' THEN '1' ELSE '2' END) as px from Project where is_deleted='0'");
+		       for(CCObject obj:xmlist){
+				  String weizhi = obj.get("lpdz")==null?"":String.valueOf(obj.get("lpdz"));
+                                  String xmmc = obj.get("name")==null?"":String.valueOf(obj.get("name"));  
+                                  String px = obj.get("px")==null?"":String.valueOf(obj.get("px"));
+                                  String id = obj.get("id")==null?"":String.valueOf(obj.get("id"));
+				  if(null!=weizhi && !"".equals(weizhi) && !"null".equals(weizhi)){ 	   
+					   JSONObject jo = new JSONObject();
+                                           jo.put("xmmc",xmmc);
+                                           jo.put("weizhi",weizhi);
+                                           jo.put("px",px);
+                                           jo.put("id",id);
+                                           rtnMsg.add(jo);
+				  }
+		      }
+                      msg = ""+rtnMsg.toString()+"";
+      }else if("1".equals(tzxm)){
+                  //查询拓展项目的记录信息
+		       List<CCObject> tzxmlist = cs.cquery("Project_tz");
+			
+		       for(CCObject obj:tzxmlist){
+				  String weizhi = String.valueOf(obj.get("xmwz"));       
+                                  String xmmc = String.valueOf(obj.get("name"));
+                                  String id = String.valueOf(obj.get("id"));
+				  if(null!=weizhi && !"".equals(weizhi) && !"null".equals(weizhi)){
+					 JSONObject jo = new JSONObject();
+                                           jo.put("xmmc",xmmc);
+                                           jo.put("weizhi",weizhi);
+                                           jo.put("id",id);
+                                           rtnMsg.add(jo);
+				  }
+		      }
+                      msg = ""+rtnMsg.toString()+"";
+      }else if("1".equals(scqtxm)){
+                   //查询市场成交项目的记录信息
+		       List<CCObject> scqtxmlist = cs.cqlQuery("scpy","select id,xmwz,name from scpy where is_deleted='0' and (spzt='审批中' or spzt='草稿' or spzt='审批拒绝')");
+		       for(CCObject obj:scqtxmlist){
+				  String weizhi = String.valueOf(obj.get("xmwz"));       
+                                  String xmmc = String.valueOf(obj.get("name"));
+                                  String id = String.valueOf(obj.get("id"));
+				  if(null!=weizhi && !"".equals(weizhi) && !"null".equals(weizhi)){
+					 JSONObject jo = new JSONObject();
+                                           jo.put("xmmc",xmmc);
+                                           jo.put("weizhi",weizhi);
+                                           jo.put("id",id);
+                                           rtnMsg.add(jo);
+				  }
+		      }
+                      msg = ""+rtnMsg.toString()+"";
+      }else if("1".equals(khgj)){
+                //查询客户迁移轨迹信息
+                      List<CCObject> khgjlist = cs.cqlQuery("contract","select id,fhdz from contract where khmc ='"+khid+"' and is_deleted = '0' order by createdate asc");
+                      int i = 0;
+                      for(CCObject obj:khgjlist){
+                                  String weizhi = String.valueOf(obj.get("fhdz"));
+                                  if(null!=weizhi && !"".equals(weizhi) && !"null".equals(weizhi)){
+					 JSONObject jo = new JSONObject();
+                                           jo.put("weizhi",weizhi);
+                                           jo.put("px",i);
+                                           rtnMsg.add(jo);
+                                           i++;
+				  }
+                      }
+                      msg = ""+rtnMsg.toString()+"";
+      }
+      
+       request.setAttribute("jsonmsg",msg);
+  
+  </cc>
+<cc:forward page="/platform/activity/task/getNodes.jsp"/>

@@ -1,0 +1,73 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+    throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+        parameterValue = new String(iso, "UTF-8");
+        return parameterValue;
+    }
+}
+return parameterValue;
+}
+</cc>
+<cc>
+CCService cs = new CCService(userInfo);
+String profile = userInfo.getProfileId();
+String uid = userInfo.getUserId();
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+String ksrq = encodeParameters(request.getParameter("startTime")==null?sdf.format(new Date()):String.valueOf(request.getParameter("startTime")));//开始日期
+String jsrq = encodeParameters(request.getParameter("endTime")==null?sdf.format(new Date()):String.valueOf(request.getParameter("endTime")));//截止日期
+String datetime = "and TO_CHAR(createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
+String sql = "select * from DailyReport where ownerid = '"+uid+"' and is_deleted = '0' "+datetime;
+
+if("aaa20180D5809FBsQZab".equals(profile)){
+     List<CCObject> salegrouplist = cs.cqlQuery("ProjectSaleGroup","select xmxsy from ProjectSaleGroup where xmmc in (select id from Project where ownerid = '"+uid+"' and is_deleted ='0') and is_deleted = '0'");
+
+     String saleall = "";
+     for(CCObject item:salegrouplist){
+          saleall += item.get("xmxsy")==null?"":"'"+item.get("xmxsy")+"',";
+     }
+     saleall = saleall.substring(0,saleall.lastIndexOf(","));
+     sql = "select * from DailyReport where ownerid in ("+saleall+")  and is_deleted = '0' "+datetime+" order by createdate desc,name desc";
+}
+List<CCObject> list = cs.cqlQuery("DailyReport",sql);
+
+</cc>
+<HTML>
+	<HEAD>
+		<title>日报查看</title>
+	</HEAD>
+<body>
+<div class="cloudbox3" >
+<form name="theform" id="theform" method="post">
+开始日期&nbsp;&nbsp;<input id="startTime" name="startTime" class="datepicker" type="text" value="<cc:outprint>ksrq</cc:outprint>"><br/>
+	&nbsp;&nbsp;截止日期&nbsp;&nbsp;<input id="endTime" name="endTime" class="datepicker" type="text" value="<cc:outprint>jsrq</cc:outprint>">
+<input type="submit"  class="input01" value=" 查 询 "/>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="1" bgcolor="#e7eff5">
+        <cc>for(CCObject item:list){</cc>
+	<tr>
+              <td colspan='3'>日报名称：<cc:outprint>item.get("name")==null?"":item.get("name")+""</cc:outprint></td>
+              <tr><td>进线：<cc:outprint>item.get("jxtj")==null?"":item.get("jxtj")+""</cc:outprint></td>
+              <td>上门：<cc:outprint>item.get("xkhtj")==null?"":item.get("xkhtj")+""</cc:outprint></td>
+              <td>联动：<cc:outprint>item.get("jrld")==null?"":item.get("jrld")+""</cc:outprint></td></tr>
+        <tr><td colspan='3'>今日处理事宜：<cc:outprint>item.get("jrclsy")==null?"":item.get("jrclsy")+""</cc:outprint></td></tr>
+        <tr><td colspan='3'>成交情况：<cc:outprint>item.get("cjqk")==null?"":item.get("cjqk")+""</cc:outprint></td></tr>
+        <tr><td colspan='3'>明日工作计划：<cc:outprint>item.get("mrgzjh")==null?"":item.get("mrgzjh")+""</cc:outprint></td></tr>
+        <tr><td colspan='3'>备注：<cc:outprint>item.get("bz")==null?"":item.get("bz")+""</cc:outprint></td></tr>
+        </tr>
+         <cc>}</cc>
+</table>
+
+</form>
+</div>
+</body>
+</HTML>

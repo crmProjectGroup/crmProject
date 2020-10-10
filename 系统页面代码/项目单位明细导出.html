@@ -1,0 +1,122 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc!>
+/*
+description:项目单位明细导出
+version: 1.0
+date:201200806
+author:tom
+log:
+*/
+    private static boolean isNull(String obj){
+        if(obj == null || obj.length() <= 0) {
+            return true;
+        }
+    return false;
+    }
+
+
+
+</cc>
+<cc>
+    CCService cs = new CCService(userInfo);
+    //时间范围
+    //SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd");
+   
+    //String ksrq = request.getParameter("ksrq") == null ? "" :request.getParameter("ksrq");
+    //String jsrq = request.getParameter("jsrq") == null ? "" :request.getParameter("jsrq");
+    //String datetime = "and TO_CHAR(c.createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(c.createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
+
+    String ldmc = request.getParameter("ldmc") == null ? "" :request.getParameter("ldmc");
+    //获取项目单位明细
+    String sql = "select j.name,l.ldmc,p.lc,p.dw,p.tnmj, p.jzmjs,p.dj,p.lfzt from projectdetail p left join ldxx l on p.ldmc =  l.id and l.is_deleted ='0' left join project j on l.xmmc=j.id and j.is_deleted='0' where p.ldmc='"+ldmc+"' and p.is_deleted='0' order by lc,dw";
+
+    List<CCObject> list = cs.cqlQuery("projectdetail", sql); // 执行sql语句
+    //double mjtotal = 0.0;//面积总计
+
+    String file_name = new String("市场数据.xls".getBytes(), "ISO-8859-1");
+    response.setHeader("Content-disposition","attachment;filename="+file_name);
+    response.setContentType("application/vnd.ms-excel;charset=UTF-8");
+</cc>
+<html >
+<head>
+    <title>市场数据</title>
+    <style type="text/css">
+<!--
+td {
+    background-color: #FFFFFF;
+}
+ 
+.txt
+    {padding-top:1px;
+    padding-right:1px;
+    padding-left:1px;
+    mso-ignore:padding;
+    color:black;
+    font-size:11.0pt;
+    font-weight:400;
+    font-style:normal;
+    text-decoration:none;
+    font-family:宋体;
+    mso-generic-font-family:auto;
+    mso-font-charset:134;
+    mso-number-format:"@";
+    text-align:general;
+    vertical-align:middle;
+    mso-background-source:auto;
+    mso-pattern:auto;
+    white-space:nowrap;}
+-->
+</style>
+
+
+</head>
+<body>
+    
+<div class="title" align="center">
+    <h1 align="center"><font size="4px">项目单位明细</font></h1>
+    <form method="post" name="theform" id="theform">
+</div> 
+<div class="cloudbox3">
+<br/>
+    
+    <table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle">
+    <td rowspan="1" NOWRAP="NOWRAP" class="tdTitle">项目名</td>
+    <td rowspan="1" NOWRAP="NOWRAP" class="tdTitle">楼栋名</td>
+    <td rowspan="1" NOWRAP="NOWRAP" class="tdTitle">楼层</td>
+    <td rowspan="1" NOWRAP="NOWRAP" class="tdTitle">单位名称</td>
+    <td rowspan="1" NOWRAP="NOWRAP" class="tdTitle">套内面积</td>
+    <td rowspan="1" NOWRAP="NOWRAP" class="tdTitle">建筑面积</td>
+    <td rowspan="1" NOWRAP="NOWRAP" class="tdTitle">单价</td>
+    <td rowspan="1" NOWRAP="NOWRAP" class="tdTitle">状态</td>
+  </tr>
+  <cc>
+  if(list.size()>0){
+       for(CCObject item:list){
+             //String sql0= "select ifnull(c.lc,'-') as lc,ifnull(c.mj,'-') as mj,ifnull(c.dj,'-') as dj,ifnull(c.xy,'-') as xy,ifnull(c.qy,'-') as qy,ifnull(c.bz,'-') as bz from cjqk c where c.is_deleted = '0' "+datetime+" and c.scpymc = '"+item.get("scpyid")+"' and c.createbyid='"+item.get("lrrid")+"' and c.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa')";
+             //out.print(sql0);
+             //List<CCObject> detaillist = cs.cqlQuery("cjqk",sql0);
+             //out.print(String.valueOf(detaillist.size()));
+             </cc>
+               <tr class="tabtitle"> 
+
+                  <td class="dataCell_h"><cc:outprint>item.get("name")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("ldmc")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("lc")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("dw")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("tnmj")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("jzmjs")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("dj")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("lfzt")</cc:outprint></td>
+</tr>
+             <cc>
+       }
+  }
+  </cc>
+ </table>
+<br/>
+</div>
+</form>
+
+</body>
+</html>

@@ -1,0 +1,76 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+    throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+        parameterValue = new String(iso, "UTF-8");
+        return parameterValue;
+    }
+}
+return parameterValue;
+}
+</cc>
+<cc>
+CCService cs = new CCService(userInfo);
+String id = request.getParameter("id")==null?"":encodeParameters(request.getParameter("id")+"");//单位明细Id
+List<CCObject> list = cs.cquery("ProjectDetail","id='"+id+"'");
+</cc>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" >
+<html>
+	<head>
+		<title>单位详细信息</title>
+	</head>
+	<body leftmargin="0" topmargin="0">
+<center>
+<div class=table-responsive">
+			<table class="table text-nowrap"  width="100%" height="272" border="0" align="center" cellpadding="0" cellspacing="0"
+				bgcolor="#FFFFFF">
+				<tr>
+					<td valign="top" bgcolor="#F6F8F9">
+						<div align="center"><strong><span class="a2">单位详细信息</span></strong><br></div>
+							<table width="100%" border="0" align="center">
+							    <cc>if(list.size()>0){</cc>
+								<tr>
+									<td width="100%" valign="top">
+										<table width="100%" border="0" align="center" cellpadding="0" cellspacing="1" bgcolor="#99CCFF">
+											<tr class="a1">
+												<td bgcolor="#D0E8FB" align="center">项目单位情况</td>
+												<td bgcolor="#EFF6FB" align="center"><cc:outprint>list.get(0).get("dw")</cc:outprint>&nbsp;</td>
+												<td bgcolor="#D0E8FB" align="center">楼层</td>
+												<td bgcolor="#EFF6FB" align="center"><cc:outprint>list.get(0).get("dw")==null?"-":list.get(0).get("lc")</cc:outprint></td>
+												<td bgcolor="#D0E8FB" align="center">套内面积</td>
+												<td bgcolor="#EFF6FB" align="center"><cc:outprint>list.get(0).get("tnmj")==null?"-":list.get(0).get("tnmj")</cc:outprint>&nbsp;</td>
+											</tr>
+                                                                                        <tr class="a1">
+												<td bgcolor="#D0E8FB" align="center">单价</td>
+												<td bgcolor="#EFF6FB" align="center"><cc:outprint>list.get(0).get("dj")==null?"-":list.get(0).get("dj")</cc:outprint>&nbsp;</td>
+												<td bgcolor="#D0E8FB" align="center">状态</td>
+												<td bgcolor="#EFF6FB" align="center"><cc:outprint>list.get(0).get("lfzt")==null?"-":list.get(0).get("lfzt")</cc:outprint></td>
+												<td bgcolor="#D0E8FB" align="center">建筑面积</td>
+												<td bgcolor="#EFF6FB" align="center"><cc:outprint>list.get(0).get("jzmjs")==null?"-":list.get(0).get("jzmjs")</cc:outprint></td>
+											</tr>
+                                                                                        <tr class="a1">
+												<td bgcolor="#D0E8FB" align="center">总价</td>
+												<td bgcolor="#EFF6FB" align="center"><cc:outprint>list.get(0).get("zj")==null?"-":list.get(0).get("zj")</cc:outprint>&nbsp;</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							<cc>}</cc>
+						</table>
+					</td>
+				</tr>
+			</table>
+			</td> </tr> </table></td> </tr> </table></div>
+</center>
+	</body>
+</html>

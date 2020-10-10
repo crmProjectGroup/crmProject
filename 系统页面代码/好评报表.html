@@ -1,0 +1,120 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<style>
+.tdTitle { text-align:center}
+.tdTitle_h { text-align:center}
+.dataCell_h {text-align:center }
+</style>
+<cc!>
+/*
+description:客户评价报表(新)
+version: 1.0
+date:20191229
+author:tom
+log:
+*/
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+	throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+	byte[] iso = parameterValue.getBytes("ISO-8859-1");
+	if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+		parameterValue = new String(iso, "UTF-8");
+		return parameterValue;
+	}
+}
+return parameterValue;
+}
+</cc>
+<cc>
+CCService cs = new CCService(userInfo);
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+String ksrq = encodeParameters(request.getParameter("startTime")==null?sdf.format(new Date()):String.valueOf(request.getParameter("startTime")));//开始日期
+String jsrq = encodeParameters(request.getParameter("endTime")==null?sdf.format(new Date()):String.valueOf(request.getParameter("endTime")));//截止日期
+String datetime = "and TO_CHAR(c.createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(c.createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
+
+//选取所有业务员
+List<CCObject> list = cs.cqlQuery("ccuser","select c.id as id,c.name as name,c.gh as gh from ccuser c where c.isusing='1' and c.profile='aaa201723453E5EBNtzU'  ");
+for(CCObject item:list){
+    String id = item.get("id")==null?"":item.get("id")+"";
+    //项目名
+    List<CCObject> psglist = cs.cqlQuery("projectsalegroup","select p.name as name from projectsalegroup s inner join project p on s.xmmc = p.id where s.is_deleted ='0' and s.xmxsy = '"+id+"' and p.xmzt='代理中'");
+    String pjname = psglist.get(0).get("name")==null?"":psglist.get(0).get("name")+""; 
+
+    //客户总数
+    List<CCObject> accountlist1 = cs.cqlQuery("account","select count(*) as num from account a  where a.createbyid='"+id+"' and a.is_deleted ='0' and TO_CHAR(a.createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(a.createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')");//客户总数
+    Double totacnum = accountlist1.get(0).get("num")==null?0.0:Double.valueOf(accountlist1.get(0).get("num")+""); 
+
+    //好评客户数
+    List<CCObject> accountlist2 = cs.cqlQuery("account","select count(*) as num from account a  where a.createbyid='"+id+"' and a.is_deleted ='0' and TO_CHAR(a.createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(a.createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and khmyd='5'");//客户总数
+    Double hpacnum = accountlist2.get(0).get("num")==null?0.0:Double.valueOf(accountlist2.get(0).get("num")+"");
+
+    //小程序扫描满意度数
+    String name = item.get("name")==null?"":item.get("name")+"";
+    List<CCObject> viewlist = cs.cqlQuery("cusreviews","select count(distinct phone) as num from cusreviews where ywy = '"+name+"' and TO_CHAR(createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')");//扫描评价数
+    Double pjnum = viewlist.get(0).get("num")==null?0.0:Double.valueOf(viewlist.get(0).get("num")+"");
+
+    //好评率
+    Double hpl =0.0;
+    if(totacnum > 0 ){
+        hpl = hpacnum/totacnum *100 ; 
+    }
+
+    item.put("pname",pjname);
+    item.put("totacnum",totacnum);
+    item.put("pjnum",pjnum);
+    item.put("hpacnum",hpacnum);
+    item.put("hpl",String.format("%.2f", hpl));
+}
+
+</cc>
+<html>
+<head>
+<script>
+function dc(){
+    window.location.href = "sjzlscbbdc.jsp?ksrq=<cc:outprint>ksrq</cc:outprint>&jsrq=<cc:outprint>jsrq</cc:outprint>";
+}
+</script>
+<title></title>
+</head>
+<body>
+<div class="cloudbox3" >
+<form name="theform" id="theform" method="post">
+开始日期&nbsp;&nbsp;<input id="startTime" name="startTime" class="datepicker" type="text" value="<cc:outprint>ksrq</cc:outprint>">
+	&nbsp;&nbsp;截止日期&nbsp;&nbsp;<input id="endTime" name="endTime" class="datepicker" type="text" value="<cc:outprint>jsrq</cc:outprint>">
+<input type="submit"  class="input01" value=" 查 询 "/>
+<!-- <input type="button" name = "export" id = "export" class="input01" onclick="dc()" value = "导出"> -->
+<table id="showtable" border="0" cellspacing="2" cellspadding="2" width="100%">
+<tr class="tabtitle">
+    <td rowspan="1" NOWRAP="NOWRAP" class="tdTitle">项目名称</td>
+    <td rowspan="1" NOWRAP="NOWRAP" class="tdTitle">员工姓名</td>
+    <td colspan="1" NOWRAP="NOWRAP" class="tdTitle">客户总数</td>
+    <td colspan="1" NOWRAP="NOWRAP" class="tdTitle">小程序扫描满意度数</td>
+    <td colspan="1" NOWRAP="NOWRAP" class="tdTitle">有效好评客户数</td>
+    <td colspan="1" NOWRAP="NOWRAP" class="tdTitle">好评率</td>
+
+ </tr>
+    <cc>
+       for(CCObject item:list){			 
+              </cc>
+                <tr>
+                 <td class="dataCell_h"><cc:outprint>item.get("pname")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("name")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("totacnum")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("pjnum")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("hpacnum")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("hpl")</cc:outprint></td>
+               </tr>
+             <cc>
+       }
+  </cc>
+</table>
+</form>
+</div>
+</body>
+</html>

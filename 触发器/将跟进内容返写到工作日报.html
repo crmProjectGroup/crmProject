@@ -1,0 +1,29 @@
+java.util.Calendar cal = java.util.Calendar.getInstance();
+java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd"); //日期 MM需大写
+String nr = record_new.get("nr")==null?"":record_new.get("nr")+"";//内容
+String gjlx = record_new.get("gjlx")==null?"":record_new.get("gjlx")+"";//跟进类型
+String kh = record_new.get("kh")==null?"":record_new.get("kh")+"";//跟进客户
+String ownerid = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";//所有人
+String createdate = record_new.get("createdate")==null?"":record_new.get("createdate")+"";//创建时间
+cal.setTime(sdf.parse(createdate));
+int year = cal.get(Calendar.YEAR);//当前年份
+int month = cal.get(Calendar.MONTH)+1;//当前月份
+int day = cal.get(Calendar.DATE);//当前日
+String khxj = "(旧)";
+if(nr.length()>0){
+    List<CCObject> customer = this.cqlQuery("Account","select name,khdj from Account where id = '"+kh+"' and is_deleted = '0'");
+    List<CCObject> customerlist = this.cqlQuery("Account","select createdate from Account where id = '"+kh+"' and YEAR(createdate)='"+year+"' and MONTH(createdate)='"+month+"' and DAY(createdate)='"+day+"' and is_deleted = '0'");
+    if(customerlist.size()>0){
+        khxj = "(新)";
+    }   
+    
+    List<CCObject> list = this.cquery("DailyReport","YEAR(createdate)='"+year+"' and MONTH(createdate)='"+month+"' and DAY(createdate) = '"+day+"' and ownerid = '"+ownerid+"'");
+    if(list.size()>0){
+        String jrclsy = list.get(0).get("jrclsy")==null?"":list.get(0).get("jrclsy")+"";//今日处理事宜
+        int xh = list.get(0).get("xh")==null?1:Integer.valueOf(list.get(0).get("xh")+"");//序号
+        CCObject obj = list.get(0);
+        obj.put("jrclsy",jrclsy+"    "+xh+"."+khxj+customer.get(0).get("name")+"("+customer.get(0).get("khdj")+")"+":"+gjlx+":"+nr);
+        obj.put("xh",xh+1);
+        this.update(obj);
+    }
+}

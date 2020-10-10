@@ -1,0 +1,88 @@
+/*
+description:回款记录hkjl触发器 afterUpsert 回款后更新收款计划的收款情况
+财务新建或确认回款记录, 更新收款计划
+同时更新对应的开票申请
+实际收款金额多应收金额过100属于不正常
+version: 1.0
+date:20191014
+author:tom
+log:
+20191108 更新对应的开票申请
+20191224 允许在没有收款计划指定的情况下新建回款
+20191227 当实际收益为0的时候,将回款金额赋值给实际收益
+*/
+
+//对象:回款记录hkjl
+//回款后更新收款计划的收款情况 -afterinsert - 财务新建回款记录, 每次回款更新
+
+CCService cs = new CCService(userInfo);
+
+//收款计划名称	skjhmc
+String skjhmc = record_new.get("skjhmc")==null?"":record_new.get("skjhmc")+"";
+//if(true) {trigger.addErrorMessage(skjhmc);}
+
+//回款确认状态hkqrzt
+String hkqrzt = record_new.get("hkqrzt")==null?"":record_new.get("hkqrzt")+"";
+
+//回款金额hkje
+double hkje = record_new.get("hkje")==""?0.0:Double.parseDouble(record_new.get("hkje")+"");
+
+//回款日期khrq   
+String khrq = record_new.get("khrq")==null?"":record_new.get("khrq")+"";
+
+//回款记录id
+String hkjlid = record_new.get("id")==null?"":record_new.get("id")+"";
+
+//判断回款是确认状态后,将金额累计到收款计划的实际回款上面
+if("已确认".equals(hkqrzt) && !"".equals(skjhmc)){
+	List<CCObject> skjh = this.cquery("cloudccskjh","id='"+skjhmc+"' and sksfwc <> 'true'");
+	//修改对应的收款计划cloudccskjh
+	if(skjh.size()==0){
+		trigger.addErrorMessage("无对应收款计划或者收款计划已完成!");
+	} else if(skjh.size()>1){
+		trigger.addErrorMessage("对应收款计划条目过多!");
+	}
+	
+	for(CCObject item:skjh){
+		//修改实际收款金额
+  		Double sjskje = item.get("sjskje")==null?0.00:Double.valueOf(item.get("sjskje")+"");//累计实际收款金额
+  		sjskje=sjskje+hkje; //累加这次的回款
+  		//到期应收金额	dqysje
+  		Double dqysje = item.get("dqysje")==null?0.00:Double.valueOf(item.get("dqysje")+"");
+  		//判断实际收款金额
+		//if(Math.abs(sjskje-dqysje)>100){ //实际收款金额和应收金额差额在100以内可接受
+		//if(Math.abs(sjskje-dqysje)>100){ //实际收款金额多应收金额过100属于不正常
+		if(sjskje-dqysje>100){ 
+  			trigger.addErrorMessage("回款超过应收金额,请确定记录是否正确!"); 
+  		} else{
+  			item.put("sjskje",sjskje); //更新实际收款金额
+  			//收款日期更新
+  			item.put("sjsksj",khrq);
+		
+  			//金额匹配,改状态为完成
+  			if(sjskje>=dqysje){ //因为有100差额, 只要大于应收金额就为完成,其他视情况手动
+  				item.put("sksfwc","true");
+  			}
+		  
+			cs.updateLt(item);
+			
+			//查找对应的开票记录, 更新开票记录中的hkje
+			String kpsqid = item.get("kpsq")==null?"":item.get("kpsq")+"";
+			//List<CCObject> kpsq = this.cquery("kpsq","id='"+kpsqid+"' ");
+			CCObject kpsq = new CCObject("kpsq");
+			kpsq.put("id",kpsqid);
+			kpsq.put("hkje",sjskje);
+			cs.updateLt(kpsq);
+  		}
+  	}
+}
+
+
+//实际收益sjsy
+double sjsy = record_new.get("sjsy")==""?0.0:Double.parseDouble(record_new.get("sjsy")+"");
+if(sjsy==0.0){
+	CCObject hkjl = new CCObject("hkjl");
+	hkjl.put("id",hkjlid);
+	hkjl.put("sjsy",hkje);
+	cs.updateLt(hkjl);
+}

@@ -1,0 +1,64 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<style>
+.tdTitle { text-align:center}
+.tdTitle_h { text-align:center}
+.dataCell_h {text-align:center }
+</style>
+<cc>
+CCService cs = new CCService(userInfo);
+String ksrq = request.getParameter("ksrq") == null ? "" :request.getParameter("ksrq");
+String jsrq = request.getParameter("jsrq") == null ? "" :request.getParameter("jsrq");
+String datetime = "and TO_CHAR(createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
+String sql = "select xmmc,ifnull(xmqy,'其他') as xmqy,ifnull(qy,'其他'),xy,lc,mj,dj from cjqk where scpymc = 'a142018F4719096CB4DN' and is_deleted = '0' and xmmc is not null "+datetime+" order by xmqy,xmmc";
+List<CCObject> list = cs.cqlQuery("scpy",sql);//执行sql
+double mjtotal = 0.0;//面积总计
+//out.print(ksrq+"----"+jsrq+"-----"+datetime+"-------"+sql);
+String file_name = new String("三级销售市场数据.xls".getBytes(), "ISO-8859-1");
+response.setHeader("Content-disposition","attachment;filename="+file_name);
+response.setContentType("application/vnd.ms-excel;charset=UTF-8");
+</cc>
+<html>
+<head>
+<title></title>
+</head>
+<body>
+<div class="title" align="center">
+    <h1 align="center"><font size="4px">三级销售市场数据</font></h1>
+</div> 
+<div class="cloudbox3" >
+
+<table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle">
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">区域</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">项目名称</td>
+    <td colspan="3" NOWRAP="NOWRAP" class="tdTitle">本周成交情况</td>
+  </tr>
+  <tr>
+    <td  NOWRAP="NOWRAP">面积(㎡)</td>
+    <td  NOWRAP="NOWRAP" >均价(万元/㎡)</td>
+    <td  NOWRAP="NOWRAP" >说明</td>
+  </tr>
+  <cc>
+  if(list.size()>0){
+       for(CCObject item:list){
+                   mjtotal += item.get("mj")==null?0.0:Double.valueOf(item.get("mj")+"");//累加面积 
+            
+             </cc>
+               <tr>
+                  <td  class="dataCell_h"><cc:outprint>item.get("xmqy")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("xmmc")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("mj")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("dj")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("xy")==null?"":item.get("xy")</cc:outprint>    <cc:outprint>item.get("qy")==null?"":item.get("qy")</cc:outprint>    <cc:outprint>item.get("lc")==null?"":item.get("lc")</cc:outprint> </td>
+               </tr>
+             <cc>
+       }
+  }
+  </cc>
+<tr class="tabtitle" style="height: 35px;color: blue" >
+                     <td colspan="5" class="tdTitle">总计：<cc:outprint>mjtotal</cc:outprint>㎡</td>
+                </tr>
+ </table>
+</div>
+</body>
+</html>

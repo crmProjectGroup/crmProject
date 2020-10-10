@@ -1,0 +1,22 @@
+String xsywyqk = record_new.get("xsywyqk")==null?"":record_new.get("xsywyqk")+"";//现物业使用情况(销售/租赁)
+
+String recordtype= record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//现物业使用情况(销售/租赁)
+
+String spzt= record_new.get("spzt")==null?"":record_new.get("spzt")+"";//审批状态
+
+//if(true) trigger.addErrorMessage(spzt);
+
+if("草稿".equals(spzt)){
+	if(!"新成立物业".equals(xsywyqk) && !"2018525F215221DtlTXV".equals(recordtype)){
+		String xbgwyjgzl = record_new.get("xbgwyjgzl")==null?"":record_new.get("xbgwyjgzl")+"";//现办公物业价格
+		String xbgwyjgxs = record_new.get("xbgwyjgxs")==null?"":record_new.get("xbgwyjgxs")+"";//销售物业价格
+		String xbgqy = record_new.get("xbgqy")==null?"":record_new.get("xbgqy")+"";//现办公区域
+		String xbgdx = record_new.get("xbgdx")==null?"":record_new.get("xbgdx")+"";//现办公大厦
+		String xwyqzsj = record_new.get("xwyqzsj")==null?"":record_new.get("xwyqzsj")+"";//现物业起始时间
+		String xbgmj = record_new.get("xbgmj")==null?"":record_new.get("xbgmj")+"";//现办公面积
+
+		if((xbgwyjgzl.length()==0 && xbgwyjgxs.length()==0) || xbgqy.length()==0 || xbgdx.length()==0 || xwyqzsj.length()==0 || xbgmj.length()==0){
+			trigger.addErrorMessage("请填写完整的物业信息!");
+		}
+	}
+}

@@ -1,0 +1,798 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" isELIgnored="false" />
+<cc!>
+/*
+description:市场数据页面
+version: 1.0
+date:20191209
+author:tom
+log:
+20200629 调用查询接口,而不是cqlquery的接口
+20200729 在app内调用接口有问题,只好把接口从'/controller.action'改成'/customize/page/9291p1140/pbbapi.jsp'
+*/
+
+/** * 将ISO-8859-1编码格式的字符串转码为UTF-8 * 
+ * * @param parameterValue 
+ * * @return 
+ * * @throws UnsupportedEncodingException 
+ * */ 
+private static String encodeParameters(String parameterValue) throws UnsupportedEncodingException { 
+	if (parameterValue != null && parameterValue.length()> 0) { 
+		byte[] iso = parameterValue.getBytes("ISO-8859-1"); 
+		if (parameterValue.equals(new String(iso, "ISO-8859-1"))) { 
+			parameterValue= new String(iso, "UTF-8"); 
+			return parameterValue; 
+		} 
+	} 
+	return parameterValue; 
+}
+</cc>
+<cc>
+	CCService cs = new CCService(userInfo); 
+	String uid = userInfo.getUserId();//当前登录用户id 
+	List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'"); //登录人的账号
+	String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; //账号用于获取bindingcode 
+	
+	//String uid = "0052018470A714CaerX7"; //李荣武id 测试用 
+	String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id,后续对查询数据权限控制用
+	//String managerId = userInfo.getManagerId();
+	//String userName = userInfo.getUserName();//getUserName 
+
+	//判断下, 当是项目经理的时候,获取以该id经理的user id list
+	String ywylist="";
+	if("aaa2018A38306ED9syVe".equals(profid)) {
+		List<CCObject> ccuser_ywy = cs.cqlQuery("ccuser","SELECT id FROM ccuser WHERE isusing='1' and manager = '"+uid+"'");
+			for (CCObject o : ccuser_ywy) {
+				//System.out.println(o);
+				ywylist +=(o.get("id")==null?"":o.get("id")+"")+",";
+			}
+	}
+	
+
+	
+	
+	//日期的处理
+	java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd"); //定义日期格式
+	String nowday = df.format(new Date()); //获取当前日期
+	//Calendar cal = Calendar.getInstance(); //不用或许当前年份
+	//int year = cal.get(Calendar.YEAR);
+	//String begin_day=year+"-01-01";
+    //out.print(nowday);
+    //String ksrq = request.getParameter("startTime")==null?nowday:request.getParameter("startTime")+"";//开始日期,取当天日期
+    //out.print(ksrq);
+    //out.print(ksrq);
+    //String jsrq = request.getParameter("endTime")==null?nowday:request.getParameter("endTime")+"";//结束日期
+	//out.print(jsrq);
+	//因为是取的时间,作用于一开始给个初始值,默认当天的00:00 到24:00
+	String kstm = nowday +" 00:00:00";
+	String jstm = nowday +" 23:59:59";
+    //String datetime = " and a.createdate >= str_to_date('"+kstm+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+jstm+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+  
+    //进入页面的用户控制
+    // List<CCObject> projectlist = new ArrayList();
+    // //out.print(profid);
+    // if("aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid) || "aaa20188BF02AA11vijc".equals(profid) ){
+	// 	//projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部','代理二部') and xmzt='代理中' and is_deleted='0'"); //所有代理项目
+	// 	projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部','代理二部') and (xmzt='代理中' or (xmzt='已结束' and xmyxrq>= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s'))) and is_deleted='0'");
+    // } else if("aaa20180681351FmekUG".equals(profid) ){
+    // 	if("aaa20180681351FmekUG".equals(uid))	{ //一部郑柏
+	// 		//projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部') and xmzt='代理中' and is_deleted='0'"); //一部项目
+	// 		projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部') and (xmzt='代理中' or (xmzt='已结束' and xmyxrq>= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s'))) and is_deleted='0'"); //一部项目
+    // 	} else {
+	// 		 //projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理二部') and xmzt='代理中' and is_deleted='0'"); //二部项目
+	// 		 projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理二部') and (xmzt='代理中' or (xmzt='已结束' and xmyxrq>= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s'))) and is_deleted='0'"); //二部项目
+    // 	}
+    // } else if("aaa2018A38306ED9syVe".equals(profid)){
+	// 	//projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'");
+	// 	projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and (xmzt='代理中' or (xmzt='已结束' and xmyxrq>= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s'))) and is_deleted='0'");
+	// }
+	
+	//JSONArray jsonArray = JSONArray.fromObject(projectlist); 
+	//String projectlist_1=jsonArray.toString();
+  
+	//out.print(String.valueOf(projectlist.size()));
+	//List<CCObject> projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'"); //该经理管理的代理中的项目 
+	//[{"CCObjectAPI":"Project","name":"广州海珠同创汇","id":"a05201825B086F3UiZWa"},{"CCObjectAPI":"Project","name":"广州誉城同创汇","id":"a05201835C43A40C4KAS"}]
+	//List<CCObject> Accountlist = cs.cqlQuery("Account","SELECT a.id as id, a.name as name, a.xylx as industry, CASE a.recordtype when '20186166515AE4A8ZfOc' then '租赁客户' when '2018525F215221DtlTXV' then '进线客户' else '销售客户' end as type, a.khdj as level , a.khlyqy as area FROM Account a inner join ccuser b on a.ownerid = b.id WHERE a.createbyid <> a.ownerid and a.ghkh = '是' and a.ownerid <> '005201852146611JQCTr' and b.profile = 'aaa2018A38306ED9syVe' and a.lxrdh not like '%0000%' and a.is_deleted = '0' ");
+	String projectid =""; //项目id 
+	String projectname =""; //项目名称 
+
+	String projectid_list =""; //项目id集合,用于数据简报接口调用
+
+
+	//获取市场盘源作为市场数据录入时候的选项, 只分二级租售(2018D7CDD5A5418hbgiJ,2018B9CEA41BA6AJFw0R)和三级租售(20180B02945019FsyYVx,2018BC817EB9158Sxq8B)
+	List<CCObject> scpylist2 = cs.cqlQuery("scpy","SELECT id,name FROM scpy WHERE is_deleted='0' and recordtype in ('2018D7CDD5A5418hbgiJ','2018B9CEA41BA6AJFw0R')"); //二级
+	JSONArray scpy2jsonarr = new JSONArray(); 
+	for(CCObject item:scpylist2){
+	      JSONObject scpy2json= new JSONObject();
+	      String scpyid = item.get("id")==null?"":item.get("id")+ "";  //id
+	      String scpynm = item.get("name")==null?"":item.get("name")+ "";  //name
+	      scpy2json.put("id",scpyid); 
+	      scpy2json.put("name",scpynm); 
+	      scpy2jsonarr.add(scpy2json);
+	}
+
+	String scpy2js=scpy2jsonarr.toString();
+
+	List<CCObject> scpylist3 = cs.cqlQuery("scpy","SELECT id,name FROM scpy WHERE is_deleted='0' and recordtype in ('20180B02945019FsyYVx','2018BC817EB9158Sxq8B')");//三级
+	JSONArray scpy3jsonarr = new JSONArray(); 
+	for(CCObject item:scpylist3){
+		  JSONObject scpy3json= new JSONObject();
+		  String scpyid = item.get("id")==null?"":item.get("id")+ "";  //id
+		  String scpynm = item.get("name")==null?"":item.get("name")+ "";  //name
+		  scpy3json.put("id",scpyid); 
+		  scpy3json.put("name",scpynm); 
+		  scpy3jsonarr.add(scpy3json);
+	}
+
+	String scpy3js=scpy3jsonarr.toString();
+
+	List<CCObject> scpylist4 = cs.cqlQuery("scpy","SELECT id,name FROM scpy WHERE is_deleted='0' and recordtype in ('2020CA38DA2EA62GseBx')");//公寓类型
+		JSONArray scpy4jsonarr = new JSONArray(); 
+		for(CCObject item:scpylist4){
+			  JSONObject scpy4json= new JSONObject();
+			  String scpyid = item.get("id")==null?"":item.get("id")+ "";  //id
+			  String scpynm = item.get("name")==null?"":item.get("name")+ "";  //name
+			  scpy4json.put("id",scpyid); 
+			  scpy4json.put("name",scpynm); 
+			  scpy4jsonarr.add(scpy4json);
+		}
+	
+		String scpy4js=scpy4jsonarr.toString();
+
+	//查询已录的数据,将有多个不同的角色情况(业务员,查询自己录入的数据;经理,查询手下业务员录入的数据;策划,总监,领导层(张总,许总,老大,管理员,茜姐),查询所有录入的数据)
+	//这里假如为第一次初始数据做个数据展示功能有必要吗?
+	
+
+
+</cc>
+		<html>
+
+		<head>
+		<!--<meta http-equiv="refresh" content="5">-->
+		<!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
+		<script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
+		<!-- <script src="https://unpkg.com/muse-ui/dist/muse-ui.js"></script> -->
+		<script src="https://cdn.jsdelivr.net/npm/muse-ui@3.0.2/dist/muse-ui.js"></script>
+		<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+		<script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
+		<!-- <script src="//unpkg.com/vue-easytable/umd/js/index.js"></script> -->
+		<!-- <link rel="stylesheet" href="https://unpkg.com/muse-ui/dist/muse-ui.css -->
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/muse-ui@3.0.2/dist/muse-ui.css">
+		<link rel="stylesheet" href="https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/vue-easytable/umd/css/index.css"> -->
+
+
+		<STYLE TYPE="text/css"> 
+			.demo-text {
+			  padding: 16px;
+			  background: #fff;
+			  p {
+			    margin: 8px 0;
+			  }
+			}
+			.demo-list-wrap {
+			  width: 100%;
+			  /*max-width: 360px;*/
+			  overflow: hidden;
+			}
+
+		</STYLE> 
+		</head>
+
+		<body>
+
+<div id="app">
+	<mu-container>
+		<mu-tabs :value.sync="active3" center color="teal"  >
+		  <mu-tab>
+			<mu-icon value="add"></mu-icon>
+			新建
+		  </mu-tab>
+		  <mu-tab>
+			<mu-icon value="event_note"></mu-icon>
+			编辑
+		  </mu-tab>
+		  <mu-tab>
+			<mu-icon value="assessment"></mu-icon>
+			图表
+		  </mu-tab>
+		</mu-tabs>
+		<div class="demo-text" v-if="active3 === 0">
+			<mu-row gutter>
+				<mu-col span="9" lg="9" sm="9">
+					<mu-flex align-items="center" style="padding-bottom: 8px;">
+						<span style="margin-right: 16px;">二级/三级:</span>
+						<mu-radio v-model="radio" style="margin-right: 16px;" value="er" label="二级" ></mu-radio>
+						<mu-radio v-model="radio" style="margin-right: 16px;" value="san" label="三级" ></mu-radio>
+						<mu-radio v-model="radio" style="margin-right: 16px;" value="gongyu" label="公寓" ></mu-radio>
+					</mu-flex>
+				</mu-col>
+				<mu-col span="3" lg="3" sm="3">
+					<mu-flex justify-content="center" align-items="center">
+						<mu-button round color="success" @click="cjshins()" >提交</mu-button>
+					</mu-flex>
+				</mu-col>
+			</mu-row>
+			<!-- <div title="二级录入" v-if="shower"> -->
+			<div title="录入">
+				<!-- <mu-form :model="form" class="mu-demo-form" label-position="left" label-width="100"> -->
+					<!-- <mu-form-item prop="select" label="Select"> -->
+				<mu-row gutter>
+					<mu-col span="4" lg="4" sm="4">
+						<mu-select label="项目名称" filterable v-model="form2.xmmc" full-width @change="py2choose($event,form2)" :error-text="form2.xmmc==''?'请选择':''"  >
+							<!-- <mu-option v-for="user,index in userlist" :key="user.id" :label="user.name" :value="user.name" ></mu-option> 类型的便利 -->
+							<mu-option v-for="scpy2,index in scpy2list" :key="scpy2.id" :label="scpy2.name" :value="scpy2"  ></mu-option>   
+						</mu-select>
+					</mu-col>
+					<mu-col span="2" lg="2" sm="2">
+						<mu-text-field v-model="form2.sm" label="上门数"  full-width ></mu-text-field>
+					</mu-col>
+					<mu-col span="2" lg="2" sm="2">
+						<mu-text-field v-model="form2.jx" label="进线数"  full-width></mu-text-field>
+					</mu-col>
+					<mu-col span="2" lg="2" sm="2">
+						<mu-text-field v-model="form2.cjss" label="成交手数"  full-width></mu-text-field>
+					</mu-col>
+					<mu-col span="2" lg="2" sm="2">
+						<mu-text-field v-model="form2.ts" label="套数"  full-width></mu-text-field>
+					</mu-col>
+					<!-- </mu-form-item> -->
+				</mu-row>
+				<div v-for="item in cjxqlist2">
+					<mu-paper :z-depth="2">
+						<!-- <mu-divider></mu-divider> -->
+						<mu-row gutter>
+							<mu-col span="3" lg="3" sm="3">
+								<mu-select label="行业" filterable v-model="item.hy" full-width  >
+									<!-- <mu-option v-for="user,index in userlist" :key="user.id" :label="user.name" :value="user.name" ></mu-option> -->
+									<mu-option v-for="optionhy,index in optionhylist" :key="optionhy" :label="optionhy" :value="optionhy"  ></mu-option>
+								</mu-select>
+							</mu-col>
+							<mu-col span="3" lg="3" sm="3">
+								<mu-select label="客户来源区域" filterable v-model="item.khqy" full-width  >
+									<!-- <mu-option v-for="user,index in userlist" :key="user.id" :label="user.name" :value="user.name" ></mu-option> -->
+									<mu-option v-for="optionkhqy,index in optionkhqylist" :key="optionkhqy" :label="optionkhqy" :value="optionkhqy"  ></mu-option>
+								</mu-select>
+							</mu-col>
+							<mu-col span="1" lg="1" sm="1">
+								<mu-text-field v-model="item.lc" label="楼层"  full-width></mu-text-field>
+							</mu-col>
+							<mu-col span="2" lg="2" sm="2">
+								<mu-text-field v-model="item.mj" label="面积"  full-width></mu-text-field>
+							</mu-col>
+							<mu-col span="3" lg="3" sm="3">
+								<mu-text-field v-model="item.dj" :label="radio==='gongyu' ? '均价':'单价'"  full-width></mu-text-field>
+							</mu-col>
+						</mu-row>
+						<mu-row gutter>
+							<mu-col span="12" lg="12" sm="12">
+								<mu-text-field v-model="item.bz" label="备注"  full-width></mu-text-field>
+							</mu-col>
+						</mu-row>
+					</mu-paper>
+				</div>
+				<!-- </mu-form> -->
+			</div>
+		</div>
+		<div class="demo-text" v-if="active3 === 1">
+			<mu-row gutter>
+				<mu-col span="6" lg="6" sm="6">
+					<mu-date-input  icon="today" v-model="timebegin" label="选择起始时间" type="dateTime" clock-type="24hr" value-format="YYYY-MM-DD HH:mm:ss" label-float full-width landscape></mu-date-input>
+				</mu-col>
+				<mu-col span="6" lg="6" sm="6">
+					<mu-date-input  icon="today" v-model="timeend" label="选择结束时间" type="dateTime" clock-type="24hr" value-format="YYYY-MM-DD HH:mm:ss" label-float full-width landscape></mu-date-input>
+				</mu-col>
+				<!-- <mu-col span="6" lg="6" sm="2">
+				<mu-flex justify-content="center" align-items="center" align-content="center">
+					<mu-button round small color="success" @click="showjsdetal()">查询</mu-button>
+					<mu-button round small color="success" @click="dc()">导出</mu-button>
+				</mu-flex>
+				</mu-col> -->
+			</mu-row>
+			<mu-row gutter>
+				<mu-col span="6" lg="6" sm="2">
+					<mu-flex justify-content="center" align-items="center" align-content="center">
+						<mu-button round small color="success" @click="showjsdetal()">查询</mu-button>
+					</mu-flex>
+				</mu-col>
+				<mu-col span="6" lg="6" sm="2">
+					<mu-flex justify-content="center" align-items="center" align-content="center">
+						<mu-button round small color="success" @click="dc()">导出</mu-button>
+					</mu-flex>
+				</mu-col>
+			</mu-row>	
+			<mu-paper :z-depth="1" class="demo-list-wrap">
+				<!-- <mu-appbar color="cyan">
+				  <mu-button icon slot="left">
+					<mu-icon value="menu"></mu-icon>
+				  </mu-button>
+				  Inbox
+				  <mu-button icon slot="right">
+					<mu-icon value="search"></mu-icon>
+				  </mu-button>
+				</mu-appbar> -->
+
+				<mu-card v-for="(item,index) in dataFortot" :key="'pygk'+index" style="width: 100%;  margin: 0 auto;">
+					<mu-card-header :title="item.scpynm" :sub-title="item.usernm">
+						<mu-avatar slot="avatar">
+						  <img :src="item.imgsrc">
+						</mu-avatar>
+					</mu-card-header>
+
+					<mu-card-title :sub-title="'上门'+item.sms+' 进线'+item.jxs+' 手数'+item.cjss+' 套数'+item.cjts"></mu-card-title>
+					<!-- <mu-card-text> -->
+						<!-- <div v-for="(item1,i) in item.cjxq">哈哈</div> -->
+						<!-- <div>{{item.cjxq}}</div> -->
+						<mu-data-table height="100%" :columns="columns" :data="item.cjxq">
+							<template slot-scope="scope">
+							  <td>{{scope.row.hy}}</td>
+							  <td>{{scope.row.qy}}</td>
+							  <td>{{scope.row.lc}}</td>
+							  <td>{{scope.row.mj}}</td>
+							  <td>{{scope.row.dj}}</td>
+							  <td>{{scope.row.bz}}</td>
+							</template>
+						</mu-data-table>
+					<!-- </mu-card-text> -->
+					<mu-card-actions>
+					  <mu-button round small color="error" @click="delcjsj(item.idlist)"  >删除</mu-button>
+					</mu-card-actions>
+				  </mu-card>
+			</mu-paper>
+		</div>
+		<div class="demo-text" v-if="active3 === 2">
+			开发中,待上线
+		</div>
+	</mu-container>
+</div>
+
+		<br>
+		<br>
+		<br>
+		
+
+<script>
+	var Main = {
+		data() {
+			return {
+				userName:'<cc:outprint>userName</cc:outprint>',
+				bindingcode: '',
+				profid: '<cc:outprint>profid</cc:outprint>',
+				uid: '<cc:outprint>uid</cc:outprint>',
+    			active3: 0,
+				//shower:true,
+				//showsan:false,
+				radio:'er',
+				optionhylist:['金融','电子','物流','实业','设计','医疗','传媒','服务','贸易','科技','地产','能源','零售','咨询','建筑设计','广告设计','服装设计','建筑施工','文体娱乐业','其他'],
+				optionkhqylist:['福田区','罗湖区','南山区','宝安区','龙岗区','龙华区','盐田区','光明新区','坪山新区','大鹏新区','外地'],
+				form2:{
+					xmid:'',
+					xmmc:'',
+					sm:0,
+					jx:0,
+					cjss:0,
+					ts:0,
+				},
+				cjxqlist2:[],
+				scpy2list: <cc:outprint>scpy2js</cc:outprint>,	
+				//已录入数据查询需要用到的字段
+				//查询的起始时间(给个默认值,当天)
+				timebegin:'<cc:outprint>kstm</cc:outprint>',
+				timeend:'<cc:outprint>jstm</cc:outprint>',
+				//接受查询已录入信息的结果
+				dataFortot:[],
+				//表格栏位
+				columns: [
+      			    { title: '行业', width: 80, name: 'hy' },
+      			    { title: '来源区域', name: 'qy', width: 100 },
+      			    { title: '楼层', name: 'lc', width: 80},
+      			    { title: '面积', name: 'mj', width: 100, sortable: true },
+      			    { title: '单价', name: 'dj', width: 100 },
+      			    { title: '备注', name: 'bz', width: 200 }
+      			],
+				  ////align: 'right',
+    		};
+		},
+		created: function() {
+
+
+			this.getBinding()
+
+			//this.getFollws()       //定义方法
+		},
+		methods: {
+			getBinding: function() {
+    			var that = this;
+    			axios.get('/distributor.action', {
+    				params: {
+    			    	serviceName: 'cssoLogin',
+    			    	userName: that.userName,
+    			    	authCode: '6b42a467259407218c0e6acdfc978c01'
+    			  }
+    			})
+    			  .then(function (response) {
+    			    that.bindingcode = response.data.binding;
+    			    //console.log(this.bindingcode);
+    			  })
+    			  .catch(function (error) {
+    			    console.log(error);
+    			  });
+    		},
+			py2choose: function(e,item){
+              item.xmid=e.id;
+              item.xmmc=e.name;
+            },
+			cjshins: function(){
+				var that = this;
+				//console.log(this.form2.xmmc);
+				// console.log(this.form2.sm);
+				// console.log(this.form2.jx);
+				// console.log(this.form2.cjss);
+				// console.log(this.form2.ts);
+				// console.log(this.cjxqlist2);
+				//做一些控制:项目为空的时候,新建不了;上门/进线或成交都没的时候,不能录;上门进线,成交手数,套数只能填写数字
+				var reg = /^\d+$/; 
+				if(!reg.test(that.form2.sm))
+        		{
+					alert("上门数必须是数字!");
+					return;
+				}
+				if(!reg.test(that.form2.jx))
+        		{
+					alert("进线数必须是数字!");
+					return;
+				}
+				if(!reg.test(that.form2.cjss))
+        		{
+					alert("成交手数必须是数字!");
+					return;
+				}
+				if(!reg.test(that.form2.ts))
+        		{
+					alert("套数必须是数字!");
+					return;
+				}
+
+				if(that.form2.xmid==''){
+					alert("未选择项目!");
+					return;
+				}
+				if((that.form2.sm=='0' && that.form2.jx=='0') && that.form2.cjss=='0'){
+					alert("上门进线和成交数据不能都没有!");
+					return;
+				}
+				axios.get('/controller.action', {
+					params: {
+						name: 'scsjapi',
+						type: 'ins',
+						lev:that.radio,
+						xmmc: that.form2.xmid,
+						sm: that.form2.sm,
+						jx: that.form2.jx,
+						cjss:that.form2.cjss,
+						ts:that.form2.ts,
+						cjxqlist2:encodeURI(JSON.stringify(that.cjxqlist2))
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.binding;
+					alert("数据提交成功!");
+					//that.checkbox.value_js=[];
+					//console.log("结算单已生成!");
+					
+					//提交成功后清空所有的输入栏
+					that.form2.xmmc ="";
+					that.form2.sm=0;
+					that.form2.jx=0;
+					that.form2.cjss=0;
+					that.form2.ts=0;
+					that.cjxqlist2=[];
+
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+					
+			},
+			//查询已录入的市场数据
+			showjsdetal: function() { 
+				var that = this;
+				//alert("begin");
+				//组一下时间控制字段
+				//var datetime = " and a.createdate >= str_to_date('"+that.timebegin+"', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+that.timeend+"', '%Y-%m-%d %H:%i:%s') ";
+                var datetime = " and a.createdate between '"+that.timebegin+"' AND '"+that.timeend+"'";
+                //1.业务员aaa201723453E5EBNtzU, 只看到他们自己的;2.项目经理aaa2018A38306ED9syVe, 看到所有以他们为经理的;3.其他有权限进入的直接看全部
+				var expresssql="";
+				if(that.profid=="aaa201723453E5EBNtzU"){ //业务员
+					expresssql="select a.scpymc as scpymc,b.name as scpynm,c.name as usernm ,a.sms as sms,a.jxs as jxs,a.cjss as cjss, a.cjts as cjts,a.createbyid as createbyid,a.id as recid from cjqk a left join scpy b on a.scpymc=b.id left join ccuser c on a.createbyid=c.id where a.is_deleted='0' and a.recordtype ='201945938A54BAEfBWgh' " + datetime + "and a.createbyid='"+that.uid+ "' order by a.createdate desc";
+					//alert(expresssql);
+					//alert(that.bindingcode);
+				} else if(that.profid=="aaa2018A38306ED9syVe"){ //项目经理
+					//在页面加载的时候就判断是项目经理的话,获取以他为经理的人,然后这里获取这些人录的就
+					var ywylist = '<cc:outprint>ywylist</cc:outprint>';
+					//这里会有特殊情况,该项目经理名下没有读取到任何业务员,预计会是空,有的格式预计为005201980AF2689yFtN5,
+					//去掉最后一个逗号,将中间的逗号都替换为','
+					ywylist = ywylist.substr(0, ywylist.length - 1);
+					//basic = basic.substring(0, basic.lastIndexOf(',')); //另一种方式, 还有以substring
+					//alert(ywylist);
+					ywylist=ywylist.replace(/,/g, "','");
+					//alert(ywylist);
+					var userid_cond= "('"+ywylist+"')";
+					expresssql="select a.scpymc as scpymc,b.name as scpynm,c.name as usernm ,a.sms as sms,a.jxs as jxs,a.cjss as cjss, a.cjts as cjts,a.createbyid as createbyid,a.id as recid from cjqk a left join scpy b on a.scpymc=b.id left join ccuser c on a.createbyid=c.id where a.is_deleted='0' and a.recordtype ='201945938A54BAEfBWgh' " + datetime + "and a.createbyid in "+userid_cond + " order by a.createdate desc";
+					
+					//alert(userid_cond);
+					//alert(expresssql)
+				
+				} else{ //其他人
+					expresssql="select a.scpymc as scpymc,b.name as scpynm,c.name as usernm ,a.sms as sms,a.jxs as jxs,a.cjss as cjss, a.cjts as cjts,a.createbyid as createbyid,a.id as recid from cjqk a left join scpy b on a.scpymc=b.id left join ccuser c on a.createbyid=c.id where a.is_deleted='0' and a.recordtype ='201945938A54BAEfBWgh' " + datetime + " order by a.createdate desc";
+                }
+                
+                //alert(expresssql);
+
+                //调用新的接口 scsjapi,type:sel; datetime ;expresssql; bindingcode
+                axios.get('/controller.action', {  ///customize/page/9291p1140/pbbapi.jsp
+                //axios.get('/customize/page/d62d70d8d6/scsjapi.jsp', {
+                    params: {
+						name: 'scsjapi',
+						type: 'sel',
+                        datetime: encodeURI(datetime),
+                        //datetime: datetime,
+						expresssql: encodeURI(expresssql),
+                        //expresssql: expresssql,
+						bindingcode: that.bindingcode
+					}
+				})
+				.then(function (response) {
+                    //that.dataFortot=response.data.data;
+                    Vue.set(that,'dataFortot', response.data.data);
+                    that.$forceUpdate();
+					//console.log("ok!");
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+
+				//查询所有时间段内录入的上门进线情况,市场盘源,上门数,进线数,成交手数,套数,录入人(当不是查询自己录入的时候需要配录入人),考虑下是否需要求和?
+				//var expresssql="select a.scpymc as scpymc,b.name as scpynm,c.name as usernm ,a.sms as sms,a.jxs as jxs,a.cjss as cjss, a.cjts as cjts,a.createbyid as createbyid,a.id as recid from cjqk a left join scpy b on a.scpymc=b.id left join ccuser c on a.createbyid=c.id where a.is_deleted='0' and a.recordtype ='201945938A54BAEfBWgh' " + datetime + " order by a.createdate desc";
+				//alert(expresssql);
+				// axios.get('/distributor.action', {
+				// 	params: {
+				// 		serviceName: 'cqlQuery',
+				// 		//serviceName: 'cquery',
+				// 		//serviceName: 'cqueryWithRoleRight',
+				// 		objectApiName: 'cjqk',
+				// 		expressions:expresssql,
+				// 		binding:that.bindingcode
+				// 	}
+				// })
+				// .then(function (response) {
+				// 	//alert(that.bindingcode);
+				// 	//alert(response.data.data);
+				// 	that.dataFortot=response.data.data;
+
+				// 	console.log(that.dataFortot);
+
+				// 	//不能将两个调用直接顺着写, 异步会造成还么有数据返回做循环, 就不进去了
+				// 	for ( var i = 0; i <that.dataFortot.length; i++){
+                //         //var cjqk=that.funA(that.dataFortot[i],datetime).data.data;
+				// 		that.dataFortot[i].idlist =[];
+				// 		that.dataFortot[i].idlist.push(that.dataFortot[i].recid);
+				// 		//console.log(that.dataFortot[i].idlist);
+                //         const result = that.funA(that.dataFortot[i],datetime);
+                //         //console.log(result);
+                //         //var res=that.funA(that.dataFortot[i],datetime);
+                //         //console.log(cjqk);
+                //         //Vue.set(that.dataFortot[i], 'cjxq', cjqk);
+				// 		// alert(i);
+				// 	    // console.log(that.dataFortot[i]);
+				// 		// var item = that.dataFortot[i];
+				// 		// var xm=that.dataFortot[i].scpymc; //盘源
+				// 		// var lrr=that.dataFortot[i].createbyid; //录入人
+				// 		// //获取头像
+				// 		// //https://k8mm1amta1700adb471ba12b.cloudcc.com/distributor.action?serviceName=showChatterImage&type=user&id=0052018FF9F7905NEd6u&binding=6A515D30F453B3D1CD91C0CB025E082A
+				// 		// var imgsrc = "/distributor.action?serviceName=showChatterImage&type=user&id="+lrr+"&binding="+that.bindingcode;
+				// 		// Vue.set(item, 'imgsrc', imgsrc);
+
+				// 		// //获取成交详情,行业,客户区域,楼层,面积,单价,备注;  20186A33481F087wkKC5 二级,20186B76C925373c6GQa 三级
+				// 		// var expresssql1="select a.xy as hy,a.qy as qy,a.lc as lc,a.mj as mj, a.dj as dj,a.bz as bz from cjqk a where a.is_deleted='0' and a.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa') and a.createbyid ='"+ lrr +"' and a.scpymc = '" +xm +"'"  + datetime + " order by a.createdate desc";
+				// 		// alert(expresssql1);
+				// 		// axios.get('/distributor.action', {
+				// 		// 	params: {
+				// 		// 		serviceName: 'cqlQuery',
+				// 		// 		objectApiName: 'cjqk',
+				// 		// 		expressions:expresssql1,
+				// 		// 		binding:that.bindingcode
+				// 		// 	}
+				// 		// })
+				// 		// .then(function (response) {
+				// 		// 	alert(response.data.data);
+				// 		// 	//alert(response.data.data);
+				// 		// 	//item.cjxq=response.data.data;
+				// 		// 	Vue.set(item, 'cjxq', response.data.data)
+				// 		// 	//console.log(that.dataFortot);
+				// 		// })
+				// 		// .catch(function (error) {
+				// 		// 	console.log(error);
+				// 		// });
+				// 	}
+				// })
+				// .catch(function (error) {
+				// 	console.log(error);
+				// });
+				//alert("step1");
+
+				//不能将两个调用直接顺着写, 异步会造成还么有数据返回做循环, 就不进去了
+				// for ( var i = 0; i <that.dataFortot.length; i++){
+				    // console.log(that.dataFortot[i]);
+					// var item = that.dataFortot[i];
+					// var xm=that.dataFortot[i].scpymc; //盘源
+					// var lrr=that.dataFortot[i].createbyid; //录入人
+					// //获取成交详情,行业,客户区域,楼层,面积,单价,备注;  20186A33481F087wkKC5 二级,20186B76C925373c6GQa 三级
+					// var expresssql1="select a.xy as hy,a.qy as qy,a.lc as lc,a.mj as mj, a.dj as dj,a.bz as bz from cjqk a where a.is_deleted='0' and a.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa') and a.createbyid ='"+ lrr +"' and a.scpymc = '" +xm +"'"  + datetime + " order by a.createdate desc";
+					// alert(expresssql1);
+					// axios.get('/distributor.action', {
+						// params: {
+							// serviceName: 'cqlQuery',
+							// objectApiName: 'cjqk',
+							// expressions:expresssql1,
+							// binding:that.bindingcode
+						// }
+					// })
+					// .then(function (response) {
+						// //alert(response.data.data);
+						// item.cjxq=response.data.data;
+						// //console.log(that.dataFortot);
+					// })
+					// .catch(function (error) {
+						// console.log(error);
+					// });
+				// }
+				//alert("end");
+			
+			},
+
+			//同步获取数据
+			async funA(item,datetime){
+                //var item = that.dataFortot[i];
+				var xm=item.scpymc; //盘源
+				var lrr=item.createbyid; //录入人
+                //获取头像
+                var imgsrc = "/distributor.action?serviceName=showChatterImage&type=user&id="+lrr+"&binding="+this.bindingcode;
+				Vue.set(item, 'imgsrc', imgsrc);
+
+				//var res =  await axios.post('') //这里的res就是axios请求回来的结果
+                var expresssql1="select a.xy as hy,a.qy as qy,a.lc as lc,a.mj as mj, a.dj as dj,a.bz as bz,a.id as recid from cjqk a where a.is_deleted='0' and a.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx') and a.createbyid ='"+ lrr +"' and a.scpymc = '" +xm +"'"  + datetime + " order by a.createdate desc";
+				//alert(expresssql1);   
+                   
+                
+				await axios.get('/distributor.action', {
+					params: {
+						serviceName: 'cqlQuery',
+						//serviceName: 'cqlQueryWithRoleRight',
+						objectApiName: 'cjqk',
+						expressions:expresssql1,
+						binding:this.bindingcode
+					}
+				})
+				.then(function (response) {
+					//console.log("ok");
+					//alert(response.data.data);
+					//item.cjxq=response.data.data;
+					Vue.set(item, 'cjxq', response.data.data);
+
+					for ( var i = 0; i <item.cjxq.length; i++){
+						//item.idlist.push(item.cjxq);
+						var item1= item.cjxq[i];
+						//console.log(item.cjxq[i]);
+						//console.log(item1.recid);
+						item.idlist.push(item1.recid);
+					}
+					//console.log(that.dataFortot);
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			},
+			delcjsj: function(val){
+				//console.log(val);
+				var that = this;
+				axios.get('/controller.action', {
+					params: {
+						name: 'scsjapi',
+						type: 'del',
+						idlist:encodeURI(val)
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.binding;
+					alert("记录删除成功!");
+					//that.checkbox.value_js=[];
+					//console.log("结算单已生成!");
+					
+					//提交成功后显示上清楚这条记录
+					that.dataFortot.forEach(function(item,index){
+						if(item.recid==val[0]){
+							//alert("index:"+index);
+							that.dataFortot.splice(index, 1);
+							return;
+						}
+					});
+
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			},
+			dc: function(){
+    			if("005201827888B25tm2iq"==this.uid || "0052018FF9F7905NEd6u"==this.uid){    
+					 window.location.href = "xcjqklrdc.jsp?ksrq="+ this.timebegin+"&jsrq="+this.timeend;
+    			}else{
+    			     alert("权限不足!");
+    			}
+			},
+		},
+		computed: {
+			// shower: function(){
+			// 	if(this.radio=='er'){
+			// 		return true;
+			// 	} else{
+			// 		return false;
+			// 	}
+			// },
+			// showsan: function(){
+			// 	return !this.shower;
+			// },
+			cjxqlist: function(){              // 判断有几手，就出现几行
+				var arrary=[];
+				for (i = 0; i < this.form2.cjss; i++) {
+					var cjxq = {};
+					cjxq["hy"] = ""; //行业
+					Vue.set(cjxq, 'hy', "");
+                	cjxq["khqy"] = ""; //客户来源区域
+                	cjxq["lc"] = ""; //楼层
+                	cjxq["mj"] = 0; //面积
+                	cjxq["dj"] = 0; //单价
+                	cjxq["bz"] = ""; //备注
+    				arrary.push(cjxq);
+					if(this.radio=='gongyu'){
+
+						break;
+					}
+ 				}
+				//this.cjxqlist2=arrary;
+				//Vue.set(this.cjxqlist2, '', arrary)
+				//Ctor.$forceUpdate();
+				return arrary;
+
+			}
+
+		},
+		watch: {
+			cjxqlist(val) {
+        		this.cjxqlist2 = val;
+      		},
+			radio(val, oldVal) {
+				//console.log(val+","+oldVal);
+				if(val!= oldVal){
+					this.form2.xmmc="";
+				}
+				if(val=='er') {
+					this.scpy2list = <cc:outprint>scpy2js</cc:outprint>;
+					//console.log('2');
+				} else if (val == 'san') {
+					this.scpy2list = <cc:outprint>scpy3js</cc:outprint>;
+					//console.log('3');
+				} else if (val == 'gongyu') {
+					this.scpy2list = <cc:outprint>scpy4js</cc:outprint>;
+				}
+				//console.log(<cc:outprint>scpy3js</cc:outprint>);
+        		
+      		}
+    	}
+    };
+	var Ctor = Vue.extend(Main)
+	new Ctor().$mount('#app')
+</script >
+		</body>
+
+		</html>

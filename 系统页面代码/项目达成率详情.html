@@ -1,0 +1,109 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+	throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+	byte[] iso = parameterValue.getBytes("ISO-8859-1");
+	if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+		parameterValue = new String(iso, "UTF-8");
+		return parameterValue;
+	}
+}
+return parameterValue;
+}
+</cc>
+<cc>
+SimpleDateFormat sf = new SimpleDateFormat("yyyy");
+CCService cs = new CCService(userInfo);
+Date myDate = new Date();
+String now_month = (myDate.getMonth()+1)+"";
+String now_year = sf.format(myDate);
+
+String roleid = userInfo.getRoleId();
+String year = request.getParameter("year")==null?now_year:encodeParameters(request.getParameter("year")+"");//获取年份
+String month = request.getParameter("month")==null?now_month:encodeParameters(request.getParameter("month")+"");//获取月份
+String dp = request.getParameter("dp")==null?"全部":encodeParameters(request.getParameter("dp")+"");//获取部门
+String project = request.getParameter("project")=="全部"?"":encodeParameters(request.getParameter("project")+"");//获取项目
+String zmb = request.getParameter("zmb")==null?"":encodeParameters(request.getParameter("zmb")+"");//总目标
+
+String dp_sql = "";
+
+if(!"全部".equals(dp)){
+    dp_sql = " and p.ssbm='"+dp+"'";
+}
+String month_sql = "";
+String month_cjsj = "";
+
+if(!"全部".equals(month)){
+    month_sql = " and r.yf = '"+month+"'";
+    month_cjsj = " and month(cjsj) = '"+month+"'";
+}
+
+List<CCObject> Opportunitylist = cs.cqlQuery("ryjx","SELECT c.name as name,ifnull(o.ss, 0) AS ss , round(ifnull(sum(grdywcyjs), 0) * 100 / sum(grdyyjmb), 2) AS dcl , round(ifnull(sum(grdywcyjs), 0), 2) AS grdywcyjs , sum(grdyyjmb) as grdyyjmb FROM ccuser c LEFT JOIN ryjx r ON c.id = r.ownerid LEFT JOIN ( SELECT ownerid, COUNT(id) AS ss FROM Opportunity WHERE (jieduan = '成交' "+month_cjsj+" AND year(cjsj) = '"+year+"' AND is_deleted = '0') GROUP BY ownerid ) o ON c.id = o.ownerid WHERE (r.is_deleted = '0' AND r.nd = '"+year+"' "+month_sql+" AND r.ownerid IN ( SELECT id FROM ccuser WHERE isusing = '1' AND role IN ( SELECT roleid FROM role WHERE parentrole_id = '"+roleid+"' AND gap > 0 ) ) AND r.xmmc = '"+project+"' AND r.recordtype = '201884204B9C199odbgA') GROUP BY c.id");
+
+
+
+</cc>
+<html>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no, minimal-ui"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+<head>
+<title>texts1</title>
+</head>
+<body>
+<form action="" method="post" name="theform" id="theform">
+<button onclick="history.go(-1);return false;">返回</button>
+<table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle">
+    <td NOWRAP="NOWRAP" class="tdTitle" >总目标</td> 
+    <td NOWRAP="NOWRAP" class="tdTitle">业务员</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">业绩目标</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">成交面积</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">完成率</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">成交手数</td>
+    
+</tr>
+<cc>
+     int flag = 0;
+       for(CCObject item:Opportunitylist){
+                   
+                   if(flag==0){
+            </cc>
+             <tr>
+                  <td NOWRAP="NOWRAP" class="tdTitle" rowspan="<cc:outprint>Opportunitylist.size()</cc:outprint>"><cc:outprint>zmb</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("name")</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("grdyyjmb")</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("grdywcyjs")</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("dcl")</cc:outprint>%</td>
+                  <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("ss")</cc:outprint></td>
+               </tr>
+<cc>
+}else{
+     </cc>
+<tr>     
+                  <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("name")</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("grdyyjmb")</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("grdywcyjs")</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("dcl")</cc:outprint>%</td>
+                  <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("ss")</cc:outprint></td>
+               </tr>
+<cc>
+}
+           flag++;
+</cc>
+               
+<cc>
+       }
+</cc>
+</table>
+</form>
+</body>
+</html>

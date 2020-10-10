@@ -1,0 +1,98 @@
+/*
+description:审批通过增加联动批次
+一般代理转介的触发器,afterupdate,
+version: 1.0
+date:20180808
+author:tom
+log:
+20191205 sql查询ryjx的时候不应该判断ownerid,而是bkhr 
+*/
+
+java.util.Calendar cal = java.util.Calendar.getInstance();
+cal.setTime(new Date());
+int year = cal.get(Calendar.YEAR);//当前年份
+int month = cal.get(Calendar.MONTH)+1;//当前月份
+String spzt = record_new.get("zt")==null?"":record_new.get("zt")+"";//审批状态
+String spzt_old = record_old.get("zt")==null?"":record_old.get("zt")+"";//审批状态(旧)
+String ownerid = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";//所有人id
+String khmc = record_new.get("khmc")==null?"":record_new.get("khmc")+"";//客户名称
+
+//通过客户名称去查找客户对应的项目
+List<CCObject> accountlist = this.cqlQuery("Account","select xmmc from Account where id = '"+khmc+"' and is_deleted = '0'");
+
+String szxm = accountlist.get(0).get("xmmc")==null?"":accountlist.get(0).get("xmmc")+"";//项目名称
+
+
+if("审批通过".equals(spzt) && "审批中".equals(spzt_old)){
+	
+
+      //List<CCObject> list = this.cqlQuery("ryjx","select ifnull(xmdyldsmps,0) as xmdyldsmps,id,recordtype from ryjx where is_deleted = '0' and nd = '"+year+"' and yf = '"+month+"' and ownerid = '"+ownerid+"' ");
+      List<CCObject> list = this.cqlQuery("ryjx","select ifnull(xmdyldsmps,0) as xmdyldsmps,id,recordtype from ryjx where is_deleted = '0' and nd = '"+year+"' and yf = '"+month+"' and bkhr = '"+ownerid+"' ");
+    //   if(true){
+    //     trigger.addErrorMessage(String.valueOf(list.size()));
+    //   }
+      if(list.size()==1){
+      	
+
+        for(CCObject item:list){
+
+          double ldcs = item.get("xmdyldsmps")==null?0.0:Double.valueOf(item.get("xmdyldsmps")+"");//联动次数
+          
+          String recordtype = item.get("recordtype")==null?"":item.get("recordtype")+"";//获取记录类型
+          
+
+           item.put("xmdyldsmps",ldcs+1);
+           
+
+           this.updateLt(item);
+           //为运营中心加入特别的审批过程， 不需要判断经理的是否审核通过
+           if("2018823B69C69F6L92FH".equals(recordtype)){
+           	List<CCObject> ryjxlist1 = this.cqlQuery("ryjx","select id,ifnull(xmdyldsmps,0) as xmdyldsmps from ryjx where nd = '"+year+"' and yf = '"+month+"' and xmmc='"+szxm+"' and recordtype='2018ED6B4DF92033DeWs' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+ownerid+"' and is_deleted = '0')");
+           		if(ryjxlist1.size()==1){
+                 	
+                       Integer zjs = ryjxlist1.get(0).get("xmdyldsmps")==null?0:Integer.valueOf(ryjxlist1.get(0).get("xmdyldsmps")+"");
+                       ryjxlist1.get(0).put("xmdyldsmps",zjs+1);
+                       this.update(ryjxlist1.get(0));
+                       
+                 }else if(ryjxlist1.size()==0){
+                 			 
+                       trigger.addErrorMessage("运营总监未创建考核或者数目过多!");
+                 }
+           } else{
+
+            
+           
+           List<CCObject> ryjxlist = this.cqlQuery("ryjx","select id,ifnull(xmdyldsmps,0) as xmdyldsmps from ryjx where spzt = '审批通过' and nd = '"+year+"' and yf = '"+month+"' and xmmc='"+szxm+"' and recordtype='2018ED6B4DF92033DeWs' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+ownerid+"' and is_deleted = '0')");
+
+            
+                 if(ryjxlist.size()==1){
+                 	
+                       Integer zjs = ryjxlist.get(0).get("xmdyldsmps")==null?0:Integer.valueOf(ryjxlist.get(0).get("xmdyldsmps")+"");
+                       ryjxlist.get(0).put("xmdyldsmps",zjs+1);
+                       this.update(ryjxlist.get(0));
+                       
+                 }else if(ryjxlist.size()==0){
+                 			 
+                       trigger.addErrorMessage("项目经理未创建考核目标!或者项目经理考核目标审批未通过!");
+                 }
+          }
+        }
+      }else if(list.size()>1){
+         trigger.addErrorMessage("当月该业务员创建考核记录多条,审批失败！");
+      }else{
+         trigger.addErrorMessage("当月该业务员未创建考核数据,审批失败！");
+      }
+      //抽取业务员对应的日报，按创建时间倒叙排，limit 1只取一条
+      List<CCObject> lists = this.cqlQuery("DailyReport","select * from DailyReport where ownerid = '"+ownerid+"' and is_deleted = '0' order by createdate desc limit 1");
+
+			//修改业务员日报的今日联动数
+      for(CCObject items:lists){
+      
+          double ldpc = items.get("jrld")==null?0.0:Double.valueOf(items.get("jrld")+"");//今日联动
+         
+          items.put("jrld",ldpc+1);
+         
+          this.updateLt(items);
+          
+      }
+}

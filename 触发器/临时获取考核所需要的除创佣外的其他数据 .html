@@ -1,0 +1,43 @@
+/**
+*描述：临时处理下回款记录的实际收益
+*
+*创建人：何俊
+*创建时间：2020/09/27
+*最后修改时间：2020/09/27
+log:
+*/
+//获取CS
+CCService cs=new CCService(userInfo);
+//时间处理
+java.util.Calendar cal = java.util.Calendar.getInstance();
+//String qysj = request.getParameter("qysj")==null?"":encodeParameters(request.getParameter("qysj")+"");//签约时间
+java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+DecimalFormat decf = new DecimalFormat("#.00");
+
+
+//遍历所有审批通过了的开票申请
+List<CCObject> hkjllist=cs.cqlQuery("hkjl","select * from hkjl where is_deleted='0' and  hkqrzt='已确认' and khrq>= str_to_date('2020-01-01 00:00:00', '%Y-%m-%d %H:%i:%s') ");
+for(CCObject hkjlitem:hkjllist){
+    String name = hkjlitem.get("name")==null?"":hkjlitem.get("name")+"";
+    double hkje = hkjlitem.get("hkje")==null?0.0:Double.parseDouble(hkjlitem.get("hkje")+"");  //开票金额//获取回款金额
+    //获取收款计划
+    String skjhmc = hkjlitem.get("skjhmc")==null?"":hkjlitem.get("skjhmc")+"";
+    List<CCObject> skjhlist=cs.cqlQuery("cloudccskjh","select * from cloudccskjh where id='"+skjhmc+"' and  is_deleted='0'");
+    if(skjhlist.size()>0){
+        //获取开票申请
+        String kpsq = skjhlist.get(0).get("kpsq")==null?"":skjhlist.get(0).get("kpsq")+"";
+        List<CCObject> kpsqlist=cs.cqlQuery("kpsq","select * from kpsq where id='"+kpsq+"' and  is_deleted='0'");
+        if(kpsqlist.size()>0){
+            double fpje = kpsqlist.get(0).get("fpje")==null?0.0:Double.parseDouble(kpsqlist.get(0).get("fpje")+"");  //开票金额
+            double sjsy = kpsqlist.get(0).get("sjsy")==null?0.0:Double.parseDouble(kpsqlist.get(0).get("sjsy")+"");//实际收益sjsy
+            double hksjsy= (hkje/fpje)*sjsy;
+            // if(true){
+            //     trigger.addErrorMessage(String.valueOf(hksjsy));
+            // }
+            hkjlitem.put("sjsy",hksjsy);
+            cs.updateLt(hkjlitem);
+        }
+    }
+    
+}
+

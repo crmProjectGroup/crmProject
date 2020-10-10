@@ -1,0 +1,36 @@
+String spzt = record_new.get("spzt")==null?"":record_new.get("spzt")+"";//审批状态
+String spzt_old = record_old.get("spzt")==null?"":record_old.get("spzt")+"";//审批状态(旧)
+String jieduan = record_new.get("jd")==null?"":record_new.get("jd")+"";//阶段
+
+if("审批通过".equals(spzt) && "审批中".equals(spzt_old) && "成交".equals(jieduan)){
+        String tzxmmc = record_new.get("tzxmmc")==null?"":record_new.get("tzxmmc")+"";//拓展项目id
+        List<CCObject> list = this.cquery("Project_tz","id='"+tzxmmc+"'");
+        if(true){trigger.addErrorMessage(list+"");}
+        if(list.size()>0){
+               String xqfw = list.get(0).get("xqfw")==null?"":list.get(0).get("xqfw")+"";//需求服务
+               String xmwz = list.get(0).get("xmwz")==null?"":list.get(0).get("xmwz")+"";//项目位置
+               String name = list.get(0).get("name")==null?"":list.get(0).get("name")+"";//项目名称
+               String xzltl = list.get(0).get("xzltl")==null?"":list.get(0).get("xzltl")+"";//写字楼体量
+               String gytl = list.get(0).get("gytl")==null?"":list.get(0).get("gytl")+"";//公寓体量
+               String sytl = list.get(0).get("sytl")==null?"":list.get(0).get("sytl")+"";//商业体量
+               String xmztl = list.get(0).get("xmztl")==null?"":list.get(0).get("xmztl")+"";//项目总体量
+               CCObject obj = new CCObject("Project");
+               obj.put("lpdz",xmwz);
+               obj.put("name",name);
+               obj.put("bgmj",xzltl);
+               obj.put("gymj",gytl);
+               obj.put("symj",sytl);
+               obj.put("jzmj",xmztl);
+               
+               if("驻场租售代理".equals(xqfw) || "营销顾问".equals(xqfw)){
+                     obj.put("ownerid","005201804F0BB20fPNIK");//将所有人改为张亮
+                     this.insert(obj);
+               }else if("一般代理".equals(xqfw)){
+                     obj.put("ownerid","005201827888B25tm2iq");
+                     obj.put("xmjl","005201827888B25tm2iq");
+                     obj.put("ssbm","运营部");
+                     this.insert(obj);
+               }
+               
+        }
+}

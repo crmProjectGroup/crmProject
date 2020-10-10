@@ -1,0 +1,87 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc>
+CCService cs = new CCService(userInfo);
+java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
+String nowday = df.format(new Date());
+String uid = userInfo.getUserId();
+String ksrq = request.getParameter("startTime")==null?nowday:request.getParameter("startTime")+"";//开始日期
+String jsrq = request.getParameter("endTime")==null?nowday:request.getParameter("endTime")+"";//结束日期
+String datetime = "createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+List<CCObject> smlist = cs.cquery("Account","createbyid = '"+uid+"' and "+datetime);
+List<CCObject> jxlist = cs.cquery("Account","recordtype='2018525F215221DtlTXV' and createbyid='"+uid+"' and "+datetime);
+List<CCObject> ldlist = cs.cquery("zjnr","zjtjr='"+uid+"' and "+datetime);
+java.util.Calendar cal = java.util.Calendar.getInstance();
+cal.setTime(new Date());
+int year = cal.get(Calendar.YEAR);//当前年份
+int month = cal.get(Calendar.MONTH)+1;//当前月份
+int day = cal.get(Calendar.DATE);//当前天数
+
+
+</cc>
+<html>
+<head>
+<title>客户报表</title>
+</head>
+<body>
+<form action="" method="post" name="theform" id="theform">
+<div>
+开始日期&nbsp;&nbsp;<input id="startTime" name="startTime" class="datepicker" type="text" value="<cc:outprint>ksrq</cc:outprint>">
+&nbsp;&nbsp;截止日期&nbsp;&nbsp;<input id="endTime" name="endTime" class="datepicker" type="text" value="<cc:outprint>jsrq</cc:outprint>">
+<input type="submit"  value=" 查 询 " class="input01"/><br><br>   
+</div>
+<div>新客户上门<cc:outprint>smlist.size()</cc:outprint>批</div>
+<table width="99%" class="cloudtablestyle" border="0" cellspacing="0" cellpadding="0" id="thetable">
+<tr class="tabtitle">
+<td align="center" valign="middle">客户名称</td>
+<td align="center" valign="middle">客户来源</td>
+<td align="center" valign="middle">认知途径</td>
+<td align="center" valign="middle">需求面积</td>
+<td align="center" valign="middle"> 客户行业</td>
+<td align="center" valign="middle">置业目的</td>
+</tr>
+<cc>for(CCObject item:smlist){</cc>
+<tr>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("name")==null?"":item.get("name")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("xbgqy")==null?"":item.get("xbgqy")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("rztj1")==null?"":item.get("rztj1")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("xqmj")==null?"":item.get("xqmj")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("szxy")==null?"":item.get("szxy")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("gmyy")==null?"":item.get("gmyy")</cc:outprint></td>
+</tr>
+<cc>}</cc>
+</table>
+<div>进线<cc:outprint>jxlist.size()</cc:outprint>批</div>
+<table width="99%" class="cloudtablestyle" border="0" cellspacing="0" cellpadding="0" id="thetable">
+<tr class="tabtitle">
+<td align="center" valign="middle" class="tdTitle">客户名称</td>
+<td align="center" valign="middle" class="tdTitle">客户来源</td>
+<td align="center" valign="middle" class="tdTitle">认知途径</td>
+<td align="center" valign="middle" class="tdTitle">客户行业</td>
+</tr>
+<cc>for(CCObject item:jxlist){</cc>
+<tr>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("name")==null?"":item.get("name")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("xbgqy")==null?"":item.get("xbgqy")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("rztj1")==null?"":item.get("rztj1")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("szxy")==null?"":item.get("szxy")</cc:outprint></td>
+</tr>
+<cc>}</cc>
+</table>
+<div>联动转出<cc:outprint>ldlist.size()</cc:outprint>批</div>
+<table width="99%" class="cloudtablestyle" border="0" cellspacing="0" cellpadding="0" id="thetable">
+<tr class="tabtitle">
+<td align="center" valign="middle" class="tdTitle">客户名称</td>
+<td align="center" valign="middle" class="tdTitle">提交人</td>
+<td align="center" valign="middle" class="tdTitle">转介项目</td>
+</tr>
+<cc>for(CCObject item:ldlist){</cc>
+<tr>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("zjkhccname")==null?"":item.get("zjkhccname")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("zjtjrccname")==null?"":item.get("zjtjrccname")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("zjxmccname")==null?"":item.get("zjxmccname")</cc:outprint></td>
+</tr>
+<cc>}</cc>
+</table>
+</form>
+</body>
+</html>

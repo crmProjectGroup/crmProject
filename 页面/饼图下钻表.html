@@ -1,0 +1,86 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+	throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+	byte[] iso = parameterValue.getBytes("ISO-8859-1");
+	if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+		parameterValue = new String(iso, "UTF-8");
+		return parameterValue;
+	}
+}
+return parameterValue;
+}
+</cc>
+<cc>
+CCService cs = new CCService(userInfo);
+
+String roleid = userInfo.getRoleId();
+String industry = request.getParameter("industry")==null?"行业类型":encodeParameters(request.getParameter("industry")+"");//获取条件
+String project = request.getParameter("project")==null?"全部":encodeParameters(request.getParameter("project")+"");//获取项目条件
+String accounttype = request.getParameter("accounttype")==null?"全部":encodeParameters(request.getParameter("accounttype")+"");//获取客户类别条件
+String ksrq = request.getParameter("ksrq")==null?"":encodeParameters(request.getParameter("ksrq")+"");//开始日期
+String jsrq = request.getParameter("jsrq")==null?"":encodeParameters(request.getParameter("jsrq")+"");//结束日期
+String condition = request.getParameter("condition")==null?"":encodeParameters(request.getParameter("condition")+"");//获取条件
+
+
+if("全部".equals(project)){
+     project = "";
+}else{
+     project = " and xmmc = '"+project+"'";
+}
+
+String datetime = " and a.createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+
+if("租赁".equals(accounttype)){
+     accounttype = " and a.recordtype = '20186166515AE4A8ZfOc'";
+}else if("销售".equals(accounttype)){
+     accounttype = " and a.recordtype = '2018496272C934EtLhWs'";
+}else{
+     accounttype = "";
+}
+
+List<CCObject> accountlist = cs.cqlQuery("Account","select a.name,ifnull(khdj,'') as khdj,c.name as cname from Account a,ccuser c where a.is_deleted = '0' and a.ownerid = c.id and isusing='1' and role in (select roleid from role where parentrole_id='"+roleid+"' and gap > 0) "+project+" and "+industry+" like '%"+condition+"%'"+accounttype+datetime);
+
+</cc>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no, minimal-ui"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>texts</title>
+</head>
+<body>
+<form action="" method="post" name="theform" id="theform">
+<button onclick="window.history.go(-1);return false;">返回</button>
+<table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle">
+    <td NOWRAP="NOWRAP" class="tdTitle">客户名称</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">客户等级</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">业务员名称</td>
+  </tr>
+  <cc>
+       for(CCObject item:accountlist){
+             </cc>
+               <tr>
+                  <td  class="dataCell_h"><cc:outprint>item.get("name")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("khdj")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("cname")</cc:outprint></td>
+               </tr>
+             <cc>
+       }
+  
+  </cc>
+
+ </table>
+
+</form>
+</body>
+</html>

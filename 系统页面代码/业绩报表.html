@@ -1,0 +1,86 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+	throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+	byte[] iso = parameterValue.getBytes("ISO-8859-1");
+	if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+		parameterValue = new String(iso, "UTF-8");
+		return parameterValue;
+	}
+}
+return parameterValue;
+}
+</cc>
+<cc>
+CCService cs = new CCService(userInfo);
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+String projects = request.getParameter("project")==null?"":request.getParameter("project")+"";//项目
+String role = userInfo.getRoleId();
+String ksrq = encodeParameters(request.getParameter("startTime")==null?sdf.format(new Date()):String.valueOf(request.getParameter("startTime")));//开始日期
+String jsrq = encodeParameters(request.getParameter("endTime")==null?sdf.format(new Date()):String.valueOf(request.getParameter("endTime")));//截止日期
+String datetime = " and DATE_FORMAT('"+ksrq+" 00:00:00','%Y-%m-%d %H:%i')<=DATE_FORMAT(o.cjsj,'%Y-%m-%d %H:%i') and DATE_FORMAT('"+jsrq+" 00:00:00','%Y-%m-%d %H:%i')>DATE_FORMAT(o.cjsj,'%Y-%m-%d %H:%i')";
+String cond = "";
+        if(!"".equals(projects) && !"全部".equals(projects)){
+             cond = "and o.xmmc = '"+projects+"'";
+        }
+
+String sql = "select c.id,c.name,ROUND(sum(o.cjmj),2) as mj,count(o.id)  as oid,ROUND(sum(ifnull(cjdj,0)*ifnull(cjmj,0)),2) as je from ccuser c left join Opportunity o on c.id = o.ownerid where o.is_deleted = '0' and c.role__c in (select roleid from role where parentrole_id='"+role+"' and gap > 0) and c.isusing='1' and o.spzt='审批通过' "+datetime+" and o.jieduan = '成交' "+cond+" group by c.id,c.name";
+//out.print(sql);
+
+List<CCObject> list = cs.cqlQuery("Opportunity",sql);
+
+List<CCObject> projectlist = cs.cqlQuery("Project","select name,id from Project where is_deleted='0'");
+
+</cc>
+<html>
+<head>
+<title></title>
+</head>
+<body>
+<div class="cloudbox3">
+<form name="theform" id="theform" method="post">
+<select id='project' name='project'>
+<option value='全部'>全部</option>
+<cc>for(CCObject project:projectlist){
+ if(projects.equals(project.get("id"))){
+</cc>
+<option selected value='<cc:outprint>project.get("id")</cc:outprint>'><cc:outprint>project.get("name")</cc:outprint></option>
+<cc>}else{</cc>
+<option value='<cc:outprint>project.get("id")</cc:outprint>'><cc:outprint>project.get("name")</cc:outprint></option>
+<cc>}}</cc>
+</select>
+开始日期&nbsp;&nbsp;<input id="startTime" name="startTime" class="datepicker" type="text" value="<cc:outprint>ksrq</cc:outprint>">
+	&nbsp;&nbsp;截止日期&nbsp;&nbsp;<input id="endTime" name="endTime" class="datepicker" type="text" value="<cc:outprint>jsrq</cc:outprint>">
+<input type='submit' value='查询'/>
+<table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr>
+<td align="center" valign="middle">业务员</td>
+<td align="center" valign="middle">成交面积</td>
+<td align="center" valign="middle">成交金额</td>
+<td align="center" valign="middle">成交手数</td>
+</tr>
+<cc>
+for(CCObject item:list){
+</cc>
+<tr>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("name")==null?"":item.get("name")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("mj")==null?"":item.get("mj")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("je")==null?"":item.get("je")</cc:outprint></td>
+<td align="center" valign="middle" class="dataCell"><cc:outprint>item.get("oid")==null?"":item.get("oid")</cc:outprint></td>
+</tr>
+<cc>
+}
+</cc>
+</table>
+</form>
+</div>
+</body>
+</html>

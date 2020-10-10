@@ -1,0 +1,22 @@
+String uid = userInfo.getUserId();
+String xsdb = record_new.get("xsdb")==null?"":record_new.get("xsdb")+"";
+String id = record_new.get("id")==null?"":record_new.get("id")+"";
+String xmmc = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";
+
+if(xsdb.length()==0){
+     CCObject obj = new CCObject("Opportunity");
+     obj.put("xsdb",uid);
+     obj.put("id",id);
+     this.updateLt(obj);
+}
+
+if(xmmc.length()==0){
+List<CCObject> list = this.cqlQuery("ProjectSaleGroup","select xmmc from ProjectSaleGroup where xmxsy = '"+uid+"'");
+ if(list.size()>0){
+      String xmmcc = list.get(0).get("xmmc")==null?"":list.get(0).get("xmmc")+"";
+      CCObject obj = new CCObject("Opportunity");
+      obj.put("xmmc",xmmcc);
+      obj.put("id",id);
+      this.updateLt(obj);
+ }
+}

@@ -1,0 +1,100 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<style>
+.tdTitle { text-align:center}
+.tdTitle_h { text-align:center}
+.dataCell_h {text-align:center }
+</style>
+<cc>
+CCService cs = new CCService(userInfo);
+String ksrq = request.getParameter("ksrq") == null ? "" :request.getParameter("ksrq");
+String jsrq = request.getParameter("jsrq") == null ? "" :request.getParameter("jsrq");
+String datetime = "and TO_CHAR(createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
+String sql = "select ifnull(b.jxs,'-') as jxs,ifnull(b.sms,'-') as sms,s.id as id,ifnull(qy,'其他') as qy,s.name,ifnull(rhsj,'-') as rhsj,ifnull(jzmj,'-') as jzmj,ifnull(kshl,'-') as kshl,ifnull(syhl,'-') as syhl,ifnull(hxmj,'-') as hxmj,ifnull(xss,'-') as xss,ifnull(jj,'-') as jj from scpy s left join (select scpymc,sum(jxs) as jxs,sum(sms) as sms from bfs where is_deleted = '0' "+datetime+" group by scpymc) b on s.id = b.scpymc where s.recordtype ='2018B9CEA41BA6AJFw0R' and s.is_deleted = '0' order by qy";
+List<CCObject> list = cs.cqlQuery("scpy",sql);//执行sql
+String file_name = new String("二级销售市场数据.xls".getBytes(), "ISO-8859-1");
+response.setHeader("Content-disposition","attachment;filename="+file_name);
+response.setContentType("application/vnd.ms-excel;charset=UTF-8");
+double mjtotal = 0.0;//面积总计
+</cc>
+<html>
+<head>
+<title>二级销售市场</title>
+</head>
+<body>
+<div class="title" align="center">
+    <h1 align="center"><font size="4px">二级销售市场数据</font></h1>
+    <form method="post" name="theform" id="theform">
+</div> 
+<div class="cloudbox3" >
+<table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle">
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">区域</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">项目名称</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">入伙时间</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">建筑面积(㎡)</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">可售货量(㎡)</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">剩余货量(㎡)</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">户型面积(㎡)</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">销售率(%)</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">均价(万元/㎡)</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">进线</td>
+    <td rowspan="2" NOWRAP="NOWRAP" class="tdTitle">上门</td>
+    <td colspan="5" NOWRAP="NOWRAP" class="tdTitle">成交情况</td>
+  </tr>
+  <tr>
+    <td  NOWRAP="NOWRAP">楼层</td>
+    <td  NOWRAP="NOWRAP">面积</td>
+    <td  NOWRAP="NOWRAP" >单价</td>
+    <td  NOWRAP="NOWRAP" >行业</td>
+    <td  NOWRAP="NOWRAP" >区域</td>
+  </tr>
+  <cc>
+  if(list.size()>0){
+       for(CCObject item:list){
+             List<CCObject> detaillist = cs.cqlQuery("cjqk","select ifnull(lc,'-') as lc,ifnull(mj,'-') as mj,ifnull(dj,'-') as dj,ifnull(xy,'-') as xy,ifnull(qy,'-') as qy from cjqk where is_deleted = '0' "+datetime+" and scpymc = '"+item.get("id")+"'");
+            
+             </cc>
+               <tr>
+                  <td  class="dataCell_h"><cc:outprint>item.get("qy")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("name")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("rhsj")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("jzmj")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("kshl")</cc:outprint></td>         
+                  <td  class="dataCell_h"><cc:outprint>item.get("syhl")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("hxmj")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("xss")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("jj")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("jxs")</cc:outprint></td>
+                  <td  class="dataCell_h"><cc:outprint>item.get("sms")</cc:outprint></td>
+                  <td colspan="5"><table cellspacing="0"   border="0"  cellspadding="0" width="100%">
+               <cc>
+                 if(detaillist.size()>0){
+                   for(CCObject items:detaillist){
+                     mjtotal += items.get("mj")==null?0.0:Double.valueOf(items.get("mj")+"");//累加面积
+               </cc><tr>
+
+                  <td class="dataCell_h"><cc:outprint>items.get("lc")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>items.get("mj")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>items.get("dj")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>items.get("xy")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>items.get("qy")</cc:outprint></td>
+</tr>
+               <cc>}
+                    }else{
+                  </cc>
+                     <tr><td colspan="5" class="dataCell_h">无成交情况</td></tr>
+                    <cc>}</cc>
+</table></td>
+               </tr>
+             <cc>
+       }
+  }
+  </cc>
+<tr class="tabtitle" style="height: 35px;color: blue" >
+                     <td colspan="16" class="tdTitle">总计：<cc:outprint>mjtotal</cc:outprint>㎡</td>
+                </tr>
+ </table>
+</form>
+</div>
+</body>
+</html>

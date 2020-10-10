@@ -1,0 +1,9 @@
+int fcbl1 = record_new.get("fcbl1")==""?0:Integer.valueOf(record_new.get("fcbl1")+"");
+int fcbl2 = record_new.get("fcbl2")==""?0:Integer.valueOf(record_new.get("fcbl2")+"");
+int fcbl3 = record_new.get("fcbl3")==""?0:Integer.valueOf(record_new.get("fcbl3")+"");
+int fcbl4 = record_new.get("fcbl4")==""?0:Integer.valueOf(record_new.get("fcbl4")+"");
+int fcbl5 = record_new.get("fcbl5")==""?0:Integer.valueOf(record_new.get("fcbl5")+"");
+
+if((fcbl1+fcbl2+fcbl3+fcbl4+fcbl5)!=100){
+      trigger.addErrorMessage("分成比例有误!"); 
+}

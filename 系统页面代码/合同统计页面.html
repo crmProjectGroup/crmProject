@@ -1,0 +1,282 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc>
+
+CCService cs = new CCService(userInfo);
+java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
+String nowday = df.format(new Date());
+String ksrq = request.getParameter("startTime")==null?nowday.substring(0,nowday.lastIndexOf("-"))+"-01":request.getParameter("startTime")+"";//开始日期
+String jsrq = request.getParameter("endTime")==null?nowday:request.getParameter("endTime")+"";//结束日期
+String roleid = userInfo.getRoleId();
+String datetime = " and createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+String htlx = request.getParameter("htlx")==null?"全部":request.getParameter("htlx")+"";
+String [] zxzt =request.getParameterValues("zxzt");
+String txt = "";
+
+if(zxzt!=null&&zxzt.length > 0){//根据客户意向级别查询
+txt +=" and htzt in (";
+	for(int i=0; i < zxzt.length; i++){
+		txt+= "'"+zxzt[i]+"',";
+	}
+
+txt= txt.substring(0,txt.lastIndexOf(","));
+txt +=")";
+}
+
+String sql = "";
+if("全部".equals(htlx)){
+      sql = "is_deleted ='0' and (recordtype='20181E6B59BB3F01y0dJ' or recordtype='2018D52C045D7EBBZE8r' or recordtype='2018DA6B0A13005ZPhsr' or recordtype='2018DD003BF4BC34I6po') "+datetime+txt+" order by recordtype";
+}else{
+      sql = "is_deleted ='0' and recordtype='"+htlx+"' "+datetime+txt+" order by recordtype";
+}
+
+List<CCObject> list = cs.cquery("contract",sql);
+
+List<CCObject> pielist = cs.cqlQuery("contract","select recordtype,count(id) as cid from contract where is_deleted ='0' and (recordtype='20181E6B59BB3F01y0dJ' or recordtype='2018D52C045D7EBBZE8r' or recordtype='2018DA6B0A13005ZPhsr' or recordtype='2018DD003BF4BC34I6po') "+datetime+txt+" group by recordtype");
+
+String recordtype = "";
+for(CCObject pieitem:pielist){
+     if("20181E6B59BB3F01y0dJ".equals(pieitem.get("recordtype"))){
+           recordtype +="['代理合同',"+pieitem.get("cid")+"],";
+     }else if("2018D52C045D7EBBZE8r".equals(pieitem.get("recordtype"))){
+           recordtype +="['顾问合同',"+pieitem.get("cid")+"],";
+     }else if("2018DA6B0A13005ZPhsr".equals(pieitem.get("recordtype"))){
+           recordtype +="['合作协议',"+pieitem.get("cid")+"],";
+     }else if("2018DD003BF4BC34I6po".equals(pieitem.get("recordtype"))){
+           recordtype +="['一般代理合同（拓展部）',"+pieitem.get("cid")+"],";
+     }
+}
+
+String htje = "";
+String htname = "";
+String hkje = "";
+for(CCObject item:list){
+      if(!"0.0".equals(item.get("htjeze")+"")){
+        htje += item.get("htjeze")+",";
+        htname += item.get("htmc")==null?"":"'"+item.get("htmc")+"',";
+        hkje += item.get("hkje")+",";
+
+      }
+}
+if(list.size()>0){
+htje = htje.substring(0,htje.lastIndexOf(","));
+htname = htname.substring(0,htname.lastIndexOf(","));
+
+recordtype = recordtype.substring(0,recordtype.lastIndexOf(","));
+}
+</cc>
+<html>
+<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1526971505862XW1lYoGh"></script>
+<script src="https://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+<style>
+input[type='checkbox']{
+        margin-top: -2px;
+        margin-bottom: 1px;
+        vertical-align: middle;
+}
+</style>
+<head>
+<title>合同统计页面</title>
+</head>
+<body>
+<form action="" method="post" name="theform" id="theform">
+<br/>
+&nbsp&nbsp 开始日期&nbsp;&nbsp;<input id="startTime" name="startTime" class="datepicker" type="text" value="<cc:outprint>ksrq</cc:outprint>">
+&nbsp;&nbsp;截止日期&nbsp;&nbsp;<input id="endTime" name="endTime" class="datepicker" type="text" value="<cc:outprint>jsrq</cc:outprint>">
+<input type="submit" value=" 查 询 " class="input01"/>
+<br/>
+<hr/>
+&nbsp&nbsp
+执行状态：
+<input id="zxzt" name="zxzt" type="checkbox"<cc>if(txt.contains("正常")==true){</cc>checked<cc>}</cc> value="正常">正常</input>&nbsp&nbsp<input id="zxzt" name="zxzt" type="checkbox" <cc>if(txt.contains("终止")==true){</cc>checked<cc>}</cc> value="终止">终止</input>&nbsp&nbsp
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+
+合同类型：
+<select id = "htlx" name="htlx">
+<option value="全部">-全部-</option>
+<option value="20181E6B59BB3F01y0dJ">代理合同</option>
+<option value="2018D52C045D7EBBZE8r">顾问合同</option>
+<option value="2018DA6B0A13005ZPhsr">合作协议</option>
+<option value="2018DD003BF4BC34I6po">一般代理合同（拓展部）</option>
+</select>
+<script>
+document.getElementById("htlx").value = "<cc:outprint>htlx</cc:outprint>";
+</script>
+<hr/>
+<div id="container" style="width: 100%;height:650px;" valign="middle" align="center"></div>
+<div  id="containers" align="left" style="width: 550px; height: 400px;float:left"></div>
+<div  style="width: 750px;float:right"><table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle">
+    <td NOWRAP="NOWRAP" class="tdTitle">合同名称</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">合同类型</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">合同总金额</td>
+</tr>
+<cc>
+       for(CCObject item:list){
+</cc>
+               <tr>
+                  <td class="dataCell_h"><cc:outprint>item.get("htmc")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("recordtypeccname")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("htjeze")</cc:outprint></td>
+               </tr>
+<cc>
+       }
+</cc>
+</table></div>
+</form>
+</body>
+<script>
+$("zxzt").each(function(){
+var flag = $(this).is(':checked');
+
+})
+
+</script>
+<script>
+$(document).ready(function(){
+    hideHeader();
+});
+function hideHeader() 
+    { 
+        $('#daima').attr('val','');
+       var links=document.getElementsByTagName('div');
+       for (var i = 0; i <links.length; i++) {
+            if (links[i].getAttribute("class") == "ui-header ui-bar-b ui-header-fixed slidedown"){
+                // 上一步
+                links[i].style.display="none";
+                break;
+            }
+       }
+    }
+
+
+</script>
+<script>
+$(document).ready(function() {  
+   var chart = {
+      renderTo: 'container',
+      type: 'column',
+      margin: 75,
+      options3d: {
+         enabled: true,
+         alpha: 15,
+         beta: 15,
+         depth: 50,
+         viewDistance: 25
+      }
+   };
+   var title = {
+      text: '合同统计页面'   
+   };
+   var subtitle = {
+      text: ''  
+   };
+   var xAxis = {
+      categories: [<cc:outprint>htname</cc:outprint>],
+      crosshair: true
+     
+   };
+   var yAxis = {
+      min: 0,
+      title: {
+         text: '合同金额(元)'         
+      }      
+   };
+   var tooltip = {
+      headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+      pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+         '<td style="padding:0"><b>{point.y:.1f}</b></td></tr>',
+      footerFormat: '</table>',
+      shared: true,
+      useHTML: true
+   };
+   var plotOptions = {
+      column: {
+         pointPadding: 0.2,
+         dataLabels:{                //柱状图数据标签
+ 
+            inside: true,
+             enabled:true,              //是否显示数据标签
+
+             formatter: function() {        //格式化输出显示
+
+                  return (this.y);
+
+              },
+
+    },
+         borderWidth: 0,
+         cursor: 'pointer',
+
+}
+   };
+   var credits = {
+      enabled: false
+   };
+
+   var series= [{
+        name: '合同金额',
+            data: [<cc:outprint>htje</cc:outprint>]
+        },{
+        name: '回款金额',
+            data: [<cc:outprint>hkje</cc:outprint>]
+        }];
+
+   var json = {};
+   json.chart = chart;
+   json.title = title;
+   json.subtitle = subtitle;
+   json.tooltip = tooltip;
+   json.xAxis = xAxis;
+   json.yAxis = yAxis;
+   json.series = series;
+   json.plotOptions = plotOptions;
+   json.credits = credits;
+   var highchart = new Highcharts.Chart(json);
+
+});
+</script>
+<script>
+$(document).ready(function() {
+   var chart = {
+       plotBackgroundColor: null,
+       plotBorderWidth: null,
+       plotShadow: false
+   };
+   var title = {
+      text: '合同类型占比'   
+   };      
+   var tooltip = {
+      pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+   };
+   var plotOptions = {
+      pie: {
+         allowPointSelect: true,
+         cursor: 'pointer',
+         dataLabels: {
+            enabled: true,
+            format: '<b>{point.name}%</b>: {point.percentage:.1f} %',
+            style: {
+               color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+            }
+         }
+      }
+   };
+
+   var series= [{
+      type: 'pie',
+      name: '百分比',
+      data: [
+         <cc:outprint>recordtype</cc:outprint>
+      ]
+   }];     
+      
+   var json = {};
+   json.chart = chart;
+   json.title = title;
+   json.tooltip = tooltip;
+   json.series = series;
+   json.plotOptions = plotOptions;
+   $('#containers').highcharts(json);
+});
+</script>
+</html>

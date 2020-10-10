@@ -1,0 +1,69 @@
+<cc:page type="detailEmbed" style="standard" showSidebar="false" showHeader="false" />
+
+<cc>
+CCService cs = new CCService(userInfo);
+String uid = userInfo.getUserId();
+String id = request.getParameter("id")==null?"":request.getParameter("id")+"";
+//List<CCObject> zjsb = cs.cquery("zjsb","id = '"+id+"'");
+List<CCObject> kpsq = cs.cqlQuery("kpsq","select * from kpsq where id = '"+id+"' and is_deleted = '0'");
+//String dljsmxb = request.getParameter("dljsmxb")==null?"":request.getParameter("dljsmxb")+"";
+String dljsmxb = kpsq.get(0).get("jsmx")==null?"":kpsq.get(0).get("jsmx")+"";
+dljsmxb="'"+dljsmxb.replace(";","','")+"'";
+String sql="id in (" + dljsmxb +")";
+//if(true) {trigger.addErrorMessage(sql);}
+List<CCObject> dljsmxblist = cs.cquery("dljsmxb",sql);
+//if(true) {trigger.addErrorMessage(String.valueOf(dljsmxblist.size()));}
+//List<CCObject> list = cs.cqlQuery("dljsmxb","select * from ywyxz where khmc = '"+id+"' and is_deleted = '0'");
+
+</cc>
+<script>
+function dc(){
+    if("0052018FF9F7905NEd6u"=="<cc:outprint>uid</cc:outprint>" || "0052018922DFE17FDT41"=="<cc:outprint>uid</cc:outprint>"){
+        window.location.href = "/customize/page/9291p1140/dckpjsmx.jsp?name=dckpjsmx&id=<cc:outprint>id</cc:outprint>";
+    }else{
+        alert("权限不足!");
+    }
+}
+function fh(){
+    window.location.href = "/query.action?id=<cc:outprint>id</cc:outprint>&m=query";
+}
+</script>
+<html>
+<head>
+<title>内嵌页面</title>
+</head>
+<body>
+<button onclick="fh()">返回</button>
+<button onclick="dc()">导出</button>
+
+<table border="1px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<cc>if(dljsmxblist.size()>0){</cc>
+
+<tr><td>操作</td><td>结算编号</td><td>项目名称</td><td>客户名称</td><td>房号</td><td>面积</td><td>单价</td><td>总价</td><td>代理费结算比例</td><td>代理费结算金额</td></tr>
+<cc>for(CCObject item:dljsmxblist){
+
+List<CCObject> Projectlist = cs.cqlQuery("Project","select name from Project where id = '"+item.get("xmmc")+"'");
+	
+List<CCObject> Accountlist = cs.cqlQuery("Account","select name from Account where id = '"+item.get("khmc")+"'");
+
+</cc>
+<tr>
+<td><a href="/query.action?m=edit&id=<cc:outprint>item.get("id")</cc:outprint>&geturl=%2Fquery.action%3Fm%3Dnewpage%26obj%3D003%26ffe201100003411lZSmp%3D%E6%B7%B1%E5%9C%B3%E4%B8%89%E6%96%B9%E6%9D%B0%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8%26ffe201100003411lZSmp_lkid%3D0012018DAC726B0VOhw3%26ismainpage%3Dlistpagenew%26rtnURL%3D%252Fquery.action%253Fid%253D0012018DAC726B0VOhw3%2526m%253Dquery&rtnURL=%2Fquery.action%3Fid%3D0012018DAC726B0VOhw3%26m%3Dquery">编辑</a>&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp<a href="/query.action?m=delete&id=<cc:outprint>item.get("id")</cc:outprint>&rtnURL=%2Fquery.action%3Fid%3D0012018D05F1AA5Prs54%26m%3Dquery" onclick="return confirm('确定要删除吗?');">删除</a></td>
+<td><a href="/query.action?id=<cc:outprint>item.get("id")</cc:outprint>&m=query"><cc:outprint>item.get("name")</cc:outprint></a></td>
+<td><cc:outprint>Projectlist.get(0).get("name")</cc:outprint></td>
+<td><cc:outprint>Accountlist.get(0).get("name")</cc:outprint></td>
+
+<td><cc:outprint>item.get("fh")</cc:outprint></td>
+<td><cc:outprint>item.get("mj")</cc:outprint></td>
+<td><cc:outprint>item.get("cjsj")</cc:outprint></td>
+<td><cc:outprint>item.get("yzj")</cc:outprint></td>
+<td><cc:outprint>item.get("dlfjsbl")</cc:outprint></td>
+<td><cc:outprint>item.get("dlfjsje")==null?"0.0":item.get("dlfjsje")</cc:outprint></td>
+</tr>
+<cc>}}else{</cc>
+<tr><td>没有记录</td><td><cc:outprint>id</cc:outprint></td><td><cc:outprint>dljsmxb</cc:outprint></td></tr>
+
+<cc>}</cc>	
+</table>
+</body>
+</html>

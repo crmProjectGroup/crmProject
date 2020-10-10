@@ -1,0 +1,30 @@
+/*
+description:新建联系人 
+version: 1.0
+date:20180508
+author:tom
+log:
+20200325 增加渠道转介人的信息新建
+*/
+
+String lxrxm = record_new.get("lxrxm")==null?"":record_new.get("lxrxm")+"";//联系人姓名
+String lxrdh = record_new.get("lxrdh")==null?"":record_new.get("lxrdh")+"";//联系人电话
+String id = record_new.get("id")==null?"":record_new.get("id")+"";//客户id
+CCObject obj = new CCObject("Contact");
+obj.put("name",lxrxm);
+obj.put("shouji",lxrdh);
+obj.put("khmc",id);
+this.insert(obj);
+
+//判断是不是渠道转介的
+String qd = record_new.get("qd")==null?"":record_new.get("qd")+"";//渠道
+String qddjrxm = record_new.get("qddjrxm")==null?"":record_new.get("qddjrxm")+"";//渠道转介人姓名
+String qddjrdh = record_new.get("qddjrdh")==null?"":record_new.get("qddjrdh")+"";//渠道转介人电话
+if(!"".equals(qddjrdh)){
+    CCObject obj1 = new CCObject("Contact");
+    obj1.put("recordtype","20207C09A85FC5FjM4AC");//20207C09A85FC5FjM4AC recordtype
+    obj1.put("name",qddjrxm);
+    obj1.put("shouji",qddjrdh);
+    obj1.put("qdmc",qd);
+    this.insert(obj1);
+}

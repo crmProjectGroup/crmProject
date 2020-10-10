@@ -1,0 +1,66 @@
+/*
+description:业务机会-阶段控制 
+version: 1.2
+date:20180627
+author:tom
+log:
+20190719 针对销售填总价的修改,将阶段控制就该下 1.1
+20191126 当挞定被拒绝或者调回的时候,要将挞定操作可能产生的结算单删掉
+20191127 因为insert操作获取不到record_old的值造成录不了客户, 紧急去掉1126修改
+*/
+
+String jieduan = record_new.get("jieduan")==null?"":record_new.get("jieduan")+"";//当前阶段
+String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
+//获取前后挞定审批的状态tdspzt
+// String tdspzt = record_new.get("tdspzt")==null?"":record_new.get("tdspzt")+"";
+// String tdspzt_old = record_old.get("tdspzt")==null?"":record_old.get("tdspzt")+"";
+// //获取记录的id
+// String oppoid = record_new.get("id")==null?"":record_new.get("id")+"";
+
+if("未成交".equals(jieduan)){
+	String bcjyyfx = record_new.get("bcjyyfx")==null?"":record_new.get("bcjyyfx")+"";//不成交原因
+	if(bcjyyfx.length()==0){
+    	trigger.addErrorMessage("丢单未填写不成交原因！");
+    }
+}else if("成交".equals(jieduan)){
+    String gmys = record_new.get("gmys")==null?"":record_new.get("gmys")+"";//购买因素
+    String qysj = record_new.get("qysj")==null?"":record_new.get("qysj")+"";//签约时间
+    String cjzq = record_new.get("cjzqt")==null?"":record_new.get("cjzqt")+"";//成交周期
+    String cjdw = record_new.get("cjdw")==null?"":record_new.get("cjdw")+"";//成交单位
+    String cjmj = record_new.get("cjmj")==null?"":record_new.get("cjmj")+"";//成交面积
+    //String cjjj = record_new.get("cjjj")==null?"":record_new.get("cjjj")+"";//成交均价	
+    //String jgbzj = record_new.get("jgbzjgs")==null?"":record_new.get("jgbzjgs")+"";//价格表总价
+    String cjdj = record_new.get("cjdj")==null?"":record_new.get("cjdj")+"";//成交单价
+    //String cjdj = String.valueOf(record_new.get("cjdj") ==null?"0":record_new.get("cjdj"));
+    //String yhcs = record_new.get("yhcs")==null?"":record_new.get("yhcs")+"";//优惠措施
+    //String cjzj = record_new.get("cjzj")==null?"":record_new.get("cjzj")+"";//成交总价
+    //if(gmys.length()==0||qysj.length()==0||cjzq.length()==0||cjdw.length()==0||cjmj.length()==0||jgbzj.length()==0||cjdj.length()==0){
+    //if(gmys.length()==0||qysj.length()==0||cjzq.length()==0||cjdw.length()==0||cjmj.length()==0||cjdj.length()==0){
+    if(gmys.length()==0||qysj.length()==0||cjzq.length()==0||cjdw.length()==0||cjmj.length()==0){ //整体不再判断一定要填单价
+    	trigger.addErrorMessage("成单信息未填写!");
+    }
+    if("20183DD9667FA14v9YSK".equals(recordtype)){  //销售
+    	String rhhsfxyzlfw = record_new.get("rhhsfxyzlfw")==null?"":record_new.get("rhhsfxyzlfw")+"";//入伙是否需要租赁
+    	if(rhhsfxyzlfw.length()==0){
+    		trigger.addErrorMessage("请确认客户入伙后是否需要租赁!");
+        }
+        String cjzj = record_new.get("cjzj")==null?"":record_new.get("cjzj")+"";
+        if(cjzj.length()==0){
+    		trigger.addErrorMessage("销售项目请填入成交总价!");
+    	}
+    }else {
+    	String zljssj = record_new.get("zljssj")==null?"":record_new.get("zljssj")+"";//租赁结束时间
+    	String jfbz = record_new.get("jfbz")==null?"":record_new.get("jfbz")+"";//交付标准
+     	if(zljssj.length()==0||jfbz.length()==0){
+    		trigger.addErrorMessage("请确认客户租赁结束时间和交付标准!");
+        }
+        if(cjdj.length()==0){
+    		trigger.addErrorMessage("请填写成交单价!");
+    	}
+    }
+}
+
+//如果之前是挞定审批中, 现在变为草稿(调回)或者拒绝, 要将可能产生的结算单删除
+// if("挞定审批中".equals(tdspzt_old) && ("草稿".equals(tdspzt) || "挞定审批拒绝".equals(tdspzt) )){
+//   this.cqlQuery("dljsmxb","update dljsmxb set is_deleted = '1' where ywjh = '"+oppoid+"' and is_deleted = '0'");
+// }

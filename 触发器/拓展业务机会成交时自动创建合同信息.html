@@ -1,0 +1,75 @@
+java.text.SimpleDateFormat sdf= new java.text.SimpleDateFormat("yyyyMMdd"); //日期 MM需大写
+String date=sdf.format(new Date());
+String tzxmmc= record_new.get("tzxmmc")==null?"":record_new.get("tzxmmc")+"";//拓展项目名称id
+String kfs= record_new.get("kfs")==null?"":record_new.get("kfs")+"";  //开发商名称id
+String tzywjkzt= record_new.get("tzywjkzt")==null?"":record_new.get("tzywjkzt")+"";  //拓展业务机会状态
+String id= record_new.get("id")==null?"":record_new.get("id")+"";  //记录id
+String ownerid= record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";  //记录ownerid
+String xqfw= record_new.get("xqfw")==null?"":record_new.get("xqfw")+"";  //需求服务
+String htmc="";
+//查询项目名称
+List<CCObject> list = this.cquery("Project_tz","id= '"+tzxmmc+"'");  //拓展项目ID读取项目名称
+String xmmc="";
+String xmwz="";
+String djrxx="";
+String lxfs="";
+
+if(list.size()>0){
+   xmmc= list.get(0).get("name")==null?"":list.get(0).get("name")+""; //获取项目名称
+   xmwz= list.get(0).get("xmwz")==null?"":list.get(0).get("xmwz")+""; //获取项目位置
+   djrxx= list.get(0).get("djrxx")==null?"":list.get(0).get("djrxx")+""; //获取对接人信息
+   lxfs= list.get(0).get("lxfs")==null?"":list.get(0).get("lxfs")+""; //获取对接人信息
+
+}
+//查询开发商名称
+List<CCObject> kfslist = this.cquery("Kfs","id= '"+kfs+"'");  //开发商名称idD读取开发商名称
+String kfsname="";
+if(kfslist.size()>0){
+   kfsname= kfslist.get(0).get("name")==null?"":kfslist.get(0).get("name")+""; //获取项目名称
+}
+//合同名称
+htmc="HT"+"_"+xmmc+"_"+kfsname+"_"+date;
+
+List<CCObject> tzywjhlist = this.cquery("contract","htmc='"+htmc+"' and is_deleted<>'1'");  //合同名称查重
+if(tzywjhlist.size()>0){
+   htmc=htmc+"1";
+}
+String recordtype="";
+
+if(xqfw.equals("一般代理")){
+   recordtype="2018DD003BF4BC34I6po";
+  }else if(xqfw.equals("前期咨询顾问")||xqfw.equals("城市评估")||xqfw.equals("营销顾问")){
+  recordtype="2018D52C045D7EBBZE8r";
+ }else if(xqfw.equals("驻场租售代理")){
+  recordtype="20181E6B59BB3F01y0dJ";
+ }
+if(record_old==null){
+  if("成单".equals(tzywjkzt)){
+  CCObject contract= new CCObject("contract");
+  contract.put("ownerid",ownerid);
+  contract.put("htmc",htmc);
+  contract.put("kfsmcs",kfs);
+  contract.put("xmwz",xmwz);
+  contract.put("lxr",djrxx);
+  contract.put("lxdh",lxfs);
+  contract.put("tzywjhmc",id);
+  contract.put("zhuangtai","草稿");
+  contract.put("recordtype",recordtype);
+  this.insert(contract);
+}
+}else{
+String tzywjkzt_old= record_old.get("tzywjkzt")==null?"":record_old.get("tzywjkzt")+"";  //拓展业务机会状态_old 
+if(!tzywjkzt_old.equals(tzywjkzt)&&tzywjkzt.equals("成单")){
+  CCObject contract= new CCObject("contract");
+  contract.put("ownerid",ownerid);
+  contract.put("htmc",htmc);
+  contract.put("kfsmcs",kfs);
+  contract.put("xmwz",xmwz);
+  contract.put("lxr",djrxx);
+  contract.put("lxdh",lxfs);
+  contract.put("tzywjhmc",id);
+  contract.put("zhuangtai","草稿");
+  contract.put("recordtype",recordtype);
+  this.insert(contract);
+}
+}

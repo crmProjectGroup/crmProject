@@ -1,0 +1,16 @@
+String name = record_new.get("name")==null?"":record_new.get("name")+"";//项目名称
+
+if(record_old!=null){
+      String name_old = record_old.get("name")==null?"":record_old.get("name")+"";//项目名称(旧)
+      if(!name.equals(name_old)){
+            List<CCObject> list = cqlQuery("Project","select id from Project where name = '"+name+"' and is_deleted= '0'");
+                 if(list.size()>0){
+                       trigger.addErrorMessage("项目楼盘名称已存在!");
+                 }
+      }
+}else{
+List<CCObject> list = cquery("Project","name = '"+name+"'");
+     if(list.size()>0){
+          trigger.addErrorMessage("项目楼盘名称已存在!");
+     }
+}

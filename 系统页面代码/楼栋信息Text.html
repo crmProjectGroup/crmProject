@@ -1,0 +1,157 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 修改：20200925  项目经理 只能看自己项目的楼栋
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+    throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+        parameterValue = new String(iso, "UTF-8");
+        return parameterValue;
+    }
+}
+return parameterValue;
+}
+</cc>
+<cc>
+CCService cs = new CCService(userInfo);
+String uid = userInfo.getUserId();//当前登录用户id
+String profile = userInfo.getProfileId(); // 取简挡
+String id = request.getParameter("id")==null?"":encodeParameters(request.getParameter("id")+"");//获取项目id
+List<CCObject> xmjlIdList = cs.cqlQuery("ProjectDetail","select xmjl from Project where id= '"+id+"' order by createdate desc ");  // 根据项目id，获取项目经理id 
+String xmjlId = "";
+if (xmjlIdList.size() > 0) {
+    xmjlId = xmjlIdList.get(0).get("xmjl")+""; // 获取最新项目的项目经理
+}
+List<CCObject>  ldxxlist  = new ArrayList();
+if (xmjlId.equals(uid) || "aaa000001".equals(profile) || "aaa20180D5809FBsQZab".equals(profile)) {
+    ldxxlist = cs.cqlQuery("ldxx","select * from ldxx where xmmc= '"+id+"' and is_deleted = '0'");
+}
+//out.print(uid + "---" + xmjlId + "项目id号" + id);
+</cc>
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>楼栋信息</title>
+    <link href="images/07/szfdc.css" rel="stylesheet" type="text/css">
+    <style type="text/css">
+        .a1
+        {
+            font-size: 12px;
+            color: #000000;
+            line-height: 180%;
+        }
+        .a2
+        {
+            font-size: 12px;
+            color: #000000;
+            text-decoration: none;
+        }
+        A:link
+        {
+            font-size: 12px;
+            color: #333399;
+            line-height: 150%;
+            text-decoration: none;
+        }
+        A:hover
+        {
+            font-size: 12px;
+            color: #ff0000;
+            line-height: 150%;
+            text-decoration: none;
+        }
+        A:visited
+        {
+            font-size: 12px;
+            color: #003366;
+            line-height: 150%;
+            text-decoration: none;
+        }
+        A:active
+        {
+            font-size: 12px;
+            color: #ff0000;
+            line-height: 150%;
+            text-decoration: none;
+        }
+        .style1
+        {
+            font-size: 12px;
+            color: #666666;
+        }
+        /*******************分页控件样式设定*****************/
+         .JumpButton{ height:19px;}
+        .PageNumBox{width:30px; height:12px;}
+        .PageInfo{text-align:right; font-size:13px;line-height:20px;}
+        .mypaper
+        {
+          line-height:20px;
+          height:20px; 
+          text-align:left; 
+          font-size:13px;
+        }
+    </style>
+</head>
+<body>
+  <form name="Form1" method="post" id="Form1">
+   <center>
+        <table width="100%" border="0" align="center" cellpadding="0" cellspacing="1">
+           <tr>
+                <td bgcolor="#ffffff">
+                    <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" bgcolor="#ffffff">
+                        <tr>
+                            <td bgcolor="#f6f8f9">
+                                <table width="96%" border="0" align="center">
+                                                                    
+                                    <tr>
+                                        <td colspan="2" valign="top">
+                                            <table id="DataList1" cellspacing="1" cellpadding="2" rules="cols" align="center" class="a1" border="0" style="background-color:#99CCFF;border-width:0px;border-style:Solid;width:100%;">
+	<tr>
+		<td>
+                                                    <table width="100%" border="0">
+                                                    <tr bgcolor='#D9EEFF'>
+                                                        <th width='200px'>楼栋名称</th>
+                                                        
+                                                    </tr>
+                                                </td>
+	</tr><tr>
+		<td>
+                                                <cc>if(ldxxlist.size()>0){
+                                                         for(CCObject item:ldxxlist){
+                                                              </cc>
+                                                         <tr bgcolor="#F5F9FC">
+                                                         <td align="center"><a href='controller.action?name=fwxkb&id=<cc:outprint>item.get("id")</cc:outprint>' target='_parent'><cc:outprint>item.get("ldmc")</cc:outprint></a></td>
+                                                        </tr><cc> 
+                                                         }
+                                                    }</cc>
+                                                   
+                                                </td>
+	</tr><tr>
+		<td></table></td>
+	</tr>
+</table>
+                                        </td>
+                                    </tr>
+                                    <tr><td colspan="2" valign="top">
+
+
+</td></tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                       
+                </td>
+            </tr>
+        </table>
+       </center>
+   </form>
+</body>
+</html>

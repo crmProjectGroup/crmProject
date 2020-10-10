@@ -1,0 +1,10 @@
+String djr= record_new.get("djrxx")==null?"":record_new.get("djrxx")+"";//对接人
+String lxfs= record_new.get("lxfs")==null?"":record_new.get("lxfs")+"";  //联系方式
+String kfs= record_new.get("kfs")==null?"":record_new.get("kfs")+"";//开发商
+String ownerid= record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";//所有人
+CCObject Contact= new CCObject("Contact");
+  Contact.put("ownerid",ownerid);
+  Contact.put("name",djr);
+  Contact.put("shouji",lxfs);
+  Contact.put("kfsmc",kfs);
+  this.insert(Contact);

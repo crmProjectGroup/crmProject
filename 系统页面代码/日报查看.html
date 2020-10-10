@@ -1,0 +1,171 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+    throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+        parameterValue = new String(iso, "UTF-8");
+        return parameterValue;
+    }
+}
+return parameterValue;
+}
+</cc>
+<cc>
+CCService cs = new CCService(userInfo);
+String profile = userInfo.getProfileId();
+String uid = userInfo.getUserId();
+String role = userInfo.getRoleId();//roleid
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+String ksrq = encodeParameters(request.getParameter("startTime")==null?sdf.format(new Date()):String.valueOf(request.getParameter("startTime")));//开始日期
+String jsrq = encodeParameters(request.getParameter("endTime")==null?sdf.format(new Date()):String.valueOf(request.getParameter("endTime")));//截止日期
+String datetime = "and TO_CHAR(createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
+//获取选择的项目
+List<CCObject> list1 = null;//下拉框数据源
+//选择项目列表的sql语句
+String sql1 = "select p.id,p.name from Project p left join ccuser c on c.id = p.xmjl where (p.xmjl = '"+uid+"' or c.role__c in (select roleid from role where parentrole_id='"+role+"' and gap > 0) ) and c.isusing='1' and p.is_deleted='0'";
+String xm = request.getParameter("xm")==null?"":request.getParameter("xm")+"";
+String cond = "";
+if(!"".equals(xm)){
+	cond = "and p.id = '"+xm+"'";
+}
+
+String sql = "select * from DailyReport where ownerid = '"+uid+"' and is_deleted = '0' "+datetime; //项目经理和业务员只能看到自己的日报的sql语句
+
+
+if("aaa20180D5809FBsQZab".equals(profile)){ //策划
+	//策划是项目的所有人
+	sql1 = "select id,name from Project where is_deleted='0' and ownerid = '"+uid+"' and xmzt='代理中'";
+  list1 = cs.cqlQuery("Project",sql1);
+	//策划的id为项目所有人，获取到对应项目，获取对应下面销售小组所有业务员
+     List<CCObject> salegrouplist = cs.cqlQuery("ProjectSaleGroup","select xmxsy from ProjectSaleGroup where xmmc in (select id from Project where ownerid = '"+uid+"' and is_deleted ='0') and is_deleted = '0'");
+    //组织sql语句
+     String saleall = "";
+     for(CCObject item:salegrouplist){
+          saleall += item.get("xmxsy")==null?"":"'"+item.get("xmxsy")+"',";
+     }
+     saleall = saleall.substring(0,saleall.lastIndexOf(","));
+     sql = "select * from DailyReport where ownerid in ("+saleall+")  and is_deleted = '0' "+datetime+" order by createdate desc,name desc";
+} else if("aaa2018A38306ED9syVe".equals(profile)){ //项目经理
+	//策划是项目的所有人
+	sql1 = "select id,name from Project where is_deleted='0' and xmjl = '"+uid+"' and xmzt='代理中'";
+  list1 = cs.cqlQuery("Project",sql1);
+	//项目经理的id获取到对应项目，获取对应下面销售小组所有业务员, xmzt项目状态的判断
+     List<CCObject> salegrouplist = cs.cqlQuery("ProjectSaleGroup","select xmxsy from ProjectSaleGroup where xmmc in (select id from Project where xmjl = '"+uid+"' and is_deleted ='0') and is_deleted = '0'");
+    //组织sql语句
+     String saleall = "";
+     for(CCObject item:salegrouplist){
+          saleall += item.get("xmxsy")==null?"":"'"+item.get("xmxsy")+"',";
+     }
+     saleall = saleall.substring(0,saleall.lastIndexOf(","));
+     sql = "select * from DailyReport where ownerid in ("+saleall+")  and is_deleted = '0' "+datetime+" order by createdate desc,name desc";
+} else if("2018615E4F1BCC6i4BMk".equals(role)){ //总监  一部
+	//总监先获取自己是一部还是二部的,    代理一部总监
+	//总监的id获取到对应项目，更新对应的项目选项,条件是项目属于代理一部,状态为在服务
+	sql1 = "select id,name from Project where is_deleted='0' and ssbm='代理一部' and xmzt='代理中'";
+  list1 = cs.cqlQuery("Project",sql1);       //list1为代理一部的项目
+  List<CCObject> salegrouplist = cs.cqlQuery("ProjectSaleGroup","select xmxsy from ProjectSaleGroup where xmmc = '"+xm+"' and is_deleted = '0'");
+	//组织sql语句
+  String saleall = "";
+  for(CCObject item:salegrouplist){
+  	saleall += item.get("xmxsy")==null?"":"'"+item.get("xmxsy")+"',";
+  }
+  List<CCObject> xmjll = cs.cqlQuery("Project","select xmjl from Project where xmmc = '"+xm+"' and is_deleted = '0'"); 
+  String xmjl ="";
+  if (xmjll.size()>0) {
+  	xmjl = xmjll.get(0).get("xmjl")==null?"":xmjll.get(0).get("xmjl")+"";
+  }
+  saleall += xmjl+"',";
+  saleall = saleall.substring(0,saleall.lastIndexOf(","));
+  sql = "select * from DailyReport where ownerid in ("+saleall+")  and is_deleted = '0' "+datetime+" order by createdate desc,name desc";
+} else if("2018E3B9B883BF7mD8kL".equals(role)){ //总监  二部
+	//总监先获取自己是一部还是二部的,    代理二部总监
+	//总监的id获取到对应项目，更新对应的项目选项,条件是项目属于代理一部,状态为在服务
+	sql1 = "select id,name from Project where is_deleted='0' and ssbm='代理二部' and xmzt='代理中'";
+  list1 = cs.cqlQuery("Project",sql1);       //list1为代理二部的项目
+  List<CCObject> salegrouplist = cs.cqlQuery("ProjectSaleGroup","select xmxsy from ProjectSaleGroup where xmmc = '"+xm+"' and is_deleted = '0'");
+	//组织sql语句
+  String saleall = "";
+  for(CCObject item:salegrouplist){
+  	saleall += item.get("xmxsy")==null?"":"'"+item.get("xmxsy")+"',";
+  }
+  List<CCObject> xmjll = cs.cqlQuery("Project","select xmjl from Project where id = '"+xm+"' and is_deleted = '0'"); 
+  String xmjl ="";
+  if (xmjll.size()>0) {
+  	xmjl = xmjll.get(0).get("xmjl")==null?"":xmjll.get(0).get("xmjl")+"";
+  }
+  saleall += "'"+xmjl+"',";
+  saleall = saleall.substring(0,saleall.lastIndexOf(","));
+  sql = "select * from DailyReport where ownerid in ("+saleall+")  and is_deleted = '0' "+datetime+" order by createdate desc,name desc";
+} else if("2017C22944AA867gtbJ8".equals(role) || "2017F9C39CFBFCCslc6i".equals(role) || "2018DA601CDE602QwC8y".equals(role)) { //亮哥 老大 运营总监 管理员
+	//所有代理项目  
+	//sql1 = "select id,name from Project where is_deleted='0' and ssbm like '代理%' and xmzt='代理中'";
+    sql1 = "select id,name from Project where is_deleted='0' and ((ssbm like '代理%' and xmzt='代理中') or id='a052018F7FCFA55YIdRp')";
+  list1 = cs.cqlQuery("Project",sql1);       //list1为代理部的项目
+  List<CCObject> salegrouplist = cs.cqlQuery("ProjectSaleGroup","select xmxsy from ProjectSaleGroup where xmmc = '"+xm+"' and is_deleted = '0'");
+	//组织sql语句
+  String saleall = "";
+  for(CCObject item:salegrouplist){
+  	saleall += item.get("xmxsy")==null?"":"'"+item.get("xmxsy")+"',";
+  }
+  List<CCObject> xmjll = cs.cqlQuery("Project","select xmjl from Project where id = '"+xm+"' and is_deleted = '0'"); 
+  String xmjl ="";
+  if (xmjll.size()>0) {
+  	xmjl = xmjll.get(0).get("xmjl")==null?"":xmjll.get(0).get("xmjl")+"";
+  }
+  saleall += "'"+xmjl+"',";
+  saleall = saleall.substring(0,saleall.lastIndexOf(","));
+  //out.print(saleall+'!'); //test
+  sql = "select * from DailyReport where ownerid in ("+saleall+")  and is_deleted = '0' "+datetime+" order by createdate desc,name desc";
+}
+List<CCObject> list = cs.cqlQuery("DailyReport",sql);
+
+</cc>
+
+<HTML>
+	<HEAD>
+		<title>日报查看</title>
+	</HEAD>
+<body>
+<div class="cloudbox3" >
+<form name="theform" id="theform" method="post">
+开始日期&nbsp;&nbsp;<input id="startTime" name="startTime" class="datepicker" type="text" value="<cc:outprint>ksrq</cc:outprint>"><br/>
+	&nbsp;&nbsp;截止日期&nbsp;&nbsp;<input id="endTime" name="endTime" class="datepicker" type="text" value="<cc:outprint>jsrq</cc:outprint>"><br/>
+<select name="xm" id="xm">
+        <cc>for(CCObject list2:list1){
+         if(xm.equals(list2.get("id"))){</cc>
+           <option selected value='<cc:outprint>list2.get("id")</cc:outprint>'><cc:outprint>list2.get("name")</cc:outprint></option>
+           <cc>}else{</cc>
+           <option value='<cc:outprint>list2.get("id")</cc:outprint>'><cc:outprint>list2.get("name")</cc:outprint></option>
+        <cc>}}</cc>
+</select id="xm">&nbsp;&nbsp;&nbsp;
+<input type="submit"  class="input01" value=" 查 询 "/>
+<table width="100%" border="0" align="center" cellpadding="0" cellspacing="1" bgcolor="#e7eff5">
+        <cc>for(CCObject item:list){</cc>
+	<tr>
+           
+              <td colspan='3'>日报名称：<span style='color:blue'><a href='/query.action?m=query&id=<cc:outprint>item.get("id")</cc:outprint>&rtnURL=11'><cc:outprint>item.get("name")==null?"":item.get("name")+""</cc:outprint></a></span></td>
+              <tr><td>进线：<cc:outprint>item.get("jxtj")==null?"":item.get("jxtj")+""</cc:outprint></td>
+              <td>上门：<cc:outprint>item.get("xkhtj")==null?"":item.get("xkhtj")+""</cc:outprint></td>
+              <td>联动：<cc:outprint>item.get("jrld")==null?"":item.get("jrld")+""</cc:outprint></td></tr>
+        <tr><td colspan='3'>今日处理事宜：<cc:outprint>item.get("jrclsy")==null?"":item.get("jrclsy")+""</cc:outprint></td></tr>
+        <tr><td colspan='3'>成交情况：<cc:outprint>item.get("cjqk")==null?"":item.get("cjqk")+""</cc:outprint></td></tr>
+        <tr><td colspan='3'>明日工作计划：<cc:outprint>item.get("mrgzjh")==null?"":item.get("mrgzjh")+""</cc:outprint></td></tr>
+        <tr><td colspan='3'>备注：<cc:outprint>item.get("bz")==null?"":item.get("bz")+""</cc:outprint></td></tr>
+        </tr>
+         <cc>}</cc>
+</table>
+
+</form>
+</div>
+</body>
+</HTML>

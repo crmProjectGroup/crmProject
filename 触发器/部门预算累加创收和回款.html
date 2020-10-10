@@ -1,0 +1,37 @@
+//部门预算
+//根据部门下的各项目预算累计整个部门的预算
+CCService cs = new CCService(userInfo);
+String id = record_new.get("id")==null?"":record_new.get("id")+""; //获取部门预算id
+
+//获取该部门预算下的各项目目标创收金额和回款额
+List<CCObject> xmyslist = cs.cquery("xmys","bm = '"+id+"'");
+
+double csbszhj = 0.0; //创收保守值合计
+double cszczhj = 0.0; //创收正常值合计
+double cslxzhj = 0.0; //创收理想值合计
+
+if(xmyslist.size()>0){
+	for(CCObject item:xmyslist){
+		double cshjbs =item.get("cshjbs")==null?0.0:Double.parseDouble(item.get("cshjbs")+""); //创收保守合计
+		csbszhj = csbszhj + cshjbs;
+		double cshjzc =item.get("cshjzc")==null?0.0:Double.parseDouble(item.get("cshjzc")+""); //创收正常合计
+		cszczhj = cszczhj + cshjzc;
+		double cshjlx =item.get("cshjlx")==null?0.0:Double.parseDouble(item.get("cshjlx")+""); //创收理想合计
+		cslxzhj = cslxzhj + cshjlx;
+	}
+
+	//计算创收
+	CCObject obj = new CCObject("bmys");
+
+	obj.put("id",id);
+
+	obj.put("bsmbje",csbszhj);
+	obj.put("zcmbje",cszczhj);
+	obj.put("lxmbje",cslxzhj);
+
+	obj.put("bshk",csbszhj*0.85);
+	obj.put("zchk",cszczhj*0.85);
+	obj.put("lxhk",cslxzhj*0.85);
+
+	cs.updateLt(obj);
+}

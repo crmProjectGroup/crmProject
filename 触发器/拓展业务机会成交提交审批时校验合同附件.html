@@ -1,0 +1,50 @@
+//新增时赋值拓展业务机会名称
+if(record_old==null){
+java.text.SimpleDateFormat sdf= new java.text.SimpleDateFormat("yyyyMMdd"); //日期 MM需大写
+String date=sdf.format(new Date());
+String tzxmmc= record_new.get("tzxmmc")==null?"":record_new.get("tzxmmc")+"";//拓展项目名称id
+String kfs= record_new.get("kfs")==null?"":record_new.get("kfs")+"";  //开发商名称id
+if("".equals(kfs)){
+   trigger.addErrorMessage("拓展项目管理中开发商为空，不能新建拓展业务机会，请维护！");
+}
+String tzywjhmc="";
+//查询项目名称
+List<CCObject> list = this.cquery("Project_tz","id= '"+tzxmmc+"'");  //拓展项目ID读取项目名称
+String xmmc="";
+if(list.size()>0){
+   xmmc= list.get(0).get("name")==null?"":list.get(0).get("name")+""; //获取项目名称
+}
+//查询开发商名称
+List<CCObject> kfslist = this.cquery("Kfs","id= '"+kfs+"'");  //开发商名称idD读取开发商名称
+String kfsname="";
+if(kfslist.size()>0){
+   kfsname= kfslist.get(0).get("name")==null?"":kfslist.get(0).get("name")+""; //获取项目名称
+}
+
+tzywjhmc=xmmc+"_"+kfsname+"_"+date;
+List<CCObject> tzywjhlist = this.cquery("tzOpportunity","name__c='"+tzywjhmc+"' and is_deleted<>'1'");  //拓展业务机会名称查重
+if(tzywjhlist.size()>0){
+   tzywjhmc=tzywjhmc+"1";
+}
+//赋值拓展业务机会名称
+record_new.put("name",tzywjhmc);
+}else{
+String id=String.valueOf(record_new.get("id"));
+String spzt=String.valueOf(record_new.get("spzt"));
+String spztold=String.valueOf(record_old.get("spzt"));
+
+if(spztold.equals("草稿") &&spzt.equals("审批中")){
+
+ //查询合同
+List<CCObject> conList = this.cquery("contract", "tzywjhmc='"+id+"'"); 
+if(conList.size()>0){
+String conid= conList.get(0).get("id")==null?"":conList.get(0).get("id")+""; //获取合同id
+//查询合同附件
+List<CCObject> attList = this.cquery("Attachement", " relatedid__c='"+conid+"'"); 
+
+  if(attList==null||attList.size()==0){
+    trigger.addErrorMessage("请添加合同附件后，再提交审批！");
+  }
+}
+}
+}

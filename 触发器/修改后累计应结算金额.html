@@ -1,0 +1,40 @@
+//对象:开票申请
+//累计应结算金额
+//afterinsupd 累计所有选择的代理结算明细的应结算金额, 根据填写的比例,计算金额
+
+CCService cs = new CCService(userInfo);
+//获取选取的结算明细
+String id = record_new.get("id")==null?"":record_new.get("id")+"";
+//if(true) {trigger.addErrorMessage(id);}
+String dljsmx_old = record_old.get("jsmx")==null?"":record_old.get("jsmx")+"";
+//if(true) {trigger.addErrorMessage(dljsmx_old);}
+String dljsmx = record_new.get("jsmx")==null?"":record_new.get("jsmx")+"";
+//sql选取所有选取对象
+dljsmx="'"+dljsmx.replace(";","','")+"'";
+String sql="id in (" + dljsmx +")";
+//if(true) {trigger.addErrorMessage(sql);}
+//本次结算比例
+//double bcjsbl_old = record_old.get("bcjsbl")==null?0.0:Double.parseDouble(record_old.get("bcjsbl")+""); //本次结算比例_旧记录
+String bcjsbl_old = record_old.get("bcjsbl")==null?"":record_old.get("bcjsbl")+"";
+//double bcjsbl = record_new.get("bcjsbl")==null?0.0:Double.parseDouble(record_new.get("bcjsbl")+""); //本次结算比例
+String bcjsbl = record_new.get("bcjsbl")==null?"":record_new.get("bcjsbl")+"";
+List<CCObject> dljsmxlist = cs.cquery("dljsmxb",sql);
+
+CCObject obj = new CCObject("kpsq");
+obj.put("id",id);
+
+boolean b1=!dljsmx_old.equals(dljsmx);
+boolean b2=!bcjsbl_old.equals(bcjsbl);
+
+if(b1 || b2){ //当结算明细前后不同或修改了本次结算比例,1.新增;2.有修改; 更新累计开票额,和本次开票额
+	double ljykpe=0.0; //累计应开票额 
+	for(CCObject item:dljsmxlist){
+		double kpje=item.get("dlfjsje")==null?0.0:Double.parseDouble(item.get("dlfjsje")+"");
+		ljykpe=ljykpe+kpje;
+	}
+	double bcjsbld = Double.parseDouble(bcjsbl);
+	double fpje = ljykpe*bcjsbld/100;
+	obj.put("ljyjsje",ljykpe);
+	obj.put("fpje",fpje);
+	cs.updateLt(obj);
+}

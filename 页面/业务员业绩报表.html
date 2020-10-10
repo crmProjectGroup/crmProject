@@ -1,0 +1,70 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+	throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+	byte[] iso = parameterValue.getBytes("ISO-8859-1");
+	if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+		parameterValue = new String(iso, "UTF-8");
+		return parameterValue;
+	}
+}
+return parameterValue;
+}
+</cc>
+<cc>
+CCService cs = new CCService(userInfo);
+String roleid = userInfo.getRoleId();
+String date = request.getParameter("month")==null?"":encodeParameters(request.getParameter("month")+"");//获取月份条件
+String project = request.getParameter("xmmc")=="全部"?"":encodeParameters(request.getParameter("xmmc")+"");//获取项目id条件
+String year = request.getParameter("year")==null?"":encodeParameters(request.getParameter("year")+"");//获取年份条件
+
+String project_sql = "";
+if(!"全部".equals(project)){
+    project_sql = " and xmmc = '"+project+"'";
+
+}
+List<CCObject> Opportunitylist = cs.cqlQuery("Opportunity","select round(sum(cjdj*cjmj),2) as cjzj,c.name,count(o.id) as oid,round(sum(cjmj),2) as cjmj from Opportunity o left join ccuser c on o.ownerid = c.id where YEAR(o.cjsj)='"+year+"' and MONTH(o.cjsj) = '"+date+"' "+project_sql+" and o.spzt = '审批通过' and o.ownerid in (select id from ccuser where isusing='1' and role in (select roleid from role where parentrole_id='"+roleid+"' and gap > 0)) and o.is_deleted = '0' group by c.name order by cjmj desc");
+
+
+</cc>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no, minimal-ui"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>texts1</title>
+</head>
+<body>
+<form action="" method="post" name="theform" id="theform">
+<button onclick="history.go(-1);return false;">返回</button>
+<table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle">
+    <td NOWRAP="NOWRAP" class="tdTitle">业务员</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">成交手数</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">成交面积</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">成交总价</td>
+</tr>
+<cc>
+       for(CCObject item:Opportunitylist){
+</cc>
+               <tr>
+                  <td class="dataCell_h"><cc:outprint>item.get("name")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("oid")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("cjmj")</cc:outprint></td>
+                  <td class="dataCell_h"><cc:outprint>item.get("cjzj")</cc:outprint></td>
+               </tr>
+<cc>
+       }
+</cc>
+</table>
+</form>
+</body>
+</html>

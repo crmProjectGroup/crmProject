@@ -1,0 +1,11 @@
+String kh = record_new.get("kh")==null?"":record_new.get("kh")+"";//客户id
+
+
+//----------判断是否是公海客户----------
+List<CCObject> list = this.cqlQuery("Account","select id from Account where id = '"+kh+"' and ghkh = '是'");
+if(list.size()>0){
+    List<CCObject> share_list = this.cquery("Account","parentid = '"+kh+"' and accesslevel='Read'",false);
+    for(CCObject item:share_list){
+        this.delete(item);//删除共享
+    }
+}

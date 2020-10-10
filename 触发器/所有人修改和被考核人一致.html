@@ -1,0 +1,13 @@
+/*
+description:所有人修改和被考核人一致
+version: 1.0
+date:20200803
+author:tom
+log:
+*/
+
+String bkhr=null==record_new.get("bkhr")?"":String.valueOf(record_new.get("bkhr"));//被考核人
+
+if(record_old==null){
+   record_new.put("ownerid",bkhr);
+}

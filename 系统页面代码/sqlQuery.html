@@ -1,0 +1,267 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc>
+CCService cs = new CCService(userInfo);
+String sqlStr = request.getParameter("sqlText")==null?"":new String(request.getParameter("sqlText").getBytes("iso8859-1"),"utf-8");
+
+int pIndex = request.getParameter("pIndex")==null?1:Integer.parseInt(request.getParameter("pIndex").toString());
+int pSize = request.getParameter("pSize")==null?5:Integer.parseInt(request.getParameter("pSize").toString());
+int pTotal = 1;
+int from = 0;
+int to = 0;
+String info = "";
+List<CCObject> originList = cs.cqlQuery("",sqlStr);
+List<CCObject> objList = new ArrayList<CCObject>();
+if(pSize!=0){
+	pTotal = originList.size()%pSize==0?originList.size()/pSize:originList.size()/pSize+1;
+	if(pIndex>pTotal&&pTotal!=0){
+		pIndex = pTotal;
+		info = "页码超出范围，现为您展示最后一页";
+	}
+	if(originList.size()>0){
+		from = (pIndex - 1) * pSize;
+		to = pIndex * pSize>originList.size()?originList.size():pIndex * pSize;
+		for(int i=from; i<to; i++){
+			objList.add(originList.get(i));
+		}
+	}
+}else{
+	if(pIndex>pTotal){
+		pIndex = pTotal;
+		info = "页码超出范围，现为您展示最后一页";
+	}
+	to = originList.size();
+	objList = originList;
+}
+
+
+
+</cc>
+<head title="开发者查询语句">
+<script type="text/javascript" src="/js/version72/lib/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="/js/version72/lib/bootstrap.min.js"></script>
+<link rel="stylesheet" href="/css/version72/bootstrap.min.css">
+
+<style>
+td {
+	white-space:nowrap;
+}
+
+.table-striped tbody tr td a {
+	background: none;
+	padding: 0;
+}
+
+input[type="text"] {
+	height: 30px;
+}
+</style>
+<script>
+$(function() {
+	var pageTotal = parseInt('<cc:outprint>pTotal</cc:outprint>') || 1; //查询结果总共页数
+	var pageIndex = parseInt('<cc:outprint>pIndex</cc:outprint>') || 1; //当前页码
+	var pageSize = parseInt('<cc:outprint>pSize</cc:outprint>'); //每页显示条数
+
+	//页码越界提醒
+	if ('<cc:outprint>info</cc:outprint>') {
+		alert('<cc:outprint>info</cc:outprint>');
+	}
+
+	//页面文字变更
+	$('#pageTotal').text(pageTotal);
+	$('#pageSize').val(pageSize);
+	$('#range').text((parseInt('<cc:outprint>from</cc:outprint>') + 1) + '-' + (parseInt('<cc:outprint>to</cc:outprint>')) + '条');
+
+	//去掉所有pager
+	$('li[id*=pager]').remove();
+
+	//生成pager显示范围
+	var pageIndexFrom = 1;
+	var pageIndexTo = 1;
+	if (pageTotal <= 5) {
+		pageIndexFrom = 1;
+		pageIndexTo = pageTotal;
+	} else {
+		if (pageIndex <= 3) {
+			pageIndexFrom = 1;
+			pageIndexTo = 5;
+		} else if (pageIndex > (pageTotal - 3)) {
+			pageIndexFrom = pageTotal - 4;
+			pageIndexTo = pageTotal;
+		} else {
+			pageIndexFrom = pageIndex - 2;
+			pageIndexTo = pageIndex + 2;
+		}
+	}
+
+	//重新生成pager
+	for (var j = pageIndexFrom; j <= pageIndexTo; j++) {
+		$('#next').before('<li id="pager' + j + '"><a href="javascript:void(0);" class="btn btn-default" role="button">' + j + '</a></li>');
+	}
+
+	//调整pager样式
+	$('#pager' + pageIndex).addClass('active');
+	$('#MyPagination li a').removeClass('disabled');
+	if (pageIndex == 1) {
+		$('#firstPage a, #prev a').addClass('disabled');
+	}
+	if (pageIndex == pageTotal) {
+		$('#lastPage a, #next a').addClass('disabled');
+	}
+
+	//pager添加点击事件
+	$('li[id*=pager]').each(function() {
+		var chosenIndex = $(this).prop('id').split('pager')[1]; //点击查询页index
+		if (chosenIndex != pageIndex) {
+			$(this).on('click', function() {
+				// console.log('chosenIndex:'+chosenIndex);
+				pageIndex = parseInt(chosenIndex);
+				$('form').submit();
+			});
+		}
+
+	});
+
+	//DOM绑定事件起
+	$('#queryBtn').on('click', function() {
+		pageIndex = 1;
+		pageSize = parseInt($('#pageSize').val());
+		$('form').submit();
+	});
+
+	$('form').on('submit', function() {
+		$('#pIndex').val(pageIndex);
+		$('#pSize').val(pageSize);
+	});
+
+	$('#pageSize').on('change', function() {
+		pageIndex = 1;
+		pageSize = parseInt($('#pageSize').val());
+		$('form').submit();
+	});
+
+	$('#go').on('click', function() {
+		if(!isNaN(parseInt($('#pageIndex').val()))){
+			pageIndex = parseInt($('#pageIndex').val())>0?parseInt($('#pageIndex').val()):1;
+			$('form').submit();
+		}
+		
+	});
+
+	$('#prev').on('click', function() {
+		pageIndex = pageIndex == 1 ? 1 : parseInt(pageIndex) - 1;
+		$('form').submit();
+	});
+
+	$('#next').on('click', function() {
+		pageIndex = pageIndex == pageTotal ? pageTotal : parseInt(pageIndex) + 1;
+		$('form').submit();
+	});
+
+	$('#firstPage').on('click', function() {
+		pageIndex = 1;
+		$('form').submit();
+	});
+
+	$('#lastPage').on('click', function() {
+		pageIndex = pageTotal || 1;
+		$('form').submit();
+	});
+	//DOM绑定事件止
+	
+})
+</script>
+</head>
+<body style="margin: 50px;">
+
+<form class="form-horizontal">
+	<div class="form-group">
+		<label for="sqlText" class="col-sm-2 control-label input-lg">语句：</label>
+		<div class="col-sm-5">
+			<textarea id="sqlText" name="sqlText" class="form-control input-lg" rows="3" placeholder="请输入语句..."><cc:outprint>sqlStr</cc:outprint></textarea>
+		</div>
+		<input type="hidden" id="pIndex" name="pIndex" />
+		<input type="hidden" id="pSize" name="pSize" />
+		<div class="col-sm-5">
+			<button id="queryBtn" type="button" class="btn btn-primary btn-lg">查询</button>
+		</div>
+	</div>
+</form>
+
+<div style=" height:600px;overflow-x:scroll;"  width="100%">
+	<table class="table table-striped table-bordered table-hover">
+	<cc>
+	if(objList.size()>0){
+		Set<String> keySet = objList.get(0).keySet();
+	</cc>
+		<thead>
+			<tr id="topic" >
+			<cc>
+				for(String keyStr : keySet){
+					out.print("<th>"+keyStr+"</th>");
+				}
+				
+			</cc>
+			</tr>
+		</thead>
+		<tbody>
+			<cc>
+				for(CCObject c : objList){
+					out.println("<tr>");
+					for(String keyStr : keySet){
+						out.print("<td>"+(c.get(keyStr)==null?"":String.valueOf(c.get(keyStr)))+"</td>");
+					}
+					out.println("</tr>");
+				}
+			</cc>
+		</tbody>
+	<cc>
+	}
+	</cc>
+	</table>
+	
+</div>
+
+<div class="container" style="width: 100%; margin-top: 10px;">
+	<div id="bottomBar" style="text-align: center;" class="row">
+		<div class="col-lg-2 input-group" style="float: left; padding: 0 50px;">
+			<span class="input-group-addon">每页显示</span>
+			<select id="pageSize" class="form-control" style="display: inline;">
+				<option value="0">全部</option>
+				<option value="5" selected="selected">5</option>
+				<option value="10">10</option>
+				<option value="20">20</option>
+				<option value="50">50</option>
+				<option value="100">100</option>
+			</select>
+			<span class="input-group-addon">条</span>
+		</div>
+		<div class="col-lg-1" style="text-align: left;">
+			<label id="range" style="margin-top: 8px;">1-1</label>
+		</div>
+		<div class="col-lg-6" style="text-align: center;">
+			<ul class="pagination" id="MyPagination" style="margin: 0">
+				<li id="firstPage"><a href="javascript:void(0);" class="btn btn-default" role="button">&laquo;</a></li>
+				<li id='prev'><a href="javascript:void(0);" class="btn btn-default" role="button">上一页</a></li>
+				<li id="pager1" class="active"><a href="javascript:void(0);">1</a></li>
+				<li id="pager2"><a href="javascript:void(0);">2</a></li>
+				<li id="pager3"><a href="javascript:void(0);">3</a></li>
+				<li id="pager4"><a href="javascript:void(0);">4</a></li>
+				<li id="pager5"><a href="javascript:void(0);">5</a></li>
+				<li id="next"><a href="javascript:void(0);" class="btn btn-default" role="button">下一页</a></li>
+				<li id="lastPage"><a href="javascript:void(0);" class="btn btn-default" role="button">&raquo;</a></li>
+			</ul>
+		</div>
+		<div class="col-lg-offset-1 col-lg-1 input-group" style="float: left; padding-left: 50px;">
+			<input type="number" min="1" class="form-control" id="pageIndex">
+			<span class="input-group-addon">页</span>
+		</div>
+		<div class="col-lg-1" style="text-align: left;">
+			<button id="go" type="button" class="btn btn-primary">GO</button>
+			<label style="margin-left: 10px;">共</label>
+			<label id="pageTotal">13</label>
+			<label>页</label>
+		</div>
+	</div>
+</div>
+	
+</body>

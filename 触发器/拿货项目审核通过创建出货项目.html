@@ -1,0 +1,61 @@
+java.text.SimpleDateFormat sdf= new java.text.SimpleDateFormat("yyyyMMdd"); //日期 MM需大写
+String date=sdf.format(new Date());
+String name= null == record_new.get("name")?"":String.valueOf(record_new.get("name"));//项目名称
+String xmdz= null == record_new.get("xmdz")?"":String.valueOf(record_new.get("xmdz"));//项目地址
+String ownerid=null==record_new.get("ownerid")?"":String.valueOf(record_new.get("ownerid"));//所有人
+String createbyid=null==record_new.get("createbyid")?"":String.valueOf(record_new.get("createbyid"));//创建人
+String spzt=null==record_new.get("spzt")?"":String.valueOf(record_new.get("spzt"));//审批状态
+String spzt_old=null==record_old.get("spzt")?"":String.valueOf(record_old.get("spzt"));//历史审批状态
+String czzj = null == record_new.get("czzj")?"":String.valueOf(record_new.get("czzj"));//承租租金
+String chengzmj = record_new.get("chengzmj")==null?"":record_new.get("chengzmj")+"";//承租面积
+String qzrq = record_new.get("qzrq")==null?"":record_new.get("qzrq")+"";//起租日期
+String dwh = record_new.get("dwh")==null?"":record_new.get("dwh")+"";//单位号
+String zhmc = record_new.get("zhmc")==null?"":record_new.get("zhmc")+"";//租户名称
+String mzq = record_new.get("mzq")==null?"":record_new.get("mzq")+"";//免租期
+String lxdh = record_new.get("lxdh")==null?"":record_new.get("lxdh")+"";//联系电话
+String id = record_new.get("id")==null?"":record_new.get("id")+"";//id
+
+String htmc="HT_"+name+"_"+zhmc+"_"+date;
+
+if(spzt.equals("审批通过") && spzt_old.equals("审批中")){
+
+  //声明一个数据存储对象
+CCObject Projectobj=new CCObject("Project");
+Projectobj.put("name",name);
+Projectobj.put("lpdz",xmdz);
+Projectobj.put("ssbm","顾问部");
+Projectobj.put("xmjl",ownerid);
+Projectobj.put("ownerid",ownerid);
+Projectobj.put("recordtype","2018786219AE553vMnXC");
+
+List<CCObject> list = this.cqlQuery("zjdz","select * from zjdz where xmmc = '"+id+"' and is_deleted = '0'");
+String txt = "";
+
+for(CCObject item:list){
+    txt += "租金递增起止时间："+item.get("dzqssj").toString().substring(0,10)+"~"+item.get("dzjssj").toString().substring(0,10)+"  ";//追加起止时间
+    txt += "递增率："+item.get("zjdzl")+"%;";//追加递增率
+}
+
+
+//创建拿货合同对象
+CCObject obj = new CCObject("contract");
+obj.put("recordtype","20189AF5008EE3AoMGdY");
+obj.put("xmmc",name);
+obj.put("ownerid",ownerid);
+obj.put("yzmc",zhmc);
+obj.put("czdw",dwh);
+obj.put("spzt","草稿");
+obj.put("czqssj",qzrq);
+obj.put("czmj",chengzmj);
+obj.put("czzj",czzj);
+obj.put("htmc",htmc);
+obj.put("mzq",mzq);
+obj.put("lxfs",lxdh);
+obj.put("cjrs",ownerid);
+obj.put("zjdzs",txt);
+
+
+//数据插入
+//this.insert(Projectobj);
+this.insert(obj);
+}

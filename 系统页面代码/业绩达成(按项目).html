@@ -1,0 +1,206 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc>
+SimpleDateFormat sf = new SimpleDateFormat("yyyy");
+CCService cs = new CCService(userInfo);
+Date myDate = new Date();
+String now_month = (myDate.getMonth()+1)+"";
+String now_year = sf.format(myDate);
+
+//String khlb = request.getParameter("khlb")==null?"全部":request.getParameter("khlb")+"";//客户类别
+String dp = request.getParameter("dp")==null?"全部":request.getParameter("dp")+"";//部门
+String year = request.getParameter("year")==null?now_year:request.getParameter("year")+"";//获取年份
+String month = request.getParameter("month")==null?now_month:request.getParameter("month")+"";//获取月份
+
+String roleid = userInfo.getRoleId();
+
+String dp_sql = "";
+String khlb_sql = "";
+if(!"全部".equals(dp)){
+    dp_sql = " and p.ssbm='"+dp+"'";
+}
+
+String month_sql = "";
+
+if(!"全部".equals(month)){
+    month_sql = " and yf = '"+month+"'";
+}
+List<CCObject> list = cs.cqlQuery("ryjx","SELECT round(ifnull(sum(tddyyjwcs), 0) * 100 / sum(tddyyjmb), 2) AS dcl , r.ownerid AS ownerid , round(ifnull(sum(tddyyjwcs), 0), 2) AS tddyyjwcs , ifnull(sum(tddyyjmb),0) as zmb, p.name as name,p.id as id FROM ryjx r LEFT JOIN Project p ON p.id = r.xmmc WHERE (r.is_deleted = '0' AND p.xmzt = '代理中' "+dp_sql+" AND r.recordtype = '2018ED6B4DF92033DeWs' AND r.ownerid IN ( SELECT id FROM ccuser WHERE isusing = '1' AND role IN ( SELECT roleid FROM role WHERE parentrole_id = '"+roleid+"' AND gap > 0 ) ) AND nd = '"+year+"' "+month_sql+") GROUP BY p.id");
+
+
+String topic = "";
+String data = "";
+
+for(CCObject item:list){
+    topic += item.get("name")==null?"":"'"+item.get("name")+"',";
+    data += item.get("dcl")==null?"":"{y:"+item.get("dcl")+",url:'controller.action?name=xmdclxq&zmb="+item.get("zmb")+"&dp="+dp+"&year="+year+"&month="+month+"&project="+item.get("id")+"',zmb:'"+item.get("zmb")+"',wcs:'"+item.get("tddyyjwcs")+"'},";
+   
+}
+if(topic.length()>0){
+    topic = topic.substring(0,topic.lastIndexOf(","));
+    data = data.substring(0,data.lastIndexOf(","));
+}
+</cc>
+<html>
+<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1526971505862XW1lYoGh"></script>
+<script src="https://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+<head>
+<title>目标达成</title>
+</head>
+<body>
+<form action="" method="post" name="theform" id="theform">
+<hr/>
+  &nbsp;&nbsp;&nbsp;
+年份：
+<select id="year" name="year">
+<option value="2018">2018</option>
+<option value="2019">2019</option>
+<option value="2020">2020</option>
+<option value="2021">2021</option>
+</select>
+  &nbsp;&nbsp;&nbsp;
+月份：
+<select id="month" name="month">
+<option value="全部">全部</option>
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+<option value="7">7</option>
+<option value="8">8</option>
+<option value="9">9</option>
+<option value="10">10</option>
+<option value="11">11</option>
+<option value="12">12</option>
+</select>
+  &nbsp;&nbsp;&nbsp;
+部门：<select id="dp" name="dp">
+<option value="全部">全部</option>
+<option value="代理一部">代理一部</option>
+<option value="代理二部">代理二部</option>
+</select>
+  &nbsp;&nbsp;&nbsp;
+<!--<select id="khlb" name="khlb">
+<option value="全部">全部</option>
+<option value="租赁">租赁</option>
+<option value="销售">销售</option>
+</select>
+  &nbsp;&nbsp;&nbsp;-->
+<script>
+document.getElementById("dp").value = "<cc:outprint>dp</cc:outprint>";
+document.getElementById("year").value = "<cc:outprint>year</cc:outprint>";
+document.getElementById("month").value = "<cc:outprint>month</cc:outprint>";
+</script>
+<input type="submit" value=" 查 询 " class="input01"/>
+<hr/>
+
+<div id="container" style="width: 100%;height:600px;" valign="middle" align="center"></div>
+
+
+</form>
+</body>
+<script>
+$(document).ready(function(){ 
+    hideHeader();
+});
+function hideHeader() 
+    { 
+        $('#daima').attr('val','');
+       var links=document.getElementsByTagName('div');
+       for (var i = 0; i <links.length; i++) {
+            if (links[i].getAttribute("class") == "ui-header ui-bar-b ui-header-fixed slidedown"){
+                // 上一步
+                links[i].style.display="none";
+                break;
+            }
+       }
+    }
+
+
+</script>
+<script>
+$(document).ready(function() {  
+   var chart = {
+      renderTo: 'container',
+      type: 'column',
+      margin: 75,
+      options3d: {
+         enabled: true,
+         alpha: 15,
+         beta: 15,
+         depth: 50,
+         viewDistance: 25
+      }
+   };
+   var title = {
+      text: '项目任务达成'
+   };
+   var subtitle = {
+      text: ''  
+   };
+   var xAxis = {
+      categories: [<cc:outprint>topic</cc:outprint>],
+      crosshair: true
+     
+   };
+   var yAxis = {
+      min: 0,
+      title: {
+         text: '百分比 (%)'         
+      }      
+   };
+   var tooltip = {
+      headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+      pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+         '<td style="padding:0"><b>{point.y:.1f} %</b></td></tr>',
+      footerFormat: '</table>',
+      shared: true,
+      useHTML: true
+   };
+   var plotOptions = {
+      column: {
+         pointPadding: 0.2,
+         dataLabels:{                //柱状图数据标签
+
+             enabled:true,              //是否显示数据标签
+
+             formatter: function(params) {        //格式化输出显示
+
+                  return "<div>总目标："+this.point.zmb+"</div><br><div>达成数："+this.point.wcs+"</div><br><div>达成率："+(this.y)+"%</div>";
+
+              },
+
+    },
+         borderWidth: 0,
+         cursor: 'pointer',
+         events: {
+            click: function(e) {
+            location.href = e.point.url;
+        }
+    }
+}
+   };  
+   var credits = {
+      enabled: false
+   };
+   
+   var series= [{
+        name: '项目',
+            data: [<cc:outprint>data</cc:outprint>]
+        }];     
+      
+   var json = {};   
+   json.chart = chart; 
+   json.title = title;   
+   json.subtitle = subtitle; 
+   json.tooltip = tooltip;
+   json.xAxis = xAxis;
+   json.yAxis = yAxis;  
+   json.series = series;
+   json.plotOptions = plotOptions;  
+   json.credits = credits;
+   var highchart = new Highcharts.Chart(json);
+});
+</script>
+</html>

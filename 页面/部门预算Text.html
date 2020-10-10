@@ -1,0 +1,410 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+/*
+description:部门预算表
+version: 1.1
+date:20190430
+author:tom
+log:
+20200828 改目标面积为创佣金额
+*/
+
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+*
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+throws UnsupportedEncodingException {
+	if (parameterValue != null && parameterValue.length() > 0) {
+		byte[] iso = parameterValue.getBytes("ISO-8859-1");
+		if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+			parameterValue = new String(iso, "UTF-8");
+			return parameterValue;
+		}
+	}
+	return parameterValue;
+}
+</cc>
+<cc>
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy");
+CCService cs = new CCService(userInfo);
+String roleid = userInfo.getRoleId();
+
+String bmxz = request.getParameter("bmxz")==null?"代理一部":request.getParameter("bmxz")+"";//部门
+String year = request.getParameter("year")==null?sdf.format(new Date()):request.getParameter("year")+"";//获取项目条件
+String projectid = request.getParameter("projectid")==null?"":request.getParameter("projectid")+"";//项目
+//List<CCObject> projectlist = cs.cqlQuery("Project","select name,id from Project where is_deleted = '0' and xmzt = '代理中' and ssbm='"+bmxz+"' ");
+List<CCObject> projectlist = cs.cqlQuery("Project","select name,id from Project where is_deleted = '0' and xmzt = '代理中'"); //去除部门限制
+List<CCObject> datelist = cs.cqlQuery("Opportunity","select DATE_FORMAT(cjsj,'%Y') as year from Opportunity where is_deleted = '0' and spzt = '审批通过' and cjsj is not null group by DATE_FORMAT(cjsj,'%Y') order by DATE_FORMAT(cjsj,'%Y') desc");
+String sja = ""; //表格中数据
+
+//out.print(bmxz);
+//out.print(year);
+
+//String mjbs = ""; //曲线图保守目标面积
+//String mjzc = ""; //曲线图正常目标面积
+String cszc = ""; //曲线图正常目标创收,项目经理个人创收目标
+//String mjlx = ""; //曲线图正常目标面积
+String cslx = ""; //曲线图理想目标面积,项目团队创收目标
+//String mjwc = ""; //曲线图完成面积
+String cswc = ""; //曲线图完成创收额
+
+List<CCObject> bmystlist = cs.cqlQuery("bmys","select * from bmys where is_deleted = '0' and bm = '"+bmxz+"' and nd = '"+year+"'");
+//out.print(String.valueOf(bmystlist.size()));
+if(bmystlist.size()>0){
+	String bmysid = bmystlist.get(0).get("id")==null?"":bmystlist.get(0).get("id")+"";//部门预算id
+	//List<CCObject> xmyslist = cs.cqlQuery("xmys","select * from xmys where is_deleted = '0' and bm = "+bmysid+" ");
+	List<CCObject> xmyslist = cs.cqlQuery("xmys","select b.name as project, date_format(a.fwzq,'%Y-%m-%d') as date, a.xmzhl as stock, a.ycshl as alrstock, a.syhl as rstock, a.jj as price, a.zcswtj as prop, a.zgswtj as hprop, a.qdswtj as lprop,CONVERT(a.xmkcsze, DECIMAL(10, 2)) as mtotal,CONVERT(a.sykcsz, DECIMAL(10, 2)) as rtotal,CONVERT(a.cshjkh, DECIMAL(10, 2)) as cshjkh,CONVERT(a.cshjbs, DECIMAL(10, 2)) as cshjbs,CONVERT(a.cshjzc, DECIMAL(10, 2)) as cshjzc,CONVERT(a.cshjlx, DECIMAL(10, 2)) as cshjlx, b.xmbdmj from xmys a inner join Project b on a.xmmc =b.id where a.bm = '"+bmysid+"' and a.is_deleted = '0' and b.is_deleted = '0' ");
+	//创建json集合
+	JSONArray jsonArray = JSONArray.fromObject(xmyslist);
+	sja=jsonArray.toString();
+
+
+
+
+	//out.print(bmysid);
+	//out.print(projectid);
+	List<CCObject> xmyslist1 = cs.cqlQuery("xmys","select * from xmys where bm = '"+bmysid+"' and is_deleted = '0' and xmmc = '"+projectid+"' ");
+	//out.print(String.valueOf(xmyslist1.size()));
+
+	if(xmyslist1.size()==1){
+		//mjbs = xmyslist1.get(0).get("ymbmj1bs") + "," + xmyslist1.get(0).get("ymbmj2bs") + "," + xmyslist1.get(0).get("ymbmj3bs") + "," + xmyslist1.get(0).get("ymbmj4bs") + "," + xmyslist1.get(0).get("ymbmj5bs") + "," + xmyslist1.get(0).get("ymbmj6bs") + "," + xmyslist1.get(0).get("ymbmj7bs") + "," + xmyslist1.get(0).get("ymbmj8bs") + "," + xmyslist1.get(0).get("ymbmj9bs") + "," + xmyslist1.get(0).get("ymbmj10bs") + "," + xmyslist1.get(0).get("ymbmj11bs") + "," + xmyslist1.get(0).get("ymbmj12bs");
+        //mjzc = xmyslist1.get(0).get("ymbmj1") + "," + xmyslist1.get(0).get("ymbmj2") + "," + xmyslist1.get(0).get("ymbmj3") + "," + xmyslist1.get(0).get("ymbmj4") + "," + xmyslist1.get(0).get("ymbmj5") + "," + xmyslist1.get(0).get("ymbmj6") + "," + xmyslist1.get(0).get("ymbmj7") + "," + xmyslist1.get(0).get("ymbmj8") + "," + xmyslist1.get(0).get("ymbmj9") + "," + xmyslist1.get(0).get("ymbmj10") + "," + xmyslist1.get(0).get("ymbmj11") + "," + xmyslist1.get(0).get("ymbmj12");
+        cszc = xmyslist1.get(0).get("ycsmb1zc") + "," + xmyslist1.get(0).get("ycsmb2zc") + "," + xmyslist1.get(0).get("ycsmb3zc") + "," + xmyslist1.get(0).get("ycsmb4zc") + "," + xmyslist1.get(0).get("ycsmb5zc") + "," + xmyslist1.get(0).get("ycsmb6zc") + "," + xmyslist1.get(0).get("ycsmb7zc") + "," + xmyslist1.get(0).get("ycsmb8zc") + "," + xmyslist1.get(0).get("ycsmb9zc") + "," + xmyslist1.get(0).get("ycsmb10zc") + "," + xmyslist1.get(0).get("ycsmb11zc") + "," + xmyslist1.get(0).get("ycsmb12zc");
+        //mjlx = xmyslist1.get(0).get("ymbmj1lx") + "," + xmyslist1.get(0).get("ymbmj2lx") + "," + xmyslist1.get(0).get("ymbmj3lx") + "," + xmyslist1.get(0).get("ymbmj4lx") + "," + xmyslist1.get(0).get("ymbmj5lx") + "," + xmyslist1.get(0).get("ymbmj6lx") + "," + xmyslist1.get(0).get("ymbmj7lx") + "," + xmyslist1.get(0).get("ymbmj8lx") + "," + xmyslist1.get(0).get("ymbmj9lx") + "," + xmyslist1.get(0).get("ymbmj10lx") + "," + xmyslist1.get(0).get("ymbmj11lx") + "," + xmyslist1.get(0).get("ymbmj12lx");
+        cslx = xmyslist1.get(0).get("ycsmb1lx") + "," + xmyslist1.get(0).get("ycsmb2lx") + "," + xmyslist1.get(0).get("ycsmb3lx") + "," + xmyslist1.get(0).get("ycsmb4lx") + "," + xmyslist1.get(0).get("ycsmb5lx") + "," + xmyslist1.get(0).get("ycsmb6lx") + "," + xmyslist1.get(0).get("ycsmb7lx") + "," + xmyslist1.get(0).get("ycsmb8lx") + "," + xmyslist1.get(0).get("ycsmb9lx") + "," + xmyslist1.get(0).get("ycsmb10lx") + "," + xmyslist1.get(0).get("ycsmb11lx") + "," + xmyslist1.get(0).get("ycsmb12lx");
+	}
+	//out.print(mjbs);
+
+	//完成面积情况取项目经理的考核表中的值
+	//List<CCObject> ryjxlist1 = cs.cqlQuery("ryjx","select CONVERT(tddyyjwcs, DECIMAL(10, 2)) as tddyyjwcs,yf from ryjx where xmmc = '"+projectid+"' and is_deleted = '0' and nd = '"+year+"' and spzt = '审批通过' and recordtype='2018ED6B4DF92033DeWs' order by yf");
+    List<CCObject> ryjxlist1 = cs.cqlQuery("ryjx","select CONVERT(ifnull(tdcywcz,0), DECIMAL(10, 2)) as tdcywcz,yf from ryjx where xmmc = '"+projectid+"' and is_deleted = '0' and nd = '"+year+"' and spzt = '审批通过' and recordtype='2018ED6B4DF92033DeWs' order by yf");//tdcywcz 团队创佣完成值
+    for(CCObject item:ryjxlist1){
+        //mjwc += (item.get("tddyyjwcs")==null?"0":item.get("tddyyjwcs")) + ",";
+        cswc += (item.get("tdcywcz")==null?"0":item.get("tdcywcz")) + ",";
+	}
+	//out.print(mjwc);
+	if(cswc.length()>0){
+		cswc = cswc.substring(0,cswc.lastIndexOf(","));
+    }
+    
+
+
+}
+</cc>
+<html>
+	<head>
+		<script src="//unpkg.com/vue/dist/vue.js"></script>
+		<script src="//unpkg.com/vue-easytable/umd/js/index.js"></script>
+		<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1526971505862XW1lYoGh"></script>
+		<script src="https://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+		<style type="text/css">
+
+			@import url("//unpkg.com/vue-easytable/umd/css/index.css");
+
+		</style>
+		<style>
+			.v-scrollbar-wrap::-webkit-scrollbar-track
+			{
+				-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+				border-radius: 10px;
+				background-color: #F5F5F5;
+			}
+
+			.v-scrollbar-wrap::-webkit-scrollbar
+			{
+				height:12px;
+				width:10px;
+				background-color: #F5F5F5;
+			}
+
+			.v-scrollbar-wrap::-webkit-scrollbar-thumb
+			{
+				border-radius: 10px;
+				-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+				background-color: #666;
+			}
+
+			.cell-edit-color{
+				color:#2db7f5;
+				font-weight: bold;
+			}
+		</style>
+	</head>
+	<body>
+		<br />
+		<form action="" method="post" name="theform" id="theform">
+			<!--项目：
+			<select id="project" name="project">
+			<option value="全部">全部</option>
+			<cc>
+			for(CCObject projectitem:projectlist){
+			</cc>
+			<option value=<cc:outprint>projectitem.get("id")</cc:outprint>><cc:outprint>projectitem.get("name")</cc:outprint></option>
+			<cc>
+			}
+			</cc>
+			</select>
+			-->
+			部门：
+			<select id="bmxz" name="bmxz">
+				<option value="代理一部">代理一部</option>
+					<option value="代理二部">代理二部</option>
+
+					</select>
+					&nbsp&nbsp
+					时间：<select id="year" name="year">
+					<cc>
+					for(CCObject dateitem:datelist){
+						</cc>
+						<option value = "<cc:outprint>dateitem.get("year")</cc:outprint>"><cc:outprint>dateitem.get("year")</cc:outprint></option>
+						<cc>
+					}
+					</cc>
+					</select>
+					&nbsp&nbsp
+					项目：<select id="projectid" name="projectid">
+					<cc>
+					for(CCObject projectitem:projectlist){
+						</cc>
+						<option value=<cc:outprint>projectitem.get("id")</cc:outprint>><cc:outprint>projectitem.get("name")</cc:outprint></option>
+						<cc>
+					}
+					</cc>
+					</select>
+					<script>
+					document.getElementById("bmxz").value = "<cc:outprint>bmxz</cc:outprint>";
+					document.getElementById("year").value = "<cc:outprint>year</cc:outprint>";
+					document.getElementById("projectid").value = "<cc:outprint>projectid</cc:outprint>";
+					</script>
+					<input type="submit" value=" 查 询 " class="input01"/>
+
+
+					<div id="app">
+					<template>
+					<v-table
+					is-horizontal-resize
+					style="width:100%"
+					:title-rows="titleRows"
+					:columns="columns"
+					:table-data="tableData"
+					row-hover-color="#eee"
+					row-click-color="#edf7ff"
+					:cell-edit-done="cellEditDone"
+					:footer-cell-class-name="setFooterCellClass"
+					:footer="footer"
+					:footer-row-height="40">
+					</v-table>
+					</template>
+					</div>
+
+
+					<div id="container1" style="width:100%;height:600px"></div>
+					</form>
+
+
+
+
+
+					<script>
+
+					var Main ={
+						data() {
+							return {
+								tableData:<cc:outprint>sja</cc:outprint>,
+								columns:  [
+								//{field: 'project', title:'项目', width: 80, titleAlign: 'center',columnAlign:'center',isEdit:true,isResize:true},
+								//{field: 'name', width: 100, columnAlign: 'center', isFrozen: true},
+								{field: 'project', width: 80, columnAlign:'center',  isResize:true, isFrozen: true},
+								{field: 'date', width: 90, columnAlign:'center',  isResize:true},
+                                {field: 'xmbdmj', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'stock', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'alrstock', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'rstock', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'price', width: 80, columnAlign:'left',  isResize:true},
+								{field: 'prop', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'hprop', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'lprop', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'mtotal', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'rtotal', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'cshjkh', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'cshjzc', width: 90, columnAlign:'center',  isResize:true},
+								{field: 'cshjlx', width: 90, columnAlign:'center',  isResize:true}
+								//{field: 'stock', title: '货量情况', width: 150, titleAlign: 'center',columnAlign:'center',isEdit:true,isResize:true},
+								//{fields: ['stock', 'alrstock', 'rstock'],colspan: 3,columnAlign:'center',isEdit:true,isResize:true},
+								//{field: 'price', width: 280, titleAlign: 'center',columnAlign:'left',isEdit:true,isResize:true},
+								//{field: 'condition', title: '商务条件', width: 280, titleAlign: 'center',columnAlign:'left',isEdit:true,isResize:true},
+								//{fields: ['prop', 'hprop', 'lprop'], title: '商务条件', titleAlign: 'center', colspan: 3,columnAlign:'center',isEdit:true,isResize:true},
+								//{field: 'mtotal', title: '项目可创收总额', width: 280, titleAlign: 'center',columnAlign:'left',isEdit:true,isResize:true},
+								//{field: 'rtotal', title: '剩余可创收值', width: 280, titleAlign: 'center',columnAlign:'left',isEdit:true,isResize:true}
+								],
+								titleRows: [
+								[{fields: ['project'], title: '项目', titleAlign: 'center',columnAlign: 'center',rowspan: 2},
+								{fields: ['date'], title: '项目服务周期（合同时间）', titleAlign: 'center',columnAlign: 'center',rowspan: 2},
+								{fields: ['stock', 'alrstock', 'rstock'], title: '货量情况', titleAlign: 'center', colspan: 3},
+								{fields: ['price'], title: '均价', titleAlign: 'center',columnAlign: 'center',rowspan: 2},
+								{fields: ['prop', 'hprop', 'lprop'], title: '商务条件', titleAlign: 'center', colspan: 3},
+								{fields: ['mtotal', 'rtotal'], title: '创收情况', titleAlign: 'center', colspan: 2},
+								{fields: ['cshjkh', 'cshjzc', 'cshjlx'], title: '创收目标', titleAlign: 'center', colspan: 3}],
+
+								[{fields: ['xmbdmj'], title: '项目标的面积', titleAlign: 'center'},
+                                    {fields: ['stock'], title: '项目总货量', titleAlign: 'center'},
+									{fields: ['alrstock'], title: '已创收货量', titleAlign: 'center', orderBy: 'asc'},
+										{fields: ['rstock'], title: '剩余货量', titleAlign: 'center', orderBy: 'desc'},
+										{fields: ['prop'], title: '佣金比例', titleAlign: 'center'},
+										{fields: ['hprop'], title: '最高佣金比例', titleAlign: 'center'},
+											{fields: ['lprop'], title: '渠道', titleAlign: 'center'},
+											{fields: ['mtotal'], title: '项目可创收总额', titleAlign: 'center'},
+											{fields: ['rtotal'], title: '剩余可创收值', titleAlign: 'center'},
+												{fields: ['cshjkh'], title: '创收考核目标', titleAlign: 'center'},
+												{fields: ['cshjzc'], title: '创收正常目标', titleAlign: 'center'},
+												{fields: ['cshjlx'], title: '创收理想目标', titleAlign: 'center'}],
+
+												],
+												footer: []
+											}
+										},
+										methods:{
+
+											// 单元格编辑回调
+											cellEditDone(newValue,oldValue,rowIndex,rowData,field){
+
+												this.tableData[rowIndex][field] = newValue;
+
+												// 接下来处理你的业务逻辑，数据持久化等...
+											},
+
+											setFooterData(){
+
+												let result = [],
+												// cshjbss = this.tableData.map(item => {
+												// 	return item.cshjkh
+												// }),
+                                                cshjkhs = this.tableData.map(item => {
+													return item.cshjkh
+												}),
+												cshjzcs = this.tableData.map(item => {
+													return item.cshjzc
+												}),
+												cshjlxs = this.tableData.map(item => {
+													return item.cshjlx
+												});
+
+
+
+
+												let sumVal = ['合计'];
+												sumVal.push('-');
+												sumVal.push('-');
+												sumVal.push('-');
+												sumVal.push('-');
+												sumVal.push('-');
+												sumVal.push('-');
+												sumVal.push('-');
+												sumVal.push('-');
+												sumVal.push('-');
+												sumVal.push('-');
+												
+												sumVal.push(
+												cshjkhs.reduce((prev, curr) => {
+
+													return parseInt(prev) + parseInt(curr);
+												}, 0)
+												)
+												
+
+												sumVal.push(
+												cshjzcs.reduce((prev, curr) => {
+
+													return parseInt(prev) + parseInt(curr);
+												}, 0)
+												)
+
+												sumVal.push(
+												cshjlxs.reduce((prev, curr) => {
+
+													return parseInt(prev) + parseInt(curr);
+												}, 0)
+												)
+
+											
+												result.push(sumVal);
+
+												this.footer = result;
+											},
+
+											// 设置 footer-cell-class
+											setFooterCellClass(rowIndex, colIndex, value){
+
+												if (colIndex === 0) {
+
+													return 'footer-cell-class-name-title'
+												} else {
+
+													return 'footer-cell-class-name-normal'
+												}
+											}
+											
+											
+										},
+										
+										created(){
+
+												this.setFooterData();
+											}
+									}
+									var Ctor = Vue.extend(Main)
+									new Ctor().$mount('#app')
+									</script>
+
+									<script>
+									var chart = Highcharts.chart('container1', {
+										chart: {
+											type: 'line'
+										},
+										title: {
+											text: '项目预算表'
+										},
+										subtitle: {
+											text: ''
+										},
+										xAxis: {
+											categories: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
+										},
+										yAxis: {
+											title: {
+												text: '金额 (元)'
+											}
+										},
+										plotOptions: {
+											line: {
+												dataLabels: {
+													// 开启数据标签
+													enabled: true
+												},
+												// 关闭鼠标跟踪，对应的提示框、点击事件会失效
+												enableMouseTracking: false
+											}
+										},
+										series: [
+                                        {
+                                            name: '团队创佣目标',
+                                            data: [<cc:outprint>cslx</cc:outprint>]
+                                        },
+                                        {
+                                            name: '项目经理考核目标',
+                                            data: [<cc:outprint>cszc</cc:outprint>]
+                                        },
+                                        {
+                                            name: '业绩完成情况',
+                                            data: [<cc:outprint>cswc</cc:outprint>]
+                                        },
+                                        ]
+									});
+
+									</script>
+									</body>
+									</html>

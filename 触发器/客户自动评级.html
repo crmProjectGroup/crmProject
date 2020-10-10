@@ -1,0 +1,140 @@
+String khlb = record_new.get("khlb")==null?"":record_new.get("khlb")+"";//客户类别
+String khid = record_new.get("id")==null?"":record_new.get("id")+"";//客户ID
+String khdj = "";//客户等级
+
+
+String sfgzzlcb = record_new.get("sfgzzlcb")==null?"":record_new.get("sfgzzlcb")+"";//关注综合成本
+String qyztmc = record_new.get("gmqc")==null?"":record_new.get("gmqc")+"";//签约主体
+String qyqc = record_new.get("qyqc")==null?"":record_new.get("qyqc")+"";//企业全称
+String xbgdz = record_new.get("xbgdz")==null?"":record_new.get("xbgdz")+"";//现办公地址
+String gsgm = record_new.get("gsgm")==null?"":record_new.get("gsgm")+"";//公司规模
+String dbjp = record_new.get("dbjp")==null?"":record_new.get("dbjp")+"";//对比竞品
+String kxwt= record_new.get("kxwt")==null?"":record_new.get("kxwt")+"";//抗性问题（销售）
+String zlkxwt= record_new.get("zlkxwt")==null?"":record_new.get("zlkxwt")+"";//抗性问题（租赁）
+
+String xqmj= record_new.get("xqmj")==null?"":record_new.get("xqmj")+"";//需求面积
+String gmyy= record_new.get("gmyy")==null?"":record_new.get("gmyy")+"";//购买原因
+String sfjxzsm = record_new.get("sfjxzsm")==null?"":record_new.get("sfjxzsm")+"";//是否进线转上门
+String spmqsdfh= record_new.get("spmqsdfh")==null?"":record_new.get("spmqsdfh")+"";//是否明确锁定房号
+String spphzx= record_new.get("spphzx")==null?"":record_new.get("spphzx")+"";//是否配合征信
+String spqtyhtj= record_new.get("spqtyhtj")==null?"":record_new.get("spqtyhtj")+"";//是否洽谈优惠条件
+String spjcrsm= record_new.get("spjcrsm")==null?"":record_new.get("spjcrsm")+"";//是否决策人上门
+String sptlfkfs= record_new.get("sptlfkfs")==null?"":record_new.get("sptlfkfs")+"";//是否讨论付款方式
+String zlyy= record_new.get("zlyy")==null?"":record_new.get("zlyy")+"";//租赁原因
+String spfhys= record_new.get("spfhys")==null?"":record_new.get("spfhys")+"";//是否符合预算
+String spmqsyrq= record_new.get("spmqsyrq")==null?"":record_new.get("spmqsyrq")+"";//是否明确使用日期
+String spjczqzygyn= record_new.get("spjczqzygyn")==null?"":record_new.get("spjczqzygyn")+"";//是否决策周期在1个月内
+String spqthtxj= record_new.get("spqthtxj")==null?"":record_new.get("spqthtxj")+"";//是否洽谈合同细节
+String jllx = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
+
+double pjzdlbcd=0.0;
+double bwksl=0.0;
+ List<CCObject> khpjpzlist=new ArrayList<CCObject>();
+if("2018496272C934EtLhWs".equals(jllx)){
+     
+  if(qyqc.length()>0){
+     bwksl +=1.0;
+  }
+ if(gsgm.length()>0 && !gsgm.equals("暂未了解")){
+     bwksl +=1.0;
+  }
+ if(dbjp.length()>0 && !dbjp.equals("暂未了解")){
+     bwksl +=1.0;
+  }
+ if(kxwt.length()>0 && !kxwt.equals("暂未了解")){
+     bwksl +=1.0;
+  }
+ if(xbgdz.length()>0){
+     bwksl +=1.0;
+  }
+ if("是".equals(sfjxzsm)){
+     bwksl +=1.0;
+  }
+ if(xqmj.length()>0){
+     bwksl +=1.0;
+  }
+ if(gmyy.length()>0){
+     bwksl +=1.0;
+  }
+ if("是".equals(spqtyhtj)){
+     bwksl +=1.0;
+ }
+ if("是".equals(spmqsdfh)){
+     bwksl +=1.0;
+  }
+ if("是".equals(spphzx)){
+     bwksl +=1.0;
+  }
+ if("是".equals(spjcrsm)){
+     bwksl +=1.0;
+  }
+ if("是".equals(sptlfkfs)){
+     bwksl +=1.0;
+  }
+if(qyztmc.length()>0){
+     bwksl +=1.0;
+  }
+  if((bwksl/14.0)>=0.8){
+     khdj = "A";
+   }else if((bwksl/14.0)>=0.5){
+         khdj = "B";
+     }else{
+         khdj = "C";    
+     }  
+}else if("20186166515AE4A8ZfOc".equals(jllx)){
+
+  if(qyqc.length()>0){
+     bwksl +=1.0;
+  }
+ if(zlyy.length()>0){
+     bwksl +=1.0;
+  }
+ if(dbjp.length()>0 && !dbjp.equals("暂未了解")){
+     bwksl +=1.0;
+  }
+ if(zlkxwt.length()>0 && !zlkxwt.equals("暂未了解")){
+     bwksl +=1.0;
+  }
+ if(xqmj.length()>0){
+     bwksl +=1.0;
+  }
+ if("是".equals(spmqsdfh)){
+     bwksl +=1.0;
+  }
+ if("是".equals(spqtyhtj)){
+     bwksl +=1.0;
+  }
+ if("是".equals(spjcrsm)){
+     bwksl +=1.0;
+  }
+
+if("是".equals(spqthtxj)){
+     bwksl +=1.0;
+  } 
+if("是".equals(spjczqzygyn)){
+     bwksl +=1.0;
+  } 	 
+if("是".equals(spmqsyrq)){
+     bwksl +=1.0;
+  }	
+if("是".equals(sfgzzlcb)){
+     bwksl +=1.0;
+} 
+if("是".equals(spfhys)){
+     bwksl +=1.0;
+  }	
+if("是".equals(sfjxzsm)){
+     bwksl +=1.0;
+  }
+if(qyztmc.length()>0){
+     bwksl +=1.0;
+  }	 
+  if((bwksl/15.0)>=0.8){
+     khdj = "A";
+   }else if((bwksl/15.0)>=0.5){
+         khdj = "B";
+     }else{
+         khdj = "C";    
+     }	 	 	 	 
+}
+ record_new.put("khdj",khdj);

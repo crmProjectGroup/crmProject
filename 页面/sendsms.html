@@ -1,0 +1,33 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc>
+    String recid = request.getParameter("recid");
+	String mobile = request.getParameter("mobile");
+	String memo = request.getParameter("memo");
+	
+    List<Map> conlist = new ArrayList<Map>();
+    List<Map> arglist = new ArrayList<Map>();
+	
+    Map conarg0 = new HashMap();
+    conarg0.put("argType",UserInfo.class);
+    conarg0.put("argValue",userInfo);
+    conlist.add(conarg0);
+	
+	Map arg1 = new HashMap();	
+    arg1.put("argType",String.class);
+    arg1.put("argValue",mobile );
+    arglist.add(arg1);
+	
+	Map arg2 = new HashMap();	
+    arg2.put("argType",String.class);
+    arg2.put("argValue",memo );
+    arglist.add(arg2);
+	
+	Map arg3 = new HashMap();	
+    arg3.put("argType",UserInfo.class);
+    arg3.put("argValue",userInfo );
+    arglist.add(arg3);
+    
+    Object obj = new PageClsInvoker(userInfo).invoker("SMSUtility","sendsms",conlist, arglist);
+    request.setAttribute("jsonmsg",obj);
+</cc>
+<cc:forward page="/platform/activity/task/getNodes.jsp"/>

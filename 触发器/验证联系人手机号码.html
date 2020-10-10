@@ -1,0 +1,42 @@
+/*
+description:验证联系人手机号码 
+1.结算接口:传入一个或者多个业务机会id,备注, 代理费结算比例; type(js),oppoid,bz,dlfjsbl
+version: 1.0
+date:20180601
+author:tom
+log:
+20200325 增加渠道转介人的电话验证
+
+*/
+
+String lxrdh = record_new.get("lxrdh") == null ? "" : String.valueOf(record_new.get("lxrdh"));// 手机
+lxrdh=lxrdh.trim();
+if(!lxrdh.equals("")){
+    boolean rs =  lxrdh.matches("^1[3|4|5|6|7|8|9][0-9]\\d{4,8}$");
+    if(!rs){
+    	trigger.addErrorMessage("联系人电话输入有误，请重新输入!");
+    }
+    List<CCObject> list = null;
+    String xmmc = record_new.get("xmmc") == null?"":record_new.get("xmmc")+"";//项目id
+    if(record_old==null){
+         list = cquery("Account","lxrdh='"+lxrdh+"' and xmmc = '"+xmmc+"'");
+    }else{
+        String lxrdh_old = record_old.get("lxrdh")==null?"":record_old.get("lxrdh")+"";
+        if(!lxrdh_old.equals(lxrdh)){
+              list = cquery("Account","lxrdh='"+lxrdh+"' and xmmc = '"+xmmc+"'");
+        }
+    }
+    if(list!=null && list.size()>0){
+           trigger.addErrorMessage("联系人电话已存在!");
+    }
+}
+
+//添加验证渠道转接人的联系电话
+String qddjrdh = record_new.get("qddjrdh") == null ? "" : String.valueOf(record_new.get("qddjrdh"));// 手机
+qddjrdh=qddjrdh.trim(); //去掉前后的空格,中间不去
+if(!qddjrdh.equals("")){
+    boolean rs1 =  qddjrdh.matches("^1[3|4|5|6|7|8|9][0-9]\\d{4,8}$");
+    if(!rs1){
+    	trigger.addErrorMessage("渠道转接人电话输入有误，请重新输入!");
+    }
+}

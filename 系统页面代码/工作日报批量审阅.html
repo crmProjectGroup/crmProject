@@ -1,0 +1,36 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc>
+	/*
+	 * #############################工作日报批量审阅################################
+	 * #################
+	 */
+	CCService cs = new CCService(userInfo);       
+	//获取当前登陆用户的id
+        String profile = userInfo.getProfileId();
+	String ids = null == request.getParameter("ids") ? "" : request.getParameter("ids").toString();// 客户id
+	String viewId = null == request.getParameter("viewId") ? "" : request.getParameter("viewId").toString();// 视图ID
+	String message = ""; // 提示信息 
+        if("aaa201723453E5EBNtzU".equals(profile)){ 
+	        message = "无权限审阅!";
+        }else{  
+           if (!"".equals(ids)) {
+		String[] idlist = ids.split(",");
+                for(int i=0;i<idlist.length;i++){
+                    cs.cqlQuery("DailyReport","update DailyReport set zt='已阅' where id = '"+idlist[i]+"'");
+                }
+		message = "审阅成功";
+	   }
+        }
+</cc>
+<script type="text/javascript">
+	var msg="<cc:outprint>message</cc:outprint>";
+	var viewId="<cc:outprint>viewId</cc:outprint>";
+	if(msg!=""){
+		alert(msg);
+		window.location.href="<cc:outprint>appPath</cc:outprint>"+"/query.action?obj=a10&m=list&viewId="+viewId;
+	}
+
+function cancel(){
+	window.location.href="<cc:outprint>appPath</cc:outprint>"+"/query.action?obj=a10&m=list&viewId=<cc:outprint>viewId</cc:outprint>";
+}
+</script>

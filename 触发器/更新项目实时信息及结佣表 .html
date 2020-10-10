@@ -1,0 +1,364 @@
+/*
+description:业务机会-更新项目实时信息及结佣表
+date:20180508
+author:tom
+log:
+1.20190519  添加自动结佣部分
+2.20190719  因为自定页面手动结佣, 去掉自动部分
+3.20191127  将挞定审批后处理加在此处, 当挞定被拒绝或者调回的时候,要将挞定操作可能产生的结算单删掉
+4.20200914  为及时计算考核分值为实时生成结算单
+*/
+
+double cjmj = 0.0;
+double cjdj = 0.0;
+
+//获取CS     
+CCService cs=new CCService(userInfo);
+
+//if(true) {trigger.addErrorMessage("hello");}  //测试
+String cjmjs = record_new.get("cjmj")==null?"":record_new.get("cjmj")+"";
+if(cjmjs.length()>0){
+	cjmj = Double.parseDouble(record_new.get("cjmj")==""?"0.0":record_new.get("cjmj")+"");
+}
+String cjdjs = record_new.get("cjdj")==null?"":record_new.get("cjdj")+"";
+if(cjdjs.toString().length()>0){
+	cjdj = Double.parseDouble(record_new.get("cjdj")==""?"0.0":record_new.get("cjdj")+"");
+}
+
+String spzt = record_new.get("spzt")==null?"":record_new.get("spzt")+"";
+
+String jieduan = record_new.get("jieduan")==null?"":record_new.get("jieduan")+"";
+String id = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";//项目id
+String spzt_old = record_old.get("spzt")==null?"":record_old.get("spzt")+"";//审批状态(旧)
+
+//获取销售或租赁 业务机会记录类型
+String op_recordtype=record_new.get("recordtype")==null?"":record_new.get("recordtype")+""; //2018BD60B25D1A2mLTd7 租赁/2018BD60B25D1A2mLTd7 销售
+//获取项目经理
+String op_xmjl=record_new.get("xmjl")==null?"":record_new.get("xmjl")+"";
+//获取客户名称；
+String op_khmc=record_new.get("khmc")==null?"":record_new.get("khmc")+"";
+
+//项目名称
+String op_xmmc=record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";
+//年月
+java.util.Calendar cal = java.util.Calendar.getInstance();
+cal.setTime(new Date());
+int year = cal.get(Calendar.YEAR);//当前年份
+int month = cal.get(Calendar.MONTH)+1;//当前月份
+//成交单位
+String op_cjdw = record_new.get("cjdw")==null?"":record_new.get("cjdw")+"";
+//获取客户的认知途径
+//String op_khmc = record_new.get("khmc")==null?"":record_new.get("khmc")+""; //前面已经获取过
+List<CCObject> kehu = this.cquery("Account","id='"+op_khmc+"'");
+String rztj1="";
+String rztj2="";
+if(kehu.size()==1){
+	rztj1 = kehu.get(0).get("rztj1")==null?"":kehu.get(0).get("rztj1")+"";//认知途径1
+	rztj2 = kehu.get(0).get("rztj2")==null?"":kehu.get(0).get("rztj2")+"";//认知途径2
+} else{
+	trigger.addErrorMessage("客户不存在");
+}
+//获取是否为转介客户, 为后期拆佣做铺垫
+
+//签约时间qysj
+String op_qysj=record_new.get("qysj")==null?"":record_new.get("qysj")+"";
+//成交时间	cjsj
+String op_cjsj=record_new.get("cjsj")==null?"":record_new.get("cjsj")+"";
+
+//if(true){trigger.addErrorMessage("hello");}  测试
+
+//获取前后挞定审批的状态tdspzt
+String tdspzt = record_new.get("tdspzt")==null?"":record_new.get("tdspzt")+"";
+String tdspzt_old = record_old.get("tdspzt")==null?"":record_old.get("tdspzt")+"";
+//获取记录的id, 前面有获取id
+//String oppoid = record_new.get("id")==null?"":record_new.get("id")+"";
+
+if("审批通过".equals(spzt) && "成交".equals(jieduan) && "审批中".equals(spzt_old)){
+	//获取累计签约面积
+	Double newljqymj = 0.0;
+	List<CCObject> list = this.cquery("xmssxx","xmmc='"+id+"'");
+	if(list.size()==1){
+		String ssxxid = list.get(0).get("id")==null?"":list.get(0).get("id")+"";//id
+		Double ljqymj = list.get(0).get("ljqymj")==null?0.00:Double.valueOf(list.get(0).get("ljqymj")+"");//累计签约面积
+		Double ljhtje = list.get(0).get("ljhtje")==null?0.00:Double.valueOf(list.get(0).get("ljhtje")+"");//累计合同金额
+		CCObject obj = new CCObject("xmssxx");
+		obj.put("id",ssxxid);
+		obj.put("ljqymj",ljqymj+cjmj);
+		newljqymj=ljqymj+cjmj;//新的签约面积
+		obj.put("ljhtje",ljhtje+(cjmj*cjdj));
+		this.updateLt(obj);
+    }
+    
+    //Double cjzj = 0.0;
+    Double cjzj = record_new.get("cjzj")==null?0.0:Double.parseDouble(record_new.get("cjzj")+"");
+
+    //成交后新建"代理结算明细表" 记录
+    //获取所有结算单所需要的数据调用接口生成结算单
+	double fl =0.0; //最终需要获取到费率和拆分渠道费率两个字段
+    double cfqdfl =0.0;
+    
+    //获取渠道结算方式,通过获取项目名称,在项目中获取这个字段
+    //String xmmc=rerecord_new.get("xmmc")==null?"":record_new.get("xmmc")+""; //项目id 已经获取过了op_xmmc
+    List<CCObject> xmlist=cs.cqlQuery("project","select qdjsfs from project where id = '"+op_xmmc+"' and is_deleted ='0'"); 
+    String qdjsfs=xmlist.get(0).get("qdjsfs")==null?"":xmlist.get(0).get("qdjsfs")+"";  //渠道结算结算方式
+
+    //获取认知途径,判断是自然上门还是渠道客户, 已经获取过了 rztj2
+
+    if("甲方结算给渠道".equals(qdjsfs)){
+        // if(true){
+        // 	trigger.addErrorMessage("step2A");
+        // }
+        //甲方给,不用拆分渠道, 实际收益就是结算额, 只需要查自然/渠道分别的结算费率
+
+        if("甲方渠道转介".equals(rztj2)||"瑞信行渠道转介".equals(rztj2)){ //渠道
+            //获取结佣策略中对应的费率
+            List<CCObject> jycllist=cs.cqlQuery("jycl","select fl from jycl where xmmc = '"+op_xmmc+"' and is_deleted ='0' and qd_zr='渠道'");
+            if(jycllist.size()==1) {
+                //fl = Double.parseDouble(jycllist.get(0).get("fl")+""); //jycllist.get(0).get("fl");
+                fl = jycllist.get(0).get("fl")==null?0.0:Double.parseDouble(jycllist.get(0).get("fl")+"");
+            }
+        } else{ //自然上门
+            List<CCObject> jycllist=cs.cqlQuery("jycl","select fl from jycl where xmmc = '"+op_xmmc+"' and is_deleted ='0' and qd_zr='自然'");
+            if(jycllist.size()==1) {
+                //fl = Double.parseDouble(jycllist.get(0).get("fl")+""); //jycllist.get(0).get("fl");
+                fl = jycllist.get(0).get("fl")==null?0.0:Double.parseDouble(jycllist.get(0).get("fl")+"");
+            }
+        }
+
+        
+    } else{ //我司结算给渠道和混合型, 这类需要得到拆分渠道费率多少,判断实际收益, 还需要考虑对渠道有不同处理的情况
+        // if(true){
+        // 	trigger.addErrorMessage("step2B");
+        // }
+        //查看客户是自然上门还是渠道转介的
+        //rztj2=(String)acctlist.get(0).get("rztj2");
+        if("甲方渠道转介".equals(rztj2)||"瑞信行渠道转介".equals(rztj2)){ //渠道
+            // if(true){
+            // 	trigger.addErrorMessage("step3A");
+            // }
+            //获取结佣策略中对应的费率   //test 喜之郎id a05201893798EB2fK4Ex
+            List<CCObject> jycllist=cs.cqlQuery("jycl","select fl,cfqdfl,qddj from jycl where xmmc = '"+op_xmmc+"' and is_deleted ='0' and qd_zr='渠道'");
+            if(jycllist.size()==1) { //只有一种渠道情况
+                // if(true){
+                // 	trigger.addErrorMessage("step4A");
+                // }
+                //fl = Double.parseDouble(jycllist.get(0).get("fl")+""); //jycllist.get(0).get("fl");
+                fl = jycllist.get(0).get("fl")==null?0.0:Double.parseDouble(jycllist.get(0).get("fl")+"");
+                cfqdfl = jycllist.get(0).get("cfqdfl")==null?0.0:Double.parseDouble(jycllist.get(0).get("cfqdfl")+""); //jycllist.get(0).get("cfqdfl");
+                // if(true){
+                // 	trigger.addErrorMessage("step5");
+                // }
+            } else{ //2中或多种渠道情况
+                //获取渠道等级
+                // if(true){
+                // 	trigger.addErrorMessage("step4B");
+                // }
+                //String qdfldj = acctlist.get(0).get("qdfldj")+""; //A或者空\
+                List<CCObject> acctlist=cs.cqlQuery("account","select a.qd,q.qdfldj from account a left join qd q on a.qd=q.id where a.id = '"+op_khmc+"' and a.is_deleted ='0'");
+                String qdfldj =acctlist.get(0).get("qdfldj")==null?"":acctlist.get(0).get("qdfldj")+"";
+                // if(true){
+                // 	trigger.addErrorMessage("渠道等级"+ qdfldj);
+                // }
+                if("".equals(qdfldj)){
+                    qdfldj = "B";
+                    // if(true){
+                    // 	trigger.addErrorMessage(qdfldj);
+                    // }
+                }
+                for(CCObject jycl:jycllist){
+                    String qddj = jycl.get("qddj")==null?"":jycl.get("qddj")+"";
+                    // if(true){
+                    // 	trigger.addErrorMessage(qddj);
+                    // }
+                    if (qddj.equals(qdfldj)){
+                        // if(true){
+                        // 	trigger.addErrorMessage("step5");
+                        // }
+                        fl = jycl.get("fl")==null?0.0:Double.parseDouble(jycl.get("fl")+""); //jycl.get("fl");
+                        cfqdfl = jycl.get("cfqdfl")==null?0.0:Double.parseDouble(jycl.get("cfqdfl")+""); //jycl.get("cfqdfl");cfqdfl
+                        // if(true){
+                        // 	trigger.addErrorMessage(String.valueOf(cfqdfl));
+                        // }
+                    } 
+                }
+            }
+        } else{ //自然上门
+            // if(true){
+            // 	trigger.addErrorMessage("step3B");
+            // }
+            List<CCObject> jycllist=cs.cqlQuery("jycl","select fl from jycl where xmmc = '"+op_xmmc+"' and is_deleted ='0' and qd_zr='自然'");
+            if(jycllist.size()==1) {
+                fl = Double.parseDouble(jycllist.get(0).get("fl")+""); //jycllist.get(0).get("fl");
+            }
+        }
+    }
+
+    //插入数据到代理结算明细表
+    CCObject dljsmxb = new CCObject("dljsmxb");
+		dljsmxb.put("xmmc",op_xmmc); //项目名称
+		dljsmxb.put("nd",year); //年
+        dljsmxb.put("yf",month); //月
+        dljsmxb.put("ywjh",id); //业务就会
+		//序号- 对应结算编号 自动
+		//房号 cjdw
+		dljsmxb.put("fh",op_cjdw);
+		//来访渠道
+		if("甲方渠道转介".equals(rztj2)){
+			dljsmxb.put("lfqd","甲方渠道");
+		} else if("瑞信行渠道转介".equals(rztj2)){
+			dljsmxb.put("lfqd","瑞信行渠道");
+		} else{
+			dljsmxb.put("lfqd","上门客户");
+		}
+		//面积
+		dljsmxb.put("mj",cjmj);
+		//成交单价
+		dljsmxb.put("cjsj",cjdj);
+		//签约时间
+		dljsmxb.put("qysj",op_cjsj);
+		//代理费结算比例(%) dlfjsbl  比例另建对象, 在对象中去取,租金的比例以1月为基准,1代表一月
+		dljsmxb.put("dlfjsbl",fl);
+		//代理费结算金额(开票额) dlfjsje
+		//dljsmxb.put("dlfjsje",(cjmj*cjdj*dlfjsbl/100));
+		//结佣状态变更为待确认
+		dljsmxb.put("jyzt","待确认");
+		//备注
+		//dljsmxb.put("bz",bz);
+	
+		dljsmxb.put("ownerid",op_xmjl);  //ownerid赋值为业务机会对应的项目经理
+		dljsmxb.put("createbyid",op_xmjl);  //createbyid赋值为项目经理
+		dljsmxb.put("xcfqdfl",cfqdfl); //需拆分渠道费率
+
+		//记录类型 区分租赁 或 销售 类型
+		if("2018BD60B25D1A2mLTd7".equals(op_recordtype)){ //租赁
+			dljsmxb.put("recordtype","201877BBCEB2536vZE9X"); //租赁
+			dljsmxb.put("khmc",op_khmc); //客户名称
+			dljsmxb.put("yzj",(cjmj*cjdj)); //月租金
+			dljsmxb.put("dlfjsje",(cjmj*cjdj*fl/100));//代理费结算金额(开票额) 
+			if(cfqdfl>0){
+				dljsmxb.put("sfxfqd","是"); //sfxfqd
+				dljsmxb.put("xfcje",(cjmj*cjdj*cfqdfl/100)); //xfcje 需分出金额
+				dljsmxb.put("sjsy",(cjmj*cjdj*fl/100)-(cjmj*cjdj*cfqdfl/100));
+			} else {
+				dljsmxb.put("sfxfqd","否"); //sfxfqd
+				dljsmxb.put("xfcje",0); //xfcje 需分出金额
+				dljsmxb.put("sjsy",(cjmj*cjdj*fl/100));
+			}
+			dljsmxb.put("qrsj",op_cjsj); //确认时间
+		} else{
+			dljsmxb.put("recordtype","2018B1EF3529342cl95M"); //销售
+			dljsmxb.put("yzmc",op_khmc); //业主名称
+			dljsmxb.put("cjzj",cjzj); //成交总价
+			dljsmxb.put("dlfjsje",(cjzj*fl/100));//代理费结算金额(开票额) 
+			if(cfqdfl>0){
+				dljsmxb.put("sfxfqd","是"); //sfxfqd
+				dljsmxb.put("xfcje",(cjzj*cfqdfl/100)); //xfcje 需分出金额
+				dljsmxb.put("sjsy",(cjzj*fl/100)-(cjzj*cfqdfl/100));
+			} else{
+				dljsmxb.put("sfxfqd","否"); //sfxfqd
+				dljsmxb.put("xfcje",0); //xfcje 需分出金额
+				dljsmxb.put("sjsy",(cjzj*fl/100));
+			}
+			dljsmxb.put("rgsj",op_cjsj); //认购时间
+		}
+
+		// dljsmxb.put("xcfqdfl",cfqdfl);
+		// dljsmxb.put("xfcje",(cjzj*cfqdfl/100)); //xfcje 需分出金额
+		// dljsmxb.put("sjsy",(cjzj*fl/100)-(cjzj*cfqdfl/100));
+		// if(true){
+		// 	trigger.addErrorMessage(String.valueOf(cjzj)+";"+String.valueOf(fl)+";"+String.valueOf(cjzj*fl/100)+";"+String.valueOf(cjzj*cfqdfl/100));
+		// }
+	
+		cs.insert(dljsmxb);//添加记录
+
+
+	//获取项目代理费结算比例
+	// double dlfjsbl = 0.0;
+	// List<CCObject> xmcs = this.cquery("xmjycs","xmmc='"+id+"'");
+	// if(xmcs.size()==1){
+	// 	//@@1.获取基础比例值
+	// 	dlfjsbl = xmcs.get(0).get("dlfjsbl")==null?0.0:Double.parseDouble(xmcs.get(0).get("dlfjsbl")+"");
+	// 	//@@2.判断是否有填入月度目标值，有的话判断是否跳点，有跳点更新佣金比例，并同时更新本月之前的结佣单
+	// 	Double ymbz = xmcs.get(0).get("ymbz")==null?0.00:Double.valueOf(xmcs.get(0).get("ymbz")+"");//获取月目标值
+	// 	Double mbtd = xmcs.get(0).get("mbtd")==null?0.00:Double.valueOf(xmcs.get(0).get("mbtd")+"");//获取完成目标后的跳点佣金
+	// 	if(ymbz>0.00&&mbtd>0.00){
+	// 		dlfjsbl=mbtd; //若有设置月度目标和完成后的跳点佣金，更新佣金比例
+	// 		//更新本月前面的订单
+	// 	}
+	// 	//@@3.有设置目标和完成目标后跳点
+	// 	Double xstdblz = xmcs.get(0).get("xstdblz")==null?0.00:Double.valueOf(xmcs.get(0).get("xstdblz")+"");//获取销售跳点比例值
+	// 	Double xstdhyj = xmcs.get(0).get("xstdhyj")==null?0.00:Double.valueOf(xmcs.get(0).get("xstdhyj")+"");//获取销售跳点后佣金
+	// 	if(xstdblz>0.00&xstdhyj>0.00){
+	// 		//获取项目标的面积
+	// 		List<CCObject> dlxm = this.cquery("Project","name='"+id+"'");
+	// 		Double xmbdmj = dlxm.get(0).get("xmbdmj")==null?0.00:Double.valueOf(dlxm.get(0).get("xmbdmj")+"");
+	// 		//判断是否完成标的面积的目标比例
+	// 		if(xmbdmj>0&&xmbdmj*xstdblz/100<=newljqymj){//有标的面积且完成了目标
+	// 			dlfjsbl=xstdhyj;//设置完成目标后的佣金比例
+	// 		}
+	// 	}
+	// 	//@@4.设置了甲方，乙方渠道转介不同佣金比例的
+	// 	Double jfqd = xmcs.get(0).get("jfqd")==null?0.00:Double.valueOf(xmcs.get(0).get("jfqd")+"");//获取甲方渠道转介比例值
+	// 	Double wfqd = xmcs.get(0).get("wfqd")==null?0.00:Double.valueOf(xmcs.get(0).get("wfqd")+"");//获取我方渠道转介比例值
+	// 	if("甲方渠道转介".equals(rztj2)&&jfqd>0){//来访渠道，需要更新渠道选项
+	// 		dlfjsbl=jfqd;
+	// 	}else if("我方渠道转介".equals(rztj2)&&wfqd>0){
+	// 		dlfjsbl=wfqd;
+	// 	}
+	// 	//@@5.半整层跳点，再成交的业务机会上去添加选项是否半整层且触发跳点？
+	// 	//@@6.500强加点，在客户上去添加一个500强选项
+
+
+
+	// 	CCObject dljsmxb = new CCObject("dljsmxb");
+	// 	dljsmxb.put("xmmc",op_xmmc); //项目名称
+	// 	dljsmxb.put("nd",year); //年
+	// 	dljsmxb.put("yf",month); //月
+	// 	//序号- 对应结算编号 自动
+	// 	//房号 cjdw
+	// 	dljsmxb.put("fh",op_cjdw);
+	// 	//来访渠道
+	// 	if("甲方渠道转介".equals(rztj2)){
+	// 		dljsmxb.put("lfqd","甲方渠道");
+	// 	} else if("瑞信行渠道转介".equals(rztj2)){
+	// 		dljsmxb.put("lfqd","瑞信行渠道");
+	// 	} else{
+	// 		dljsmxb.put("lfqd","上门客户");
+	// 	}
+	// 	//面积
+	// 	dljsmxb.put("mj",cjmj);
+	// 	//成交单价
+	// 	dljsmxb.put("cjsj",cjdj);
+	// 	//签约时间
+	// 	dljsmxb.put("qysj",op_qysj);
+	// 	//代理费结算比例(%) dlfjsbl  比例另建对象, 在对象中去取,租金的比例以1月为基准,1代表一月
+	// 	dljsmxb.put("dlfjsbl",dlfjsbl);
+	// 	//代理费结算金额(开票额) dlfjsje
+	// 	dljsmxb.put("dlfjsje",(cjmj*cjdj*dlfjsbl/100));
+	// 	//结佣状态变更为待确认
+	// 	dljsmxb.put("jyzt","待确认");
+
+	// 	dljsmxb.put("ownerid",op_xmjl);  //ownerid赋值为业务机会对应的项目经理
+	// 	dljsmxb.put("createbyid",op_xmjl);  //createbyid赋值为项目经理
+	// 	//记录类型 区分租赁 或 销售 类型
+	// 	if("2018BD60B25D1A2mLTd7".equals(op_recordtype)){ //租赁
+	// 		dljsmxb.put("recordtype","201877BBCEB2536vZE9X"); //租赁
+	// 		dljsmxb.put("khmc",op_khmc); //客户名称
+	// 		dljsmxb.put("yzj",(cjmj*cjdj)); //月租金
+	// 		dljsmxb.put("qrsj",op_cjsj); //确认时间
+	// 	} else{
+	// 		dljsmxb.put("recordtype","2018B1EF3529342cl95M"); //销售
+	// 		dljsmxb.put("yzmc",op_khmc); //业主名称
+	// 		dljsmxb.put("cjzj",(cjmj*cjdj)); //成交总价
+	// 		dljsmxb.put("rgsj",op_cjsj); //认购时间
+	// 	}
+
+	// 	this.insert(dljsmxb);//添加记录
+
+	// }
+}
+
+//如果之前是挞定审批中, 现在变为草稿(调回)或者拒绝, 要将可能产生的结算单删除
+if("挞定审批中".equals(tdspzt_old) && ("草稿".equals(tdspzt) || "挞定审批拒绝".equals(tdspzt) )){
+    this.cqlQuery("dljsmxb","update dljsmxb set is_deleted = '1' where ywjh = '"+id+"' and is_deleted = '0'");
+  }

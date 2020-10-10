@@ -1,0 +1,31 @@
+//通过该触发器验证客户名称是否存在重复
+String khmc=null==record_new.get("name")?"":String.valueOf(record_new.get("name"));//客户名称
+String id=null==record_new.get("id")?"":String.valueOf(record_new.get("id"));//客户id
+String ownerid=null==record_new.get("ownerid")?"":String.valueOf(record_new.get("ownerid"));//销售人员
+String xmmc=null==record_new.get("xmmc")?"":String.valueOf(record_new.get("xmmc"));//项目名称
+String lxrdh =null==record_new.get("lxrdh")?"":record_new.get("lxrdh")+"";//联系人电话
+String owneridccname="";
+khmc= khmc.trim();
+record_new.put("name",khmc);
+List<CCObject> accountList= new ArrayList<CCObject>();
+
+if(record_old == null){
+//通过客户名称查找客户
+accountList=this.cquery("Account","name__c='"+khmc+"' and xmmc='"+xmmc+"' and lxrdh='"+lxrdh+"' and is_deleted<>'1'");
+if(accountList.size()>0){
+	owneridccname=accountList.get(0).get("owneridccname")==null?"":accountList.get(0).get("owneridccname").toString();
+	trigger.addErrorMessage("一个项目下不能存在相同的客户,当前跟进的业务员为："+owneridccname+",请重新录入！");
+}
+}else{
+String ownerid_old=null==record_old.get("ownerid")?"":String.valueOf(record_old.get("ownerid"));//销售人员
+if(ownerid_old.equals(ownerid)){
+accountList=this.cquery("Account","name__c='"+khmc+"'and xmmc='"+xmmc+"' and lxrdh='"+lxrdh+"' and id__c<>'"+id+"' and is_deleted<>'1'");
+if(accountList.size()>0){
+	owneridccname=accountList.get(0).get("owneridccname")==null?"":accountList.get(0).get("owneridccname").toString();
+	trigger.addErrorMessage("一个项目下不能存在相同的客户,当前跟进的业务员为："+owneridccname+",请重新录入！");
+}
+}
+}
+
+
+

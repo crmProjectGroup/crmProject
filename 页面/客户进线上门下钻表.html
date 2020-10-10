@@ -1,0 +1,93 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+	throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+	byte[] iso = parameterValue.getBytes("ISO-8859-1");
+	if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+		parameterValue = new String(iso, "UTF-8");
+		return parameterValue;
+	}
+}
+return parameterValue;
+}
+</cc>
+<cc>
+CCService cs = new CCService(userInfo);
+String roleid = userInfo.getRoleId();
+
+String ksrq = request.getParameter("ksrq")==null?"1":encodeParameters(request.getParameter("ksrq")+"");//获取开始时间
+String jsrq = request.getParameter("jsrq")==null?"1":encodeParameters(request.getParameter("jsrq")+"");//获取结束时间
+String project = request.getParameter("project")=="ALL"?"":encodeParameters(request.getParameter("project")+"");//获取项目条件
+String khdj = request.getParameter("khdj")==null?"ALL":encodeParameters(request.getParameter("khdj")+"");//获取客户等级
+int val = request.getParameter("val")==null?0:Integer.valueOf(encodeParameters(request.getParameter("val")+""));//获取总上门数
+
+String datetime = " and a.createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+
+String project_sql = "";
+String khdj_sql = "";
+if(!"ALL".equals(project)){
+    project_sql = " and g.xmmc = '"+project+"'";
+
+}
+if(!"ALL".equals(khdj)){
+    khdj_sql = " and a.khdj = '"+khdj+"'";
+}
+
+List<CCObject> Opportunitylist = cs.cqlQuery("ccuser","SELECT c.name as name,ifnull(y.yid,0) as yid,ifnull(t.zid,0)+ifnull(e.eid,0) as zid,ifnull(b.aid,0) as aid,ifnull(b.cid,0) as cid,ifnull(a.jxid,0) as jxid FROM ccuser c LEFT JOIN ( SELECT c.id AS cid,count(z.id) as eid FROM ccuser c LEFT JOIN Account a ON a.ownerid = c.id LEFT JOIN wbzj z ON z.khmc = a.id WHERE a.is_deleted = '0' "+khdj_sql+" and z.zt='审批通过' and a.xmmc='"+project+"'and z.lastmodifydate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND z.lastmodifydate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') GROUP BY c.id ) e ON c.id = e.cid LEFT JOIN ( SELECT c.id AS cid, COUNT(z.id) AS zid FROM ccuser c LEFT JOIN zjnr z ON z.zjtjr = c.id LEFT JOIN Account a ON z.zjkh = a.id WHERE (a.is_deleted = '0' "+khdj_sql+" and a.xmmc='"+project+"' and z.createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND z.createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s')) GROUP BY c.id ) t ON t.cid = c.id LEFT JOIN ( SELECT c.id AS cid, COUNT(a.recordtype) AS jxid FROM ccuser c LEFT JOIN Account a ON a.ownerid = c.id LEFT JOIN zjnr z ON z.zjkh = a.id WHERE a.is_deleted = '0' "+khdj_sql+" and a.xmmc='"+project+"' "+datetime+" AND a.recordtype = '2018525F215221DtlTXV' GROUP BY c.id ) a ON c.id = a.cid LEFT JOIN ( SELECT c.id AS cid, COUNT(a.recordtype) AS aid FROM ccuser c LEFT JOIN Account a ON a.ownerid = c.id LEFT JOIN zjnr z ON z.zjkh = a.id WHERE a.is_deleted = '0' "+khdj_sql+" and a.xmmc='"+project+"'  "+datetime+" AND (a.recordtype = '2018496272C934EtLhWs' OR a.recordtype = '20186166515AE4A8ZfOc') GROUP BY c.id ) b ON b.cid = c.id LEFT JOIN (SELECT c.id AS cid, COUNT(y.id) AS yid FROM ccuser c LEFT JOIN Account a ON a.ownerid = c.id LEFT JOIN ywjhgjmx y ON y.kh = a.id WHERE (a.is_deleted = '0' "+khdj_sql+" AND a.xmmc = '"+project+"' and y.createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND y.createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ) GROUP BY c.id) y ON c.id = y.cid LEFT JOIN ProjectSaleGroup g ON g.xmxsy = c.id WHERE c.id in (select id from ccuser where role in (select roleid from role where parentrole_id='"+roleid+"' and gap > 0)) AND g.is_deleted = '0' "+project_sql);
+
+
+
+</cc>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no, minimal-ui"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>texts1</title>
+</head>
+<body>
+<form action="" method="post" name="theform" id="theform">
+<button onclick="history.go(-1);return false;">返回</button>
+<table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle">
+    <td NOWRAP="NOWRAP" class="tdTitle" align="center">业务员</td>
+    <td NOWRAP="NOWRAP" class="tdTitle" align="center">进线数</td>
+    <td NOWRAP="NOWRAP" class="tdTitle" align="center">上门数</td>
+    <td NOWRAP="NOWRAP" class="tdTitle" align="center">转介数</td>
+    <td NOWRAP="NOWRAP" class="tdTitle" align="center">跟进数</td>
+</tr>
+<cc>
+       int i = 0;
+       for(CCObject item:Opportunitylist){
+                  i += Integer.valueOf(item.get("aid")+"");
+</cc>
+               <tr>
+                  <td NOWRAP="NOWRAP" class="tdTitle" align="center"><cc:outprint>item.get("name")</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle" align="center"><cc:outprint>item.get("jxid")</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle" align="center"><cc:outprint>item.get("aid")</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle" align="center"><cc:outprint>item.get("zid")</cc:outprint></td>
+                  <td NOWRAP="NOWRAP" class="tdTitle" align="center"><cc:outprint>item.get("yid")</cc:outprint></td>
+               </tr>
+<cc>
+       }
+       if(Opportunitylist.size()>0){
+</cc>
+<!-- <tr class="tabtitle">
+<td NOWRAP="NOWRAP" class="tdTitle" align="center">公海客户数</td>
+<td colspan='4' NOWRAP="NOWRAP" class="tdTitle" align="center"><cc:outprint>val-i</cc:outprint></td>
+</tr> -->
+<cc>       
+}
+</cc>
+</table>
+</form>
+</body>
+</html>

@@ -1,0 +1,262 @@
+CCService cs = new CCService(userInfo);
+
+//判断是否输入货量值
+String xmzhls = record_new.get("xmzhl")==null?"":record_new.get("xmzhl")+"";
+String syhls = record_new.get("syhl")==null?"":record_new.get("syhl")+"";
+if(xmzhls.length()==0 || syhls.length()==0){
+	trigger.addErrorMessage("请填写详细的货量信息!");
+}
+
+//判断是否填写均价和商务条件
+String jjs = record_new.get("jj")==null?"":record_new.get("jj")+"";
+String zcswtjs = record_new.get("zcswtj")==null?"":record_new.get("zcswtj")+"";
+String qdswtjs = record_new.get("qdswtj")==null?"":record_new.get("qdswtj")+""; //qdswtj
+//zgswtj 最高的商务条件是否一定要必填
+if(jjs.length()==0 || zcswtjs.length()==0 || qdswtjs.length()==0){
+	trigger.addErrorMessage("请填写详细的均价和商务条件!");
+}
+
+//判断每月目标面积
+//保守
+String ymbmj1bss = record_new.get("ymbmj1bs")==null?"":record_new.get("ymbmj1bs")+"";
+String ymbmj2bss = record_new.get("ymbmj2bs")==null?"":record_new.get("ymbmj2bs")+"";
+String ymbmj3bss = record_new.get("ymbmj3bs")==null?"":record_new.get("ymbmj3bs")+"";
+String ymbmj4bss = record_new.get("ymbmj4bs")==null?"":record_new.get("ymbmj4bs")+"";
+String ymbmj5bss = record_new.get("ymbmj5bs")==null?"":record_new.get("ymbmj5bs")+"";
+String ymbmj6bss = record_new.get("ymbmj6bs")==null?"":record_new.get("ymbmj6bs")+"";
+String ymbmj7bss = record_new.get("ymbmj7bs")==null?"":record_new.get("ymbmj7bs")+"";
+String ymbmj8bss = record_new.get("ymbmj8bs")==null?"":record_new.get("ymbmj8bs")+"";
+String ymbmj9bss = record_new.get("ymbmj9bs")==null?"":record_new.get("ymbmj9bs")+"";
+String ymbmj10bss = record_new.get("ymbmj10bs")==null?"":record_new.get("ymbmj10bs")+"";
+String ymbmj11bss = record_new.get("ymbmj11bs")==null?"":record_new.get("ymbmj11bs")+"";
+String ymbmj12bss = record_new.get("ymbmj12bs")==null?"":record_new.get("ymbmj12bs")+"";
+if(ymbmj1bss.length()==0 || ymbmj2bss.length()==0 || ymbmj3bss.length()==0 || ymbmj4bss.length()==0 || ymbmj5bss.length()==0 || ymbmj6bss.length()==0 || ymbmj6bss.length()==0 || ymbmj7bss.length()==0 || ymbmj8bss.length()==0 || ymbmj9bss.length()==0 || ymbmj10bss.length()==0 || ymbmj11bss.length()==0 || ymbmj12bss.length()==0){
+	trigger.addErrorMessage("某月保守目标面积没有填写!");
+}
+
+//正常
+String ymbmj1s = record_new.get("ymbmj1")==null?"":record_new.get("ymbmj1")+"";
+String ymbmj2s = record_new.get("ymbmj2")==null?"":record_new.get("ymbmj2")+"";
+String ymbmj3s = record_new.get("ymbmj3")==null?"":record_new.get("ymbmj3")+"";
+String ymbmj4s = record_new.get("ymbmj4")==null?"":record_new.get("ymbmj4")+"";
+String ymbmj5s = record_new.get("ymbmj5")==null?"":record_new.get("ymbmj5")+"";
+String ymbmj6s = record_new.get("ymbmj6")==null?"":record_new.get("ymbmj6")+"";
+String ymbmj7s = record_new.get("ymbmj7")==null?"":record_new.get("ymbmj7")+"";
+String ymbmj8s = record_new.get("ymbmj8")==null?"":record_new.get("ymbmj8")+"";
+String ymbmj9s = record_new.get("ymbmj9")==null?"":record_new.get("ymbmj9")+"";
+String ymbmj10s = record_new.get("ymbmj10")==null?"":record_new.get("ymbmj10")+"";
+String ymbmj11s = record_new.get("ymbmj11")==null?"":record_new.get("ymbmj11")+"";
+String ymbmj12s = record_new.get("ymbmj12")==null?"":record_new.get("ymbmj12")+"";
+if(ymbmj1s.length()==0 || ymbmj2s.length()==0 || ymbmj3s.length()==0 || ymbmj4s.length()==0 || ymbmj5s.length()==0 || ymbmj6s.length()==0 || ymbmj6s.length()==0 || ymbmj7s.length()==0 || ymbmj8s.length()==0 || ymbmj9s.length()==0 || ymbmj10s.length()==0 || ymbmj11s.length()==0 || ymbmj12s.length()==0){
+	trigger.addErrorMessage("某月正常目标面积没有填写!");
+}
+
+//理想
+String ymbmj1lxs = record_new.get("ymbmj1lx")==null?"":record_new.get("ymbmj1lx")+"";
+String ymbmj2lxs = record_new.get("ymbmj2lx")==null?"":record_new.get("ymbmj2lx")+"";
+String ymbmj3lxs = record_new.get("ymbmj3lx")==null?"":record_new.get("ymbmj3lx")+"";
+String ymbmj4lxs = record_new.get("ymbmj4lx")==null?"":record_new.get("ymbmj4lx")+"";
+String ymbmj5lxs = record_new.get("ymbmj5lx")==null?"":record_new.get("ymbmj5lx")+"";
+String ymbmj6lxs = record_new.get("ymbmj6lx")==null?"":record_new.get("ymbmj6lx")+"";
+String ymbmj7lxs = record_new.get("ymbmj7lx")==null?"":record_new.get("ymbmj7lx")+"";
+String ymbmj8lxs = record_new.get("ymbmj8lx")==null?"":record_new.get("ymbmj8lx")+"";
+String ymbmj9lxs = record_new.get("ymbmj9lx")==null?"":record_new.get("ymbmj9lx")+"";
+String ymbmj10lxs = record_new.get("ymbmj10lx")==null?"":record_new.get("ymbmj10lx")+"";
+String ymbmj11lxs = record_new.get("ymbmj11lx")==null?"":record_new.get("ymbmj11lx")+"";
+String ymbmj12lxs = record_new.get("ymbmj12lx")==null?"":record_new.get("ymbmj12lx")+"";
+if(ymbmj1lxs.length()==0 || ymbmj2lxs.length()==0 || ymbmj3lxs.length()==0 || ymbmj4lxs.length()==0 || ymbmj5lxs.length()==0 || ymbmj6lxs.length()==0 || ymbmj6lxs.length()==0 || ymbmj7lxs.length()==0 || ymbmj8lxs.length()==0 || ymbmj9lxs.length()==0 || ymbmj10lxs.length()==0 || ymbmj11lxs.length()==0 || ymbmj12lxs.length()==0){
+	trigger.addErrorMessage("某月理想目标面积没有填写!");
+}
+
+
+//计算创收
+CCObject obj = new CCObject("xmys");
+
+double ycsbsz = 0.0; //月创收保守值
+double ycszcz = 0.0; //月创收正常值
+double ycslxz = 0.0; //月创收理想值
+double csbszhj = 0.0; //创收保守值合计
+double cszczhj = 0.0; //创收正常值合计
+double cslxzhj = 0.0; //创收理想值合计
+double ymbmj = 0.0; //月目标面积
+
+//获取均价和佣金比例
+Double jj = Double.parseDouble(record_new.get("jj")==""?"0.0":record_new.get("jj")+""); //均价
+Double zcswtj = Double.parseDouble(record_new.get("zcswtj")==""?"0.0":record_new.get("zcswtj")+""); //正常比例
+Double qdswtj = Double.parseDouble(record_new.get("qdswtj")==""?"0.0":record_new.get("qdswtj")+""); //渠道比例
+Double zgswtj = Double.parseDouble(record_new.get("zgswtj")==""?"0.0":record_new.get("zgswtj")+""); //渠道比例
+
+//项目可创收额计算
+double xmzhl = Double.parseDouble(record_new.get("xmzhl")==""?"0.0":record_new.get("xmzhl")+"");  //总货量
+double syhl = Double.parseDouble(record_new.get("syhl")==""?"0.0":record_new.get("syhl")+"");  //剩余货量
+double xmkcsze = zgswtj * jj * xmzhl;
+double sykcsz = zgswtj * jj * syhl;
+obj.put("xmkcsze",xmkcsze);
+obj.put("sykcsz",sykcsz);
+
+//if(true) {trigger.addErrorMessage("hello");}  //测试
+//保守值计算
+ymbmj = Double.parseDouble(record_new.get("ymbmj1bs")==""?"0.0":record_new.get("ymbmj1bs")+""); //1月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb1bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj2bs")==""?"0.0":record_new.get("ymbmj2bs")+""); //2月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb2bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj3bs")==""?"0.0":record_new.get("ymbmj3bs")+""); //3月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb3bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj4bs")==""?"0.0":record_new.get("ymbmj4bs")+""); //4月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb4bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj5bs")==""?"0.0":record_new.get("ymbmj5bs")+""); //5月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb5bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj6bs")==""?"0.0":record_new.get("ymbmj6bs")+""); //6月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb6bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj7bs")==""?"0.0":record_new.get("ymbmj7bs")+""); //7月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb7bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj8bs")==""?"0.0":record_new.get("ymbmj8bs")+""); //8月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb8bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj9bs")==""?"0.0":record_new.get("ymbmj9bs")+""); //9月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb9bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj10bs")==""?"0.0":record_new.get("ymbmj10bs")+""); //10月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb10bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj11bs")==""?"0.0":record_new.get("ymbmj11bs")+""); //11月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb11bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj12bs")==""?"0.0":record_new.get("ymbmj12bs")+""); //12月
+ycsbsz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb12bs",ycsbsz);
+csbszhj = csbszhj + ycsbsz;
+
+//正常值计算
+ymbmj = Double.parseDouble(record_new.get("ymbmj1")==""?"0.0":record_new.get("ymbmj1")+""); //1月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb1zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj2")==""?"0.0":record_new.get("ymbmj2")+""); //2月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb2zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj3")==""?"0.0":record_new.get("ymbmj3")+""); //3月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb3zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj4")==""?"0.0":record_new.get("ymbmj4")+""); //4月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb4zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj5")==""?"0.0":record_new.get("ymbmj5")+""); //5月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb5zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj6")==""?"0.0":record_new.get("ymbmj6")+""); //6月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb6zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj7")==""?"0.0":record_new.get("ymbmj7")+""); //7月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb7zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj8")==""?"0.0":record_new.get("ymbmj8")+""); //8月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb8zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj9")==""?"0.0":record_new.get("ymbmj9")+""); //9月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb9zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj10")==""?"0.0":record_new.get("ymbmj10")+""); //10月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb10zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj11")==""?"0.0":record_new.get("ymbmj11")+""); //11月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb11zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj12")==""?"0.0":record_new.get("ymbmj12")+""); //12月
+ycszcz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb12zc",ycszcz);
+cszczhj = cszczhj + ycszcz;
+
+//理想值计算
+ymbmj = Double.parseDouble(record_new.get("ymbmj1lx")==""?"0.0":record_new.get("ymbmj1lx")+""); //1月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb1lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj2lx")==""?"0.0":record_new.get("ymbmj2lx")+""); //2月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb2lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj3lx")==""?"0.0":record_new.get("ymbmj3lx")+""); //3月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb3lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj4lx")==""?"0.0":record_new.get("ymbmj4lx")+""); //4月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb4lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj5lx")==""?"0.0":record_new.get("ymbmj5lx")+""); //5月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb5lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj6lx")==""?"0.0":record_new.get("ymbmj6lx")+""); //6月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb6lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj7lx")==""?"0.0":record_new.get("ymbmj7lx")+""); //7月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb7lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj8lx")==""?"0.0":record_new.get("ymbmj8lx")+""); //8月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb8lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj9lx")==""?"0.0":record_new.get("ymbmj9lx")+""); //9月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb9lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj10lx")==""?"0.0":record_new.get("ymbmj10lx")+""); //10月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb10lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj11lx")==""?"0.0":record_new.get("ymbmj11lx")+""); //11月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb11lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+ymbmj = Double.parseDouble(record_new.get("ymbmj12lx")==""?"0.0":record_new.get("ymbmj12lx")+""); //12月
+ycslxz = ymbmj * jj * (zcswtj+qdswtj)/2;
+obj.put("ycsmb12lx",ycslxz);
+cslxzhj = cslxzhj + ycslxz;
+
+
+//创收合计
+obj.put("cshjbs",csbszhj); //保守
+obj.put("cshjzc",cszczhj); //正常
+obj.put("cshjlx",cslxzhj); //理想
+
+//回款合计
+obj.put("hkbs",csbszhj*0.85); //保守
+obj.put("hkzc",cszczhj*0.85); //正常
+obj.put("hklx",cslxzhj*0.85); //理想
+
+String id = record_new.get("id")==null?"":record_new.get("id")+"";
+obj.put("id",id);
+
+cs.updateLt(obj);

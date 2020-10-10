@@ -1,0 +1,391 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+
+<cc>
+CCService cs = new CCService(userInfo);
+String roleid = userInfo.getRoleId();
+java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
+String nowday = df.format(new Date());
+String ksrq = request.getParameter("startTime")==null?nowday.substring(0,nowday.lastIndexOf("-"))+"-01":request.getParameter("startTime")+"";//开始日期
+String jsrq = request.getParameter("endTime")==null?nowday:request.getParameter("endTime")+"";//结束日期
+
+String industry = request.getParameter("industry")==null?"行业类型":request.getParameter("industry")+"";//获取条件
+String project = request.getParameter("project")==null?"全部":request.getParameter("project")+"";//获取项目条件
+String accounttype = request.getParameter("accounttype")==null?"全部":request.getParameter("accounttype")+"";//获取客户类别条件
+
+List<CCObject> projectlist = cs.cqlQuery("Project","select name,id from Project where is_deleted = '0' and xmzt = '代理中' and id in (select distinct(xmmc) from ProjectSaleGroup where is_deleted='0' and xmxsy in (select id from ccuser where isusing='1' and role in (select roleid from role where parentrole_id='"+roleid+"' and gap > 0)))");
+
+String pie_sql = "";
+String pie_title_data = "";
+String pie_topic = "";
+String industry_conditions = "";
+String project_conditions = "";
+String account_conditions = "";
+
+
+String datetime = " and createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+
+if(!"全部".equals(project)){
+     project_conditions = " and xmmc = '"+project+"'";
+}
+
+if("租赁".equals(accounttype)){
+     account_conditions = " and recordtype = '20186166515AE4A8ZfOc'";
+}else if("销售".equals(accounttype)){
+     account_conditions = " and recordtype = '2018496272C934EtLhWs'";
+}
+
+if("行业类型".equals(industry)){
+     industry_conditions = "xylx";
+}else if("来源区域".equals(industry)){
+     industry_conditions = "khlyqy";
+}else if("需求面积".equals(industry)){
+     industry_conditions = "xqmj";
+}else if("认知途径".equals(industry)){
+     industry_conditions = "rztj1";
+}else if("认可点".equals(industry)){
+     industry_conditions = "rkd";
+}else if("客户等级".equals(industry)){
+     industry_conditions = "khdj";
+}else if("抗性问题".equals(industry)){
+     industry_conditions = "zlkxwt";
+}
+
+List<CCObject> accountlist = new ArrayList<CCObject>();
+
+
+if("抗性问题".equals(industry)){
+     List<CCObject> titlelist = new ArrayList<CCObject>();
+     
+     pie_sql = "select zlkxwt as title from Account where is_deleted = '0' "+project_conditions+account_conditions+datetime+" and zlkxwt is not null and ownerid in (select id from ccuser where isusing='1' and role in (select roleid from role where parentrole_id='"+roleid+"' and gap > 0))";
+     accountlist = cs.cqlQuery("Account",pie_sql);
+     CCObject obj1 = new CCObject();
+     obj1.put("name","其他");
+     obj1.put("value","0");
+     CCObject obj2 = new CCObject();
+     obj2.put("name","交通");
+     obj2.put("value","0");
+     CCObject obj3 = new CCObject();
+     obj3.put("name","配套");
+     obj3.put("value","0");
+     CCObject obj4 = new CCObject();
+     obj4.put("name","楼层");
+     obj4.put("value","0");
+     CCObject obj5 = new CCObject();
+     obj5.put("name","交楼时间");
+     obj5.put("value","0");
+     CCObject obj6 = new CCObject();
+     obj6.put("name","品质");
+     obj6.put("value","0");
+     CCObject obj7 = new CCObject();
+     obj7.put("name","风水");
+     obj7.put("value","0");
+     CCObject obj8 = new CCObject();
+     obj8.put("name","景观");
+     obj8.put("value","0");
+     CCObject obj9 = new CCObject();
+     obj9.put("name","装修");
+     obj9.put("value","0");
+     CCObject obj10 = new CCObject();
+     obj10.put("name","免租期");
+     obj10.put("value","0");
+     CCObject obj11 = new CCObject();
+     obj11.put("name","递增率");
+     obj11.put("value","0");
+     CCObject obj12 = new CCObject();
+     obj12.put("name","年限");
+     obj12.put("value","0");
+     CCObject obj13 = new CCObject();
+     obj13.put("name","入驻率");
+     obj13.put("value","0");
+     CCObject obj14 = new CCObject();
+     obj14.put("name","政策补贴");
+     obj14.put("value","0");
+     for(CCObject pie_title_item:accountlist){
+          String title = pie_title_item.get("title")+"";
+          String[] title_val = title.split(";");
+          for(int i = 0;i<title_val.length;i++){
+               if("其他".equals(title_val[i])){
+                    obj1.put("value",Integer.valueOf(obj1.get("value")+"")+1);
+               }else if("交通".equals(title_val[i])){
+                    obj2.put("value",Integer.valueOf(obj2.get("value")+"")+1);
+               }else if("配套".equals(title_val[i])){
+                    obj3.put("value",Integer.valueOf(obj3.get("value")+"")+1);
+               }else if("楼层".equals(title_val[i])){
+                    obj4.put("value",Integer.valueOf(obj4.get("value")+"")+1);
+               }else if("交楼时间".equals(title_val[i])){
+                    obj5.put("value",Integer.valueOf(obj5.get("value")+"")+1);
+               }else if("品质".equals(title_val[i])){
+                    obj6.put("value",Integer.valueOf(obj6.get("value")+"")+1);
+               }else if("风水".equals(title_val[i])){
+                    obj7.put("value",Integer.valueOf(obj7.get("value")+"")+1);
+               }else if("景观".equals(title_val[i])){
+                    obj8.put("value",Integer.valueOf(obj8.get("value")+"")+1);
+               }else if("装修".equals(title_val[i])){
+                    obj9.put("value",Integer.valueOf(obj9.get("value")+"")+1);
+               }else if("免租期".equals(title_val[i])){
+                    obj10.put("value",Integer.valueOf(obj10.get("value")+"")+1);
+               }else if("递增率".equals(title_val[i])){
+                    obj11.put("value",Integer.valueOf(obj11.get("value")+"")+1);
+               }else if("年限".equals(title_val[i])){
+                    obj12.put("value",Integer.valueOf(obj12.get("value")+"")+1);
+               }else if("入驻率".equals(title_val[i])){
+                    obj13.put("value",Integer.valueOf(obj13.get("value")+"")+1);
+               }else if("政策补贴".equals(title_val[i])){
+                    obj14.put("value",Integer.valueOf(obj14.get("value")+"")+1);
+               }
+          }
+     }
+     accountlist = new ArrayList<CCObject>();
+     accountlist.add(obj1);
+     accountlist.add(obj2);
+     accountlist.add(obj3);
+     accountlist.add(obj4);
+     accountlist.add(obj5);
+     accountlist.add(obj6);
+     accountlist.add(obj7);
+     accountlist.add(obj8);
+     accountlist.add(obj9);
+     accountlist.add(obj10);
+     accountlist.add(obj11);
+     accountlist.add(obj12);
+     accountlist.add(obj13);
+     accountlist.add(obj14);
+
+
+if(accountlist.size()>0){
+     for(CCObject pie_title_item:accountlist){
+          pie_topic += "'"+pie_title_item.get("name")+"',";
+          pie_title_data += "{value:"+pie_title_item.get("value")+",name:'"+pie_title_item.get("name")+"',url:'controller.action?name=btxzb&industry=zlkxwt&project="+project+"&accounttype="+accounttype+"&ksrq="+ksrq+"&jsrq="+jsrq+"'},";
+     }
+     pie_title_data = pie_title_data.substring(0,pie_title_data.lastIndexOf(","));
+     pie_topic = pie_topic.substring(0,pie_topic.lastIndexOf(","));
+}
+
+     
+}else{
+     pie_sql = "select "+industry_conditions+" as title,count(id) as cid from Account where is_deleted = '0' "+project_conditions+account_conditions+datetime+" and ownerid in (select id from ccuser where isusing='1' and role in (select roleid from role where parentrole_id='"+roleid+"' and gap > 0))  and "+industry_conditions+" is not null group by "+industry_conditions;
+
+accountlist = cs.cqlQuery("Account",pie_sql);
+
+if(accountlist.size()>0){
+     for(CCObject pie_title_item:accountlist){
+          pie_topic += "'"+pie_title_item.get("title")+"',";
+          pie_title_data += "{value:"+pie_title_item.get("cid")+",name:'"+pie_title_item.get("title")+"',url:'controller.action?name=btxzb&industry="+industry_conditions+"&project="+project+"&accounttype="+accounttype+"&ksrq="+ksrq+"&jsrq="+jsrq+"'},";
+     }
+     pie_title_data = pie_title_data.substring(0,pie_title_data.lastIndexOf(","));
+     pie_topic = pie_topic.substring(0,pie_topic.lastIndexOf(","));
+}
+
+}
+
+
+</cc>
+
+<html>
+<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1526972355175tvSWZ3EL"></script>
+<head>
+<title>客户饼图分析</title>
+</head>
+<body style="text-align:center;">
+<br/>
+<form action="" method="post" name="theform" id="theform">
+<div style="width:100%;margin-left:auto;margin-right:auto;">
+项目：
+<select id="project" name="project">
+<option value="全部">全部</option>
+<cc>
+for(CCObject projectitem:projectlist){
+</cc>
+<option value=<cc:outprint>projectitem.get("id")</cc:outprint>><cc:outprint>projectitem.get("name")</cc:outprint></option>
+<cc>}</cc>
+</select>
+&nbsp&nbsp
+客户类别：
+<select id="accounttype" name="accounttype">
+<option>全部</option>
+<option>租赁</option>
+<option>销售</option>
+</select>
+
+&nbsp&nbsp
+条件：
+<select id="industry" name="industry">
+<option>行业类型</option>
+<option>抗性问题</option>
+<option>来源区域</option>
+<option>需求面积</option>
+<option>认知途径</option>
+<option>认可点</option>
+<option>客户等级</option>
+</select>
+<script>
+document.getElementById("industry").value = "<cc:outprint>industry</cc:outprint>";
+document.getElementById("accounttype").value = "<cc:outprint>accounttype</cc:outprint>";
+document.getElementById("project").value = "<cc:outprint>project</cc:outprint>";
+</script>
+&nbsp&nbsp
+开始日期&nbsp;&nbsp;<input id="startTime" name="startTime" class="datepicker" type="text" value="<cc:outprint>ksrq</cc:outprint>">
+&nbsp;&nbsp;截止日期&nbsp;&nbsp;<input id="endTime" name="endTime" class="datepicker" type="text" value="<cc:outprint>jsrq</cc:outprint>">
+<input type="submit" value=" 查 询 " class="input01"/>
+</div>
+<table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle" >
+    <td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>industry</cc:outprint></td>
+    <td NOWRAP="NOWRAP" class="tdTitle">记录数</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">占比</td>
+</tr>
+<cc>
+ Double total = 0.0;
+Double tos = 0.0;
+String toss = "0";
+
+
+if("抗性问题".equals(industry)){
+for(CCObject items:accountlist){
+        total += items.get("value")==null?0.0:Double.valueOf(items.get("value")+"");
+}
+
+for(CCObject itemss:accountlist){
+                   Double record = itemss.get("value")==null?0.0:Double.valueOf(itemss.get("value")+"");
+                  if(record>0 && total>0){
+                   tos = record*100/total;
+}                   
+if(tos>0){
+                      BigDecimal bd = new BigDecimal(tos);
+                   bd = bd.setScale(2, RoundingMode.HALF_UP);
+                      toss = bd.toString();
+                   }
+
+
+
+</cc>
+<tr class="tabtitle" onMouseOver="over()" onMouseOut="out()" onclick="jump('<cc:outprint>ksrq</cc:outprint>','<cc:outprint>jsrq</cc:outprint>','<cc:outprint>project</cc:outprint>','<cc:outprint>accounttype</cc:outprint>','<cc:outprint>industry_conditions</cc:outprint>','<cc:outprint>itemss.get("name")</cc:outprint>')">
+
+<td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>itemss.get("name")</cc:outprint></td>
+<td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>itemss.get("value")</cc:outprint></td>
+<td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>toss</cc:outprint>%</td>
+
+</tr>
+<cc> 
+}
+}else{
+
+for(CCObject items:accountlist){
+        total += items.get("cid")==null?0.0:Double.valueOf(items.get("cid")+"");
+}
+for(CCObject item:accountlist){
+
+                   Double record = item.get("cid")==null?0.0:Double.valueOf(item.get("cid")+"");
+  if(record>0 && total>0){
+                   tos = record*100/total;
+}
+                   if(tos>0){
+                      BigDecimal bd = new BigDecimal(tos);
+                   bd = bd.setScale(2, RoundingMode.HALF_UP);
+                      toss = bd.toString();
+                   }
+                   
+</cc>
+<tr class="tabtitle" onMouseOver="over()" onMouseOut="out()" onclick="jump('<cc:outprint>ksrq</cc:outprint>','<cc:outprint>jsrq</cc:outprint>','<cc:outprint>project</cc:outprint>','<cc:outprint>accounttype</cc:outprint>','<cc:outprint>industry_conditions</cc:outprint>','<cc:outprint>item.get("title")</cc:outprint>')">
+
+<td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("title")</cc:outprint></td>
+<td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("cid")</cc:outprint></td>
+<td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>toss</cc:outprint>%</td>
+
+</tr>
+<cc>}
+
+
+}</cc>
+</table>
+
+<div id="chart" style="width: 100%;height:600px;" valign="middle" align="center"></div>
+</form>
+</body>
+</html>
+<script>
+option = {
+    title : {
+        text: '客户分析',
+        subtext: '数据分析',
+        x:'center'
+    },
+    tooltip : {
+        trigger: 'item',
+        formatter: "{a} <br/>{b} : {c} ({d}%)"
+    },
+    legend: {
+        orient : 'horizontal',
+        x:'center',
+        y:'50',
+        data:[<cc:outprint>pie_topic</cc:outprint>]
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : {show: true},
+            dataView : {show: true, readOnly: false},
+            magicType : {
+                show: true, 
+                type: ['pie', 'funnel'],
+                option: {
+                    funnel: {
+                        x: '25%',
+                        width: '50%',
+                        funnelAlign: 'left',
+                        max: 1548
+                    }
+                }
+            },
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    calculable : true,series : [
+        {
+            name:'访问来源',
+            type:'pie',
+            radius : '55%',
+            center: ['50%', '60%'],
+            data:[<cc:outprint>pie_title_data</cc:outprint>].sort(function (a, b) { return a.value - b.value; }),
+            itemStyle:{ 
+            normal:{ 
+                  label:{ 
+                    show: true, 
+                    formatter: '{b} : {c} ({d}%)' 
+                  }, 
+                  labelLine :{show:true} 
+                } 
+            } 
+        }
+    ]
+}
+    
+echartsPie = echarts.init(document.getElementById('chart'));  
+    $(function(){ 
+        echartsPie.setOption(option); 
+    }); 
+echartsPie.on('click', function(param) {
+    var url = param.data.url+"&condition="+param.name;
+    window.location.href = url;
+});
+//鼠标点击另外一行时关闭已选行变色  
+    function out() {
+        var oObj = event.srcElement;
+        if (oObj.tagName.toLowerCase() == "td") {
+            var oTr = oObj.parentNode;
+            if (!oTr.tag) oTr.style.backgroundColor = "";
+        }
+    }
+    //鼠标移动到选择行上时的行变色
+    function over() {
+        var oObj = event.srcElement;
+        if (oObj.tagName.toLowerCase() == "td") {
+            var oTr = oObj.parentNode;
+            if (!oTr.tag) oTr.style.backgroundColor = "#E1E9FD";
+        }
+    }
+function jump(ksj,jsj,pj,at,icd,cdt){
+        location.href = "controller.action?name=btxzb&industry="+icd+"&project="+pj+"&accounttype="+at+"&ksrq="+ksj+"&jsrq="+jsj+"&condition="+cdt;
+}
+</script>

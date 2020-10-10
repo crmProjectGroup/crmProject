@@ -1,0 +1,1304 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" isELIgnored="false" />
+<cc!>
+/*
+description:项目经理结算开票页面
+version: 1.0
+date:20190531
+author:tom
+log:
+1.20190719 销售部分的修改
+2.20190806 添加数据简报部分
+3.20190809 因为手机端表格对其问题,引入vue-easytable
+4.20190822 简报中累计回款金额
+5.20190828 给财务加入权限
+*/
+
+/** * 将ISO-8859-1编码格式的字符串转码为UTF-8 * 
+ * * @param parameterValue 
+ * * @return 
+ * * @throws UnsupportedEncodingException 
+ * */ 
+private static String encodeParameters(String parameterValue) throws UnsupportedEncodingException { 
+	if (parameterValue != null && parameterValue.length()> 0) { 
+		byte[] iso = parameterValue.getBytes("ISO-8859-1"); 
+		if (parameterValue.equals(new String(iso, "ISO-8859-1"))) { 
+			parameterValue= new String(iso, "UTF-8"); 
+			return parameterValue; 
+		} 
+	} 
+	return parameterValue; 
+}
+</cc>
+<cc>
+	CCService cs = new CCService(userInfo); 
+	String uid = userInfo.getUserId();//当前登录用户id 
+	List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'"); //登录人的账号
+	String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; 
+	
+	//String uid = "0052018470A714CaerX7"; //李荣武id 测试用 
+	String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id 
+	String managerId = userInfo.getManagerId();
+	//String userName = userInfo.getUserName();//getUserName 
+	
+	
+	//日期的处理
+	java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
+	String nowday = df.format(new Date());
+	Calendar cal = Calendar.getInstance();
+	int year = cal.get(Calendar.YEAR);
+	String begin_day=year+"-01-01";
+    //out.print(nowday);
+    String ksrq = request.getParameter("startTime")==null?begin_day:request.getParameter("startTime")+"";//开始日期
+    //out.print(ksrq);
+    //out.print(ksrq);
+    String jsrq = request.getParameter("endTime")==null?nowday:request.getParameter("endTime")+"";//结束日期
+    //out.print(jsrq);
+    String datetime = " and a.createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+  
+    //进入页面的用户控制
+    List<CCObject> projectlist = new ArrayList();
+    //out.print(profid);
+    if("aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid) || "aaa20188BF02AA11vijc".equals(profid) ){
+		//projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部','代理二部') and xmzt='代理中' and is_deleted='0'"); //所有代理项目
+		projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部','代理二部') and (xmzt='代理中' or (xmzt='已结束' and xmyxrq>= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s'))) and is_deleted='0'");
+    } else if("aaa20180681351FmekUG".equals(profid) ){
+    	if("aaa20180681351FmekUG".equals(uid))	{ //一部郑柏
+			//projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部') and xmzt='代理中' and is_deleted='0'"); //一部项目
+			projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部') and (xmzt='代理中' or (xmzt='已结束' and xmyxrq>= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s'))) and is_deleted='0'"); //一部项目
+    	} else {
+			 //projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理二部') and xmzt='代理中' and is_deleted='0'"); //二部项目
+			 projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理二部') and (xmzt='代理中' or (xmzt='已结束' and xmyxrq>= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s'))) and is_deleted='0'"); //二部项目
+    	}
+    } else if("aaa2018A38306ED9syVe".equals(profid)){
+		//projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'");
+		projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and (xmzt='代理中' or (xmzt='已结束' and xmyxrq>= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s'))) and is_deleted='0'");
+	}
+	
+	JSONArray jsonArray = JSONArray.fromObject(projectlist); 
+	String projectlist_1=jsonArray.toString();
+  
+	//out.print(String.valueOf(projectlist.size()));
+	//List<CCObject> projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'"); //该经理管理的代理中的项目 
+	//[{"CCObjectAPI":"Project","name":"广州海珠同创汇","id":"a05201825B086F3UiZWa"},{"CCObjectAPI":"Project","name":"广州誉城同创汇","id":"a05201835C43A40C4KAS"}]
+	//List<CCObject> Accountlist = cs.cqlQuery("Account","SELECT a.id as id, a.name as name, a.xylx as industry, CASE a.recordtype when '20186166515AE4A8ZfOc' then '租赁客户' when '2018525F215221DtlTXV' then '进线客户' else '销售客户' end as type, a.khdj as level , a.khlyqy as area FROM Account a inner join ccuser b on a.ownerid = b.id WHERE a.createbyid <> a.ownerid and a.ghkh = '是' and a.ownerid <> '005201852146611JQCTr' and b.profile = 'aaa2018A38306ED9syVe' and a.lxrdh not like '%0000%' and a.is_deleted = '0' ");
+	String projectid =""; //项目id 
+	String projectname =""; //项目名称 
+
+	String projectid_list =""; //项目id集合,用于数据简报接口调用
+	
+	//业务机会
+	String oppoid = ""; //业务机会id
+	String khmc = ""; //客户id
+	String khnm = ""; //客户名称
+	String cjdw = ""; //成交单位
+	String cjsj = ""; //成交时间
+	String recordtype = ""; //
+	Double cjmj = 0.0;//成交面积
+	Double cjdj = 0.0;//成交单价
+	Double cjzj = 0.0;//成交总价
+	Double xszj = 0.0;//销售总价
+	
+
+
+	JSONObject Oppojson = new JSONObject();
+	JSONArray Oppojsonarr = new JSONArray(); 
+	String jsa =""; 
+
+
+	//代理结算明细
+	String dljsmxid = ""; //结算单id
+	String ownerid = ""; //业务员id
+	String dljsmxname = ""; //结算单编号
+	String dljsmxtype = ""; //结算租赁或销售
+	Double dlfjsbl = 0.0;//结算比例
+    Double dlfjsje = 0.0;//结算额
+    Double ykpbl = 0.0;//已开票比例
+	String jyzt = ""; //结佣状态
+
+	JSONObject dljsmxbjson = new JSONObject();
+	JSONArray dljsmxbjsonarr = new JSONArray(); 
+	String jsb =""; 
+
+	//开票申请
+	String kpsqid = "";//开票申请id kpsqid 
+	String fplx = ""; //发票类型
+	String fptt = "";//发票抬头fptt
+	String sqbh = "";//申请编号
+	String jsmx = "";//结算明细jsmx
+	Double ljyjsje = 0.0;//累计应结算金额ljyjsje
+	Double bcjsbl = 0.0;//本次结算比例bcjsbl
+	Double fpje = 0.0;//开票金额fpje
+	String fpnr = "";//发票内容fpnr
+	String bz = "";//备注
+	String spzt = "";//审批状态
+	String opnm = "";//业务机会名称
+
+	JSONObject kpsqjson = new JSONObject();
+	JSONArray kpsqjsonarr = new JSONArray(); 
+	String jsc =""; 
+
+	for(CCObject item:projectlist){ 
+		// ywylineacnumt =0;
+		// ywysmacnumt =0;
+		projectid = item.get("id")==null?"":item.get("id")+ ""; 
+		projectid_list +=projectid+",";
+    projectname = item.get("name")==null?"":item.get("name") + ""; 
+    //业务机会拼接客户, 获取客户名字, 成交单位, 成交面积, 成交单价, 成交总价, 成交时间  a05201895750531u4bBv 星港
+		//List<CCObject> Opportunitylist = cs.cqlQuery("Opportunity","SELECT name,khmc,cjdw,cjmj,cjdj,date_format(cjsj, '%Y-%m-%d') as cjsj,ROUND(cjmj*cjdj,2) as cjzj,cjzj as xszj FROM Opportunity WHERE xmmc = '"+projectid+"' and is_deleted='0' and jieduan='成交' and spzt='审批通过'"); 
+		datetime = " and o.cjsj >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND o.cjsj <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+		List<CCObject> Opportunitylist = cs.cqlQuery("Opportunity","SELECT o.id,o.name as name,o.ownerid as ownerid,o.khmc,a.name as khnm,o.cjdw,TRUNCATE(o.cjmj,3) as cjmj,o.cjdj,date_format(o.cjsj, '%Y-%m-%d') as cjsj,ROUND(o.cjmj*o.cjdj,2) as cjzj,o.cjzj as xszj, o.recordtype as recordtype FROM Opportunity o inner join Account a on o.khmc=a.id WHERE o.xmmc = '"+projectid+"' and o.is_deleted='0' and o.jieduan='成交' and o.spzt='审批通过' " +datetime +" order by cjsj desc"); 
+		//获取客户名称'
+		List<CCObject> ccuser = null;
+		for(CCObject Opportunity:Opportunitylist){
+			oppoid = Opportunity.get("id")==null?"":Opportunity.get("id")+ ""; 
+			ownerid = Opportunity.get("ownerid")==null?"":Opportunity.get("ownerid")+ ""; 
+			ccuser = cs.cqlQuery("ccuser","select name from ccuser where id='"+ownerid+"'");
+			ownerid=ccuser.get(0).get("name")==null?"":ccuser.get(0).get("name")+ ""; 
+			opnm = Opportunity.get("name")==null?"":Opportunity.get("name")+ ""; 
+			khmc = Opportunity.get("khmc")==null?"":Opportunity.get("khmc")+ ""; 
+			khnm = Opportunity.get("khnm")==null?"":Opportunity.get("khnm")+ ""; 
+			cjdw = Opportunity.get("cjdw")==null?"":Opportunity.get("cjdw")+ "";
+			cjsj = Opportunity.get("cjsj")==null?"":Opportunity.get("cjsj")+ "";
+			cjmj = Opportunity.get("cjmj")==null?0.0:Double.parseDouble(Opportunity.get("cjmj")+"");
+			cjdj = Opportunity.get("cjdj")==null?0.0:Double.parseDouble(Opportunity.get("cjdj")+"");
+			recordtype = Opportunity.get("recordtype")==null?"":Opportunity.get("recordtype")+ "";
+			//按类型给总价
+			if("2018BD60B25D1A2mLTd7".equals(recordtype)){ //租赁
+				cjzj = Opportunity.get("cjzj")==null?0.0:Double.parseDouble(Opportunity.get("cjzj")+"");
+			} else {
+				cjzj = Opportunity.get("xszj")==null?0.0:Double.parseDouble(Opportunity.get("xszj")+"");
+			}
+			//xszj = Opportunity.get("xszj")==null?0.0:Double.parseDouble(Opportunity.get("xszj")+"");
+
+			Oppojson.put("projectid",projectid);
+			Oppojson.put("projectname",projectname);
+			Oppojson.put("oppoid",oppoid);
+			Oppojson.put("opnm",opnm);
+			Oppojson.put("khmc",khmc);
+			Oppojson.put("khnm",khnm);
+			Oppojson.put("cjdw",cjdw);
+			Oppojson.put("cjmj",cjmj);
+			Oppojson.put("cjdj",cjdj);
+			Oppojson.put("cjzj",cjzj); 
+			//Oppojson.put("xszj",xszj); 
+			Oppojson.put("cjsj",cjsj); 
+			Oppojson.put("ownerid",ownerid); 
+			Oppojsonarr.add(Oppojson); 
+		}
+
+		//代理结算明细表 id,结算单名称, 客户,房号,面积,单价,总价,代理费结算比例,开票额,签约时间,结佣状态
+		datetime = " and qysj >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND qysj <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+		//List<CCObject> dljsmxblist = cs.cqlQuery("dljsmxb","SELECT id,recordtype,khmc,yzmc, fh, mj, cjsj as cjdj,cjzj , yzj, dlfjsbl, dlfjsje , date_format(qysj, '%Y-%m-%d') AS cjsj, jyzt,ykpbl FROM dljsmxb WHERE xmmc = '"+projectid+"' AND is_deleted = '0'"); 
+		List<CCObject> dljsmxblist = cs.cqlQuery("dljsmxb","SELECT id,name,recordtype,khmc,yzmc, fh, TRUNCATE(mj,3) as mj, cjsj as cjdj,ROUND(cjzj,2) as cjzj , ROUND(yzj,2) as yzj, dlfjsbl, ROUND(dlfjsje,2) as dlfjsje , date_format(qysj, '%Y-%m-%d') AS cjsj, jyzt,ykpbl FROM dljsmxb WHERE xmmc = '"+projectid+"' AND is_deleted = '0'" +datetime +" order by qysj desc"); 
+		
+		for(CCObject dljsmxb:dljsmxblist){
+			dljsmxid = dljsmxb.get("id")==null?"":dljsmxb.get("id")+ ""; 
+			dljsmxname = dljsmxb.get("name")==null?"":dljsmxb.get("name")+ ""; 
+			khnm = "获取失败"; 
+			cjdw = dljsmxb.get("fh")==null?"":dljsmxb.get("fh")+ "";
+			cjmj = dljsmxb.get("mj")==null?0.0:Double.parseDouble(dljsmxb.get("mj")+"");
+			cjdj = dljsmxb.get("cjdj")==null?0.0:Double.parseDouble(dljsmxb.get("cjdj")+"");
+			dljsmxtype = dljsmxb.get("recordtype")==null?"":dljsmxb.get("recordtype")+ ""; 
+			if("201877BBCEB2536vZE9X".equals(dljsmxtype)){ //租赁
+				khmc = dljsmxb.get("khmc")==null?"":dljsmxb.get("khmc")+ ""; 
+				cjzj = dljsmxb.get("yzj")==null?0.0:Double.parseDouble(dljsmxb.get("yzj")+"");
+			} else {
+				khmc = dljsmxb.get("yzmc")==null?"":dljsmxb.get("yzmc")+ ""; 
+				cjzj = dljsmxb.get("cjzj")==null?0.0:Double.parseDouble(dljsmxb.get("cjzj")+"");
+			}
+			
+			List<CCObject> account_dljs = cs.cqlQuery("Account", "select name from Account where id='"+khmc+"' AND is_deleted = '0'");
+			if(account_dljs.size()>0){
+				khnm = account_dljs.get(0).get("name")==null?"":account_dljs.get(0).get("name")+ "";
+			}
+			dlfjsbl = dljsmxb.get("dlfjsbl")==null?0.0:Double.parseDouble(dljsmxb.get("dlfjsbl")+"");
+			dlfjsje = dljsmxb.get("dlfjsje")==null?0.0:Double.parseDouble(dljsmxb.get("dlfjsje")+"");
+			cjsj = dljsmxb.get("cjsj")==null?"":dljsmxb.get("cjsj")+ "";
+            jyzt = dljsmxb.get("jyzt")==null?"":dljsmxb.get("jyzt")+ "";
+            ykpbl = dljsmxb.get("ykpbl")==null?0.0:Double.parseDouble(dljsmxb.get("ykpbl")+"");//ykpbl
+
+			dljsmxbjson.put("projectid",projectid);
+			dljsmxbjson.put("dljsmxname",dljsmxname);
+			dljsmxbjson.put("projectname",projectname);
+			dljsmxbjson.put("dljsmxid",dljsmxid);
+			dljsmxbjson.put("khnm",khnm);
+			dljsmxbjson.put("cjdw",cjdw);
+			dljsmxbjson.put("cjmj",cjmj);
+			dljsmxbjson.put("cjdj",cjdj);
+			dljsmxbjson.put("cjzj",cjzj);
+			dljsmxbjson.put("dljsmxtype",dljsmxtype);
+			dljsmxbjson.put("dlfjsbl",dlfjsbl);
+			dljsmxbjson.put("dlfjsje",dlfjsje);
+			dljsmxbjson.put("cjsj",cjsj);
+            dljsmxbjson.put("jyzt",jyzt);
+            dljsmxbjson.put("ykpbl",ykpbl);
+
+			dljsmxbjsonarr.add(dljsmxbjson); 
+		}
+
+		//开票申请  申请编号,项目, 发票类型,发票抬头,结算明细,累计应结算金额,开票金额,发票内容, 备注,审批状态
+		List<CCObject> kpsqlist = cs.cqlQuery("kpsq","SELECT id,name,xmmc,fplx, fptt, jsmx, ROUND(ljyjsje,2) as ljyjsje,bcjsbl,ROUND(fpje,2) as fpje, fpnr, bz , spzt , date_format(createdate, '%Y-%m-%d') AS createdate, ROUND(hkje,2) AS hkje FROM kpsq WHERE xmmc = '"+projectid+"' AND is_deleted = '0'"); 
+		for(CCObject kpsq:kpsqlist){
+			kpsqid = kpsq.get("id")==null?"":kpsq.get("id")+ ""; 
+			fplx = kpsq.get("fplx")==null?"":kpsq.get("fplx")+ "";
+			fptt = kpsq.get("fptt")==null?"":kpsq.get("fptt")+ "";
+			sqbh = kpsq.get("name")==null?"":kpsq.get("name")+ "";
+			jsmx = kpsq.get("jsmx")==null?"":kpsq.get("jsmx")+ "";
+			ljyjsje = kpsq.get("ljyjsje")==null?0.0:Double.parseDouble(kpsq.get("ljyjsje")+"");
+			bcjsbl = kpsq.get("bcjsbl")==null?0.0:Double.parseDouble(kpsq.get("bcjsbl")+"");
+			fpje = kpsq.get("fpje")==null?0.0:Double.parseDouble(kpsq.get("fpje")+"");
+			fpnr = kpsq.get("fpnr")==null?"":kpsq.get("fpnr")+ "";
+			bz = kpsq.get("bz")==null?"":kpsq.get("bz")+ "";
+			spzt = kpsq.get("spzt")==null?"":kpsq.get("spzt")+ "";
+
+			//回款进度
+			Double hkje = kpsq.get("hkje")==null?0.0:Double.parseDouble(kpsq.get("hkje")+"");
+
+
+			kpsqjson.put("projectid",projectid);
+			kpsqjson.put("projectname",projectname);
+			kpsqjson.put("kpsqid",kpsqid);
+			kpsqjson.put("sqbh",sqbh);
+			kpsqjson.put("fplx",fplx);
+			kpsqjson.put("fptt",fptt);
+			kpsqjson.put("jsmx",jsmx);
+			kpsqjson.put("cjzj",cjzj);
+			kpsqjson.put("ljyjsje",ljyjsje);
+			kpsqjson.put("bcjsbl",bcjsbl);
+			kpsqjson.put("fpje",fpje);
+			kpsqjson.put("fpnr",fpnr);
+			kpsqjson.put("bz",bz);
+			kpsqjson.put("spzt",spzt);
+			kpsqjson.put("hkje",hkje);
+		
+			kpsqjsonarr.add(kpsqjson); 
+		}
+		
+	} 
+	jsa=Oppojsonarr.toString(); 
+	jsb =dljsmxbjsonarr.toString(); 
+	jsc =kpsqjsonarr.toString(); 
+	//out.print(jsb);
+
+
+</cc>
+		<html>
+
+		<head>
+		<!--<meta http-equiv="refresh" content="5">-->
+		<script src="//unpkg.com/vue/dist/vue.js"></script>
+		<script src="https://unpkg.com/muse-ui/dist/muse-ui.js"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<script src="//unpkg.com/vue-easytable/umd/js/index.js"></script>
+		<link rel="stylesheet" href="https://unpkg.com/muse-ui/dist/muse-ui.css">
+		<link rel="stylesheet" href="https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css">
+		<link rel="stylesheet" href="https://unpkg.com/vue-easytable/umd/css/index.css">
+
+
+		<STYLE TYPE="text/css"> 
+			.mu-input-label {
+				font-size: 18px;
+    			line-height: 28px;
+    			width: 140px;
+			}
+			.title-cell-class-name-test1 {
+        		background-color: #2db7f5;
+   			}
+    		.title-cell-class-name-test2 {
+    		    background-color: #f60;
+    		}
+		</STYLE> 
+		</head>
+
+		<body>
+
+		<form action="" method="post" name="theform" id="theform">
+    <h2 align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h2>
+
+   &nbsp;&nbsp;&nbsp;
+开始日期&nbsp;&nbsp;<input id="startTime" name="startTime" class="datepicker" type="text" value="<cc:outprint>ksrq</cc:outprint>" v-model="ksrq_bd">
+&nbsp;&nbsp;截止日期&nbsp;&nbsp;<input id="endTime" name="endTime" class="datepicker" type="text" value="<cc:outprint>jsrq</cc:outprint>" v-model="jsrq_bd">
+&nbsp;&nbsp;<input type="submit"  value=" 查 询 " class="input01"/><br><br>   
+    <br>
+
+</form>
+
+<div id="app">
+<mu-container>
+    <mu-tabs :value.sync="active">
+        <mu-tab>成交详情</mu-tab>
+        <mu-tab>结算详情</mu-tab>
+		<mu-tab>开票详情</mu-tab>
+		<mu-tab :change="sjjb_get(projectid_list)">数据简报</mu-tab>
+    </mu-tabs>
+		<div class="demo-text" v-if="active === 0">
+			<mu-expansion-panel v-for="(item,index) in collapselist" :key="'0_' + index">
+				<div slot="header">
+					<mu-icon size="16" value="location_city"></mu-icon>{{item.name}}
+				</div>
+				<mu-card v-for="item1 in collapselist1" v-if="item1.projectid===item.id" v-bind:key="item1.oppoid" :raised="true" style="width: 100%; max-width: 375px; margin: 0 auto;">
+					<mu-card-header style="padding-bottom: 4px;">
+						<div>
+							<mu-icon size="16" value="account_box"></mu-icon><a :href="'/query.action?m=query&id='+item1.khmc">{{item1.khnm}}</a>
+							<mu-checkbox :value="item1.oppoid" v-model="checkbox.value_js"></mu-checkbox>
+						</div>
+						<!--<div slot="sub-title">{{item1.cjdw}}</div>-->
+					</mu-card-header>
+					<!--<mu-card-title title="Content Title" sub-title="Content Title"></mu-card-title>-->
+					<mu-card-text style="padding-top: 4px;padding-bottom: 4px;">
+						<div>业务机会:<a :href="'/query.action?m=query&id='+item1.oppoid">{{item1.opnm}}</a></div>
+						<div>成交单位:{{item1.cjdw}}</div>
+						<div>成交面积:{{item1.cjmj}}</div>
+						<div>成交单价:{{item1.cjdj}}</div>
+						<div>成交总价:{{item1.cjzj}}</div>
+						<div>成交时间:{{item1.cjsj}}</div>
+						<div>成交人:{{item1.ownerid}}</div>
+					</mu-card-text>
+					<!--<mu-card-actions style="padding-top: 4px;">
+		                        <mu-button color="secondary" small="true" @click="Cancellation(item1.oppoid)">撤单</mu-button>
+		                    </mu-card-actions>-->
+				</mu-card>
+				<mu-button slot="action" color="primary" @click="openScrollDialog">结算</mu-button>
+		
+			</mu-expansion-panel>
+			<mu-dialog title="结算" width="360" scrollable :open.sync="openScroll">
+				<mu-container>
+					<mu-form :model="form" class="mu-demo-form" :label-position="labelPosition" label-width="100">
+						<mu-form-item prop="input" label="代理费结算比例(%)">
+							<mu-text-field v-model="form.dlfjsbl"></mu-text-field>
+						</mu-form-item>
+						<mu-form-item prop="input" label="备注">
+							<mu-text-field v-model="form.bz"></mu-text-field>
+						</mu-form-item>
+					</mu-form>
+				</mu-container>
+				<mu-button slot="actions" flat color="primary" @click="closeScrollDialog">ok</mu-button>
+			</mu-dialog>
+		</div>
+		<div class="demo-text" v-if="active === 1">
+			<mu-expansion-panel v-for="(item,index) in collapselist" :key="'1_'+index">
+				<div slot="header">
+					<mu-icon size="16" value="location_city"></mu-icon>{{item.name}}
+				</div>
+				<mu-expansion-panel :key="'dqr_'+index">
+					<div slot="header">待确认</div>
+					<mu-card v-for="item1 in collapselist2" v-if="item1.projectid===item.id && item1.jyzt=='待确认'"
+						v-bind:key="item1.dljsmxid" :raised="true" style="width: 100%; max-width: 375px; margin: 0 auto;">
+						<mu-card-header style="padding-bottom: 4px;">
+							<div>
+								<mu-icon size="16" value="monetization_on"></mu-icon>{{item1.khnm}}
+								<!-- <mu-checkbox :value="item1.dljsmxid" v-model="checkbox.value1"></mu-checkbox> -->
+							</div>
+							<!--<div slot="sub-title">{{item1.cjdw}}</div>-->
+						</mu-card-header>
+						<!--<mu-card-title title="Content Title" sub-title="Content Title"></mu-card-title>-->
+						<mu-card-text style="padding-top: 4px;padding-bottom: 4px;">
+							<div>结算单编号:<a :href="'/query.action?m=query&id='+item1.dljsmxid">{{item1.dljsmxname}}</a></div>
+							<div><span>成交单位:{{item1.cjdw}}</span> <span>成交面积:{{item1.cjmj}}</span></div>
+							<div>成交单价:{{item1.cjdj}} 成交总价:{{item1.cjzj}}</div>
+							<div>成交时间:{{item1.cjsj}} 结算状态:{{item1.jyzt}}</div>
+							<div>结算比例:{{item1.dlfjsbl}} 结算金额:{{item1.dlfjsje}}</div>
+						</mu-card-text>
+						<mu-card-actions style="padding-top: 4px;">
+							<mu-button color="primary" :small="true" @click="confirmjs(item1.dljsmxid)">确认</mu-button>
+							<mu-button color="secondary" :small="true" @click="editjs(item1.dljsmxid)">编辑</mu-button>
+							<mu-button color="red" :small="true" @click="deletejs(item1.dljsmxid)">删除</mu-button>
+						</mu-card-actions>
+					</mu-card>
+				</mu-expansion-panel>
+				<mu-dialog title="结算单编辑" width="360" scrollable :open.sync="openScroll_jsed">
+					<mu-container>
+						<mu-form :model="form_jsed" class="mu-demo-form" :label-position="labelPosition" label-width="120">
+							<!-- <mu-checkbox v-model="form_jsed.checkbox" :label="'是否舍弃零头'"></mu-checkbox> -->
+							<mu-form-item prop="input" label="结算比例(%)">
+								<mu-text-field v-model="form_jsed.dlfjsbl"></mu-text-field>
+							</mu-form-item>
+							<!-- <mu-text-field v-model="form_jsed.ljkpje" disabled label="累计应结算金额" suffix="元"></mu-text-field> -->
+							<mu-form-item prop="input" label="备注">
+								<mu-text-field v-model="form_jsed.bz"></mu-text-field>
+							</mu-form-item>
+						</mu-form>
+					</mu-container>
+					<mu-button slot="actions" flat color="primary" @click="closeScrollDialog_jsed">ok</mu-button>
+				</mu-dialog>
+				<mu-expansion-panel :key="'yqr_'+index">
+					<div slot="header">已确认</div>
+					<mu-card v-for="item1 in collapselist2" v-if="item1.projectid===item.id && item1.jyzt=='已确认'"
+						v-bind:key="item1.dljsmxid" :raised="true" style="width: 100%; max-width: 375px; margin: 0 auto;">
+						<mu-card-header style="padding-bottom: 4px;">
+							<div>
+								<mu-icon size="16" value="monetization_on"></mu-icon>{{item1.khnm}}
+								<mu-checkbox :value="item1.dljsmxid" v-model="checkbox.value_kp"></mu-checkbox>
+							</div>
+							<!--<div slot="sub-title">{{item1.cjdw}}</div>-->
+						</mu-card-header>
+						<!--<mu-card-title title="Content Title" sub-title="Content Title"></mu-card-title>-->
+						<mu-card-text style="padding-top: 4px;padding-bottom: 4px;">
+							<div>结算单编号:<a :href="'/query.action?m=query&id='+item1.dljsmxid">{{item1.dljsmxname}}</a></div>
+							<div><span>成交单位:{{item1.cjdw}}</span> <span>成交面积:{{item1.cjmj}}</span></div>
+							<div>成交单价:{{item1.cjdj}} 成交总价:{{item1.cjzj}}</div>
+							<div>成交时间:{{item1.cjsj}} 结算状态:{{item1.jyzt}}</div>
+							<div>结算比例:{{item1.dlfjsbl}} 结算金额:{{item1.dlfjsje}}</div>
+						</mu-card-text>
+						<mu-card-actions style="padding-top: 4px;">
+							<mu-button color="secondary" :small="true" @click="setback(item1.dljsmxid)">回退</mu-button>
+						</mu-card-actions>
+					</mu-card>
+					<mu-button slot="action" color="primary" @click="openScrollDialog_kp(item.id)">开票</mu-button>
+				</mu-expansion-panel>
+				<mu-expansion-panel :key="'bfkp'+index">
+					<div slot="header">部分开票</div>
+					<mu-card v-for="item1 in collapselist2" v-if="item1.projectid===item.id && item1.jyzt=='部分开票'"
+						v-bind:key="item1.dljsmxid" :raised="true" style="width: 100%; max-width: 375px; margin: 0 auto;">
+						<mu-card-header style="padding-bottom: 4px;">
+							<div>
+								<mu-icon size="16" value="monetization_on"></mu-icon>{{item1.khnm}}
+								<mu-checkbox :value="item1.dljsmxid" v-model="checkbox.value_kp"></mu-checkbox>
+							</div>
+							<!--<div slot="sub-title">{{item1.cjdw}}</div>-->
+						</mu-card-header>
+						<!--<mu-card-title title="Content Title" sub-title="Content Title"></mu-card-title>-->
+						<mu-card-text style="padding-top: 4px;padding-bottom: 4px;">
+							<div>结算单编号:<a :href="'/query.action?m=query&id='+item1.dljsmxid">{{item1.dljsmxname}}</a></div>
+							<div><span>成交单位:{{item1.cjdw}}</span> <span>成交面积:{{item1.cjmj}}</span></div>
+							<div>成交单价:{{item1.cjdj}} 成交总价:{{item1.cjzj}}</div>
+							<div>成交时间:{{item1.cjsj}} 结算状态:{{item1.jyzt}}</div>
+							<div>结算比例:{{item1.dlfjsbl}} 结算金额:{{item1.dlfjsje}}</div>
+							<div>已开票比例:{{item1.ykpbl}} </div>
+						</mu-card-text>
+						<!--<mu-card-actions style="padding-top: 4px;">
+				                        <mu-button color="secondary" small="true" @click="Cancellation(item1.oppoid)">撤单</mu-button>
+				                    </mu-card-actions>-->
+					</mu-card>
+					<mu-button slot="action" color="primary" @click="openScrollDialog_kp(item.id)">开票</mu-button>
+				</mu-expansion-panel>
+				<mu-dialog title="开票申请" width="360" scrollable :open.sync="openScroll_kp">
+					<mu-container>
+						<mu-form :model="form_kp" class="mu-demo-form" :label-position="labelPosition" label-width="120">
+							<mu-form-item prop="select" label="发票类型">
+								<mu-select v-model="form_kp.select">
+									<mu-option v-for="option,index in options" :key="option" :label="option" :value="option">
+									</mu-option>
+								</mu-select>
+							</mu-form-item>
+							<mu-form-item prop="input" label="发票抬头">
+								<mu-text-field v-model="form_kp.fptt"></mu-text-field>
+							</mu-form-item>
+							<mu-form-item prop="input" label="发票内容">
+								<mu-text-field v-model="form_kp.fpnr"></mu-text-field>
+							</mu-form-item>
+							<mu-text-field v-model="form_kp.ljyjsje" disabled label="累计应结算金额" suffix="元"></mu-text-field>
+							<mu-form-item prop="input" label="本次结算比例(%)">
+								<mu-text-field v-model="form_kp.bcjsbl"></mu-text-field>
+							</mu-form-item>
+							<mu-text-field v-model="jskp_ljkpje" disabled label="开票金额" suffix="元"></mu-text-field>
+							<mu-form-item prop="input" label="备注">
+								<mu-text-field v-model="form_kp.bz"></mu-text-field>
+							</mu-form-item>
+						</mu-form>
+					</mu-container>
+					<mu-button slot="actions" flat color="primary" @click="closeScrollDialog_kp">ok</mu-button>
+				</mu-dialog>
+				<mu-expansion-panel :key="'qbkp_'+index">
+					<div slot="header">全部开票</div>
+					<mu-card v-for="item1 in collapselist2" v-if="item1.projectid===item.id && item1.jyzt=='全部开票'"
+						v-bind:key="item1.dljsmxid" :raised="true" style="width: 100%; max-width: 375px; margin: 0 auto;">
+						<mu-card-header style="padding-bottom: 4px;">
+							<div>
+								<mu-icon size="16" value="monetization_on"></mu-icon>{{item1.khnm}}
+							</div>
+							<!--<div slot="sub-title">{{item1.cjdw}}</div>-->
+						</mu-card-header>
+						<!--<mu-card-title title="Content Title" sub-title="Content Title"></mu-card-title>-->
+						<mu-card-text style="padding-top: 4px;padding-bottom: 4px;">
+							<div>结算单编号:<a :href="'/query.action?m=query&id='+item1.dljsmxid">{{item1.dljsmxname}}</a></div>
+							<div><span>成交单位:{{item1.cjdw}}</span> <span>成交面积:{{item1.cjmj}}</span></div>
+							<div>成交单价:{{item1.cjdj}} 成交总价:{{item1.cjzj}}</div>
+							<div>成交时间:{{item1.cjsj}} 结算状态:{{item1.jyzt}}</div>
+							<div>结算比例:{{item1.dlfjsbl}} 结算金额:{{item1.dlfjsje}}</div>
+						</mu-card-text>
+						<!--<mu-card-actions style="padding-top: 4px;">
+				                        <mu-button color="secondary" small="true" @click="Cancellation(item1.oppoid)">撤单</mu-button>
+				                    </mu-card-actions>-->
+					</mu-card>
+				</mu-expansion-panel>
+			</mu-expansion-panel>
+		</div>
+		<div class="demo-text" v-if="active === 2">
+			<mu-expansion-panel v-for="(item,index) in collapselist" :key="'2_' + index">
+				<div slot="header">
+					<mu-icon size="16" value="location_city"></mu-icon>{{item.name}}
+				</div>
+				<mu-expansion-panel :key="'kpsqcg'+index">
+					<div slot="header">草稿</div>
+					<mu-card v-for="item1 in collapselist3" v-if="item1.projectid===item.id  && item1.spzt=='草稿'"
+						v-bind:key="item1.kpid" :raised="true" style="width: 100%; max-width: 375px; margin: 0 auto;">
+						<mu-card-header style="padding-bottom: 4px;">
+							<div>
+								<mu-icon size="16" value="assignment_turned_in"></mu-icon><a
+									:href="'/query.action?m=query&id='+item1.kpsqid">{{item1.sqbh}}</a>
+							</div>
+							<!--<div slot="sub-title">{{item1.cjdw}}</div>-->
+						</mu-card-header>
+						<!--<mu-card-title title="Content Title" sub-title="Content Title"></mu-card-title>-->
+						<!--申请编号,项目, 发票类型,发票抬头,结算明细,累计应结算金额,开票金额,发票内容, 备注,审批状态-->
+						<mu-card-text style="padding-top: 4px;padding-bottom: 4px;">
+							<div>发票类型:{{item1.fplx}}</div>
+							<div>发票抬头:{{item1.fptt}}</div>
+							<div>累计应结算金额:{{item1.ljyjsje}}</div>
+							<div>本次结算比例:{{item1.bcjsbl}}</div>
+							<div>开票金额:{{item1.fpje}}</div>
+							<div>发票内容:{{item1.fpnr}}</div>
+							<div>备注:{{item1.bz}}</div>
+							<div>审批状态:{{item1.spzt}}</div>
+						</mu-card-text>
+						<mu-card-actions style="padding-top: 4px;">
+							<mu-button color="success" :small="true" @click="showjsdetal(item1.jsmx)">结算明细</mu-button>
+							<mu-button color="primary" :small="true" @click="kptjsp(item1.kpsqid)">提交审批</mu-button>
+							<mu-button color="red" :small="true" @click="kpdelete(item1.kpsqid)">删除</mu-button>
+						</mu-card-actions>
+					</mu-card>
+				</mu-expansion-panel>
+		
+				<mu-expansion-panel :key="'kpsqspz'+index">
+					<div slot="header">审批中</div>
+					<mu-card v-for="item1 in collapselist3" v-if="item1.projectid===item.id  && item1.spzt=='审批中'"
+						v-bind:key="item1.kpid" :raised="true" style="width: 100%; max-width: 375px; margin: 0 auto;">
+						<mu-card-header style="padding-bottom: 4px;">
+							<div>
+								<mu-icon size="16" value="assignment_turned_in"></mu-icon><a
+									:href="'/query.action?m=query&id='+item1.kpsqid">{{item1.sqbh}}</a>
+							</div>
+							<!--<div slot="sub-title">{{item1.cjdw}}</div>-->
+						</mu-card-header>
+						<!--<mu-card-title title="Content Title" sub-title="Content Title"></mu-card-title>-->
+						<!--申请编号,项目, 发票类型,发票抬头,结算明细,累计应结算金额,开票金额,发票内容, 备注,审批状态-->
+						<mu-card-text style="padding-top: 4px;padding-bottom: 4px;">
+							<div>发票类型:{{item1.fplx}}</div>
+							<div>发票抬头:{{item1.fptt}}</div>
+							<div>累计应结算金额:{{item1.ljyjsje}}</div>
+							<div>本次结算比例:{{item1.bcjsbl}}</div>
+							<div>开票金额:{{item1.fpje}}</div>
+							<div>发票内容:{{item1.fpnr}}</div>
+							<div>备注:{{item1.bz}}</div>
+							<div>审批状态:{{item1.spzt}}</div>
+						</mu-card-text>
+						<mu-card-actions style="padding-top: 4px;">
+							<mu-button color="success" :small="true" @click="showjsdetal(item1.jsmx)">结算明细</mu-button>
+						</mu-card-actions>
+					</mu-card>
+				</mu-expansion-panel>
+		
+				<mu-expansion-panel :key="'kpsqsptg'+index">
+					<div slot="header">审批通过</div>
+					<mu-card v-for="item1 in collapselist3" v-if="item1.projectid===item.id  && item1.spzt=='审批通过'"
+						v-bind:key="item1.kpid" :raised="true" style="width: 100%; max-width: 375px; margin: 0 auto;">
+						<mu-card-header style="padding-bottom: 4px;">
+							<div>
+								<mu-icon size="16" value="assignment_turned_in"></mu-icon><a
+									:href="'/query.action?m=query&id='+item1.kpsqid">{{item1.sqbh}}</a>
+							</div>
+							<!--<div slot="sub-title">{{item1.cjdw}}</div>-->
+						</mu-card-header>
+						<!--<mu-card-title title="Content Title" sub-title="Content Title"></mu-card-title>-->
+						<!--申请编号,项目, 发票类型,发票抬头,结算明细,累计应结算金额,开票金额,发票内容, 备注,审批状态-->
+						<mu-card-text style="padding-top: 4px;padding-bottom: 4px;">
+							<div>发票类型:{{item1.fplx}}</div>
+							<div>发票抬头:{{item1.fptt}}</div>
+							<div>累计应结算金额:{{item1.ljyjsje}}</div>
+							<div>本次结算比例:{{item1.bcjsbl}}</div>
+							<div>开票金额:{{item1.fpje}}</div>
+							<div>发票内容:{{item1.fpnr}}</div>
+							<div>备注:{{item1.bz}}</div>
+							<div>审批状态:{{item1.spzt}}</div>
+						</mu-card-text>
+						<!-- <mu-circular-progress class="demo-circular-progress" mode="determinate" :value="item1.hkje/item1.fpje*100" color="warning" :stroke-width="7" :size="96"></mu-circular-progress> -->
+						<mu-flex class="demo-linear-progress">
+							<mu-linear-progress mode="determinate" :value="item1.hkje/item1.fpje*100"></mu-linear-progress>
+						</mu-flex>
+						<mu-card-actions style="padding-top: 4px;">
+							<mu-button color="success" :small="true" @click="showjsdetal(item1.jsmx)">结算明细</mu-button>
+							<mu-button color="success" :small="true" @click="tzcy(item1.kpsqid)">拆佣</mu-button>
+						</mu-card-actions>
+					</mu-card>
+				</mu-expansion-panel>
+		
+				<mu-expansion-panel :key="'kpsqspjj'+index">
+					<div slot="header">审批拒绝</div>
+					<mu-card v-for="item1 in collapselist3" v-if="item1.projectid===item.id  && item1.spzt=='审批拒绝'"
+						v-bind:key="item1.kpid" :raised="true" style="width: 100%; max-width: 375px; margin: 0 auto;">
+						<mu-card-header style="padding-bottom: 4px;">
+							<div>
+								<mu-icon size="16" value="assignment_turned_in"></mu-icon><a
+									:href="'/query.action?m=query&id='+item1.kpsqid">{{item1.sqbh}}</a>
+							</div>
+							<!--<div slot="sub-title">{{item1.cjdw}}</div>-->
+						</mu-card-header>
+						<!--<mu-card-title title="Content Title" sub-title="Content Title"></mu-card-title>-->
+						<!--申请编号,项目, 发票类型,发票抬头,结算明细,累计应结算金额,开票金额,发票内容, 备注,审批状态-->
+						<mu-card-text style="padding-top: 4px;padding-bottom: 4px;">
+							<div>发票类型:{{item1.fplx}}</div>
+							<div>发票抬头:{{item1.fptt}}</div>
+							<div>累计应结算金额:{{item1.ljyjsje}}</div>
+							<div>本次结算比例:{{item1.bcjsbl}}</div>
+							<div>开票金额:{{item1.fpje}}</div>
+							<div>发票内容:{{item1.fpnr}}</div>
+							<div>备注:{{item1.bz}}</div>
+							<div>审批状态:{{item1.spzt}}</div>
+						</mu-card-text>
+						<mu-card-actions style="padding-top: 4px;">
+							<mu-button color="success" :small="true" @click="showjsdetal(item1.jsmx)">结算明细</mu-button>
+							<mu-button color="primary" :small="true" @click="kptjsp(item1.kpsqid)">重新提交</mu-button>
+							<mu-button color="red" :small="true" @click="kpdelete(item1.kpsqid)">删除</mu-button>
+						</mu-card-actions>
+					</mu-card>
+				</mu-expansion-panel>
+				<!-- <mu-button slot="action" color="primary" @click="openScrollDialog">结算</mu-button> -->
+		
+			</mu-expansion-panel>
+			<mu-drawer :open.sync="open1" :docked="docked1" :right="position1 === 'right'" width="80%">
+				<mu-paper :z-depth="1">
+					<mu-data-table :columns="columns1" :data="dataForMessage">
+						<template slot-scope="scope">
+							<td>{{scope.row.khnm}}</td>
+							<td>{{scope.row.fh}}</td>
+							<td>{{scope.row.mj}}</td>
+							<td>{{scope.row.cjdj}}</td>
+							<td>{{scope.row.yzj==null?scope.row.cjzj:scope.row.yzj}}</td>
+							<td>{{scope.row.cjsj}}</td>
+							<td>{{scope.row.dlfjsbl}}</td>
+							<td>{{scope.row.dlfjsje}}</td>
+						</template>
+					</mu-data-table>
+				</mu-paper>
+			</mu-drawer>
+		</div>
+		<div class="demo-text" v-if="active === 3">
+			<mu-paper :z-depth="1" style="margin-top: 8px;">
+				<template>
+					<v-table  is-horizontal-resize style="width:100%,height:100%" :is-loading="tab_jb_ft" even-bg-color="#f2f2f2" :title-rows="titleRows" :columns="columns_sjjb" :table-data="list_sjjb" row-hover-color="#eee" row-click-color="#edf7ff" :height="480" @on-custom-comp="customCompFunc"></v-table>
+				</template>
+
+				<!-- <mu-data-table border :fit="true" :loading="tab_jb_ft" :columns="columns_sjjb" :sort.sync="sort" @sort-change="handleSortChange"
+					:data="list_sjjb">
+					<template slot="header" slot-scope="scope">
+						<tr>
+							<th rowspan="2" class="is-center">  项目  </th>
+							<th colspan="3" class="is-center">成交情况</th>
+							<th colspan="6" class="is-center">结算情况</th>
+							<th colspan="2" class="is-center">开票情况</th>
+						</tr>
+						<tr>
+							<th class="is-center">成交手数</th>
+							<th class="is-center">合计成交面积</th>
+							<th class="is-center">合计成交额</th>
+							<th class="is-center">结算单数量</th>
+							<th class="is-center">待确认数</th>
+							<th class="is-center">已确认数</th>
+							<th class="is-center">部分开票数</th>
+							<th class="is-center">全部开票数</th>
+							<th class="is-center">累计结算金额</th>
+							<th class="is-center">开票次数</th>
+							<th class="is-center">累计开票金额</th>
+						</tr>
+					</template>
+					<template slot-scope="scope">
+						<td>{{scope.row.xmmc}}</td>
+						<td class="is-center">{{scope.row.cjss}}</td>
+						<td class="is-center">{{scope.row.hjcjmj}}</td>
+						<td class="is-center">{{scope.row.hjcje}}</td>
+						<td class="is-center">{{scope.row.jsdsl}}</td>
+						<td class="is-center">{{scope.row.dqrs}}</td>
+						<td class="is-center">{{scope.row.yqrs}}</td>
+						<td class="is-center">{{scope.row.bfkps}}</td>
+						<td class="is-center">{{scope.row.qbkps}}</td>
+						<td class="is-center">{{scope.row.ljjsje}}</td>
+						<td class="is-center">{{scope.row.kpcs}}</td>
+						<td class="is-center">{{scope.row.ljkpje}}</td>
+					</template>
+				</mu-data-table> -->
+			</mu-paper>
+		</div>
+</mu-container>
+</div>
+
+		<br>
+		<br>
+		<br>
+		
+
+<script>
+	var Main = {
+		data() {
+			return {
+				panel: '',
+                collapselist: <cc:outprint>projectlist_1</cc:outprint>,
+                collapselist1: <cc:outprint>jsa</cc:outprint>,
+				collapselist2: <cc:outprint>jsb</cc:outprint>,
+				collapselist3:<cc:outprint>jsc</cc:outprint>,
+                checkbox: {
+					value_js: [],
+					value_kp: []
+				},
+				openScroll: false,
+				openScroll_jsed: false,
+				openScroll_kp: false,
+                form: {
+					bz: '',
+					dlfjsbl: ''
+				},
+				form_jsed: {
+					checkbox: false,
+					jsid:'',
+					bz: '',
+					dlfjsbl: ''
+				},
+				labelPosition: 'top',
+				form_kp: {
+					select:'增值税专用发票',
+					fptt: '',
+					fpnr: '',
+					ljyjsje:0.00,
+					bcjsbl:100,
+					//ljkpje:0,
+					bz:''
+				},
+				options: ['服务发票', '增值税普通发票', '增值税专用发票'],
+
+				//结算明细
+				docked1: false,
+      			open1: false,
+				position1: 'left',
+				dataForMessage: [],
+				columns1: [
+          			{ title: '客户名称', name: 'khnm', width: 80},
+          			{ title: '房号', width: 80, name: 'fh' },
+					{ title: '面积', name: 'mj', width: 80},
+					{ title: '成交单价', name: 'cjdj', width: 80},
+					{ title: '成交总价', name: 'cjzj', width: 80},
+					{ title: '成交时间', name: 'cjsj', width: 80},
+					{ title: '结算比例', name: 'dlfjsbl', width: 80},
+					{ title: '结算金额', name: 'dlfjsje', width: 80}
+				],
+
+				managerId: '<cc:outprint>managerId</cc:outprint>',
+				bindingcode: '',
+				activeNames: ['1'],
+                userName: '<cc:outprint>userName</cc:outprint>',
+				url1: 'https://k8mm1amta1700adb471ba12b.cloudcc.com/distributor.action?serviceName=cssoLogin',
+				datetime: "<cc:outprint>datetime</cc:outprint>",
+				gridData1: [],
+				active: 0,
+
+				tab_jb_ft: true,
+				projectid_list:'<cc:outprint>projectid_list</cc:outprint>',
+				sort: {
+					name: '',
+					order: 'asc'
+				},
+      			columns_sjjb: [
+      			    { field: 'xmmc',width: 80, isFrozen: true },
+      			    { field: 'cjss', width: 100, columnAlign: 'center' },
+      			    { field: 'hjcjmj', width: 100, columnAlign: 'center' },
+      			    { field: 'hjcje', width: 100, columnAlign: 'center' },
+      			    { field: 'jsdsl', width: 100, columnAlign: 'center' },
+      			    { field: 'dqrs', width: 100, columnAlign: 'center' },
+      			    { field: 'yqrs', width: 100, columnAlign: 'center' },
+      			    { field: 'bfkps', width: 100, columnAlign: 'center' },
+      			    { field: 'qbkps', width: 100, columnAlign: 'center' },
+      			    { field: 'ljjsje', width: 100, columnAlign: 'center' },
+      			    { field: 'kpcs', width: 100, columnAlign: 'center' },
+      			    { field: 'ljkpje', width: 100, columnAlign: 'center' },
+					{ field: 'ljhkje', width: 100, columnAlign: 'center' },
+                   { field: 'custome-adv', width: 100, columnAlign:'center',componentName:'table-operation'}
+				  ],
+				titleRows: [
+					[
+                {fields: ['xmmc'], title: '项目', columnAlign: 'center',titleAlign: 'center', rowspan: 2},
+					 {fields: ['cjss', 'hjcjmj', 'hjcje'], title: '成交情况', columnAlign: 'center',titleAlign: 'center', colspan: 3},
+					 {fields: ['jsdsl', 'dqrs', 'yqrs', 'bfkps', 'qbkps', 'ljjsje'], title: '结算情况', columnAlign: 'center',titleAlign: 'center', colspan: 6},
+					 {fields: ['kpcs','ljkpje','ljhkje'], title: '开票情况', columnAlign: 'center',titleAlign: 'center', colspan: 3},
+                {fields: ['custome-adv'], title: '操作', titleAlign: 'center',columnAlign:'center',rowspan: 2}
+               ],
+
+					[{fields: ['cjss'], title: '成交手数', columnAlign: 'center'},
+					 {fields: ['hjcjmj'], title: '合计成交面积', columnAlign: 'center', orderBy: 'asc'},
+					 {fields: ['hjcje'], title: '合计成交额', columnAlign: 'center', orderBy: 'desc'},
+					 {fields: ['jsdsl'], title: '结算单数量', columnAlign: 'center'},
+					 {fields: ['dqrs'], title: '待确认数', columnAlign: 'center'},
+					 {fields: ['yqrs'], title: '已确认数', columnAlign: 'center'},
+					 {fields: ['bfkps'], title: '部分开票数', columnAlign: 'center'},
+					 {fields: ['qbkps'], title: '全部开票数', columnAlign: 'center'},
+					 {fields: ['ljjsje'], title: '累计结算金额', columnAlign: 'center'},
+					 {fields: ['kpcs'], title: '开票次数', columnAlign: 'center'},
+					 {fields: ['ljkpje'], title: '累计开票金额', columnAlign: 'center'},
+					 {fields: ['ljhkje'], title: '累计回款金额', columnAlign: 'center'}]
+				 ],
+				list_sjjb: null,
+				ksrq_bd:'<cc:outprint>ksrq</cc:outprint>',
+				jsrq_bd:'<cc:outprint>jsrq</cc:outprint>'
+
+
+            }
+        },
+		created: function() {
+
+
+			this.getBinding()
+
+			//this.getFollws()       //定义方法
+		},
+		methods: {
+			toggle(panel) {
+				this.panel = panel === this.panel ? '' : panel;
+			},
+			openScrollDialog() {
+				if(this.checkbox.value_js.length==0){
+					alert('请先选择要开票的单!');
+					return;
+				}
+				this.openScroll = true;
+			},
+			closeScrollDialog() {
+				this.openScroll = false;
+				var that = this;
+				//var reg = new RegExp("^[0-9]*$");
+				var reg = new RegExp("^[0-9]*\\.{0,1}[0-9]*$");
+				// alert(that.checkbox.value_js);
+				// alert(this.form.dlfjsbl.length);
+				
+				if(this.form.dlfjsbl.length==0){
+					alert('代理费比例不允许为空值!');
+					return;
+				}
+				if(!reg.test(this.form.dlfjsbl))
+        		{
+					alert("必须是数字!");
+					return;
+				}    
+				//alert(that.checkbox.value_js);
+				//alert(typeof(that.checkbox.value_js));
+				//controller.action?name=gkxgsyr&id="+cusid,
+				axios.get('/controller.action', {
+					params: {
+						name: 'jskpapi',
+						type: 'js',
+						oppoid: JSON.stringify(that.checkbox.value_js),
+						dlfjsbl: that.form.dlfjsbl,
+						bz: that.form.bz
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.binding;
+					alert("成功生成结算单!");
+					that.checkbox.value_js=[];
+					//console.log(this.bindingcode);
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			},
+			openScrollDialog_kp(val) {
+				var that= this;
+				this.form_kp.ljyjsje = 0.00;
+				that.form_kp.xmmc=val;
+				//alert(this.checkbox.value_kp.length);
+				for(var i = 0;i < this.checkbox.value_kp.length; i++) {
+
+					//alert(this.checkbox.value_kp[i]+",");
+
+					this.collapselist2.forEach(function(item,index){
+						if(item.dljsmxid==that.checkbox.value_kp[i]){
+							that.form_kp.ljyjsje += item.dlfjsje;
+						}
+					});
+					//Math.round(X * 100) / 100
+					that.form_kp.ljyjsje = Math.round(that.form_kp.ljyjsje *100)/100
+
+				}
+				
+				this.openScroll_kp = true;
+				//计算下累计的应结算金额
+				
+			},
+			closeScrollDialog_kp() {
+				this.openScroll_kp = false;
+				var that = this;
+				//alert(that.checkbox.value_js);
+				//alert(typeof(that.checkbox.value_js));
+				//controller.action?name=gkxgsyr&id="+cusid,
+				axios.get('/controller.action', {
+					params: {
+						name: 'jskpapi',
+						type: 'jsop_qr_kp',
+						xmmc: that.form_kp.xmmc,
+						jsid: JSON.stringify(that.checkbox.value_kp),
+						fplx: that.form_kp.select,
+						fptt: that.form_kp.fptt,
+						fpnr: that.form_kp.fpnr,
+						ljyjsje: that.form_kp.ljyjsje,
+						bcjsbl: that.form_kp.bcjsbl,
+						ljkpje: that.jskp_ljkpje,
+						bz: that.form_kp.bz
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.binding;
+					alert("开票成功!");
+					that.checkbox.value_kp =[];
+					//console.log(this.bindingcode);
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			},
+			getBinding: function() {
+				var that = this;
+				axios.get('/distributor.action', {
+					params: {
+						serviceName: 'cssoLogin',
+						userName: this.userName,
+						authCode: '6b42a467259407218c0e6acdfc978c01'
+					
+					}
+				})
+					.then(function (response) {
+						that.bindingcode = response.data.binding;
+						//console.log(this.bindingcode);
+					})
+					.catch(function (error) {
+						console.log(error);
+					});
+			},
+			// getFlByTime: function(val) { //传入客户id
+			// 	this.open = !this.open;
+			// 	console.log(val);
+			// 	this.dialogTableVisible = true;
+			// 	var that = this;
+			// 	var datetime = this.datetime;
+			// 	var expresssql = "select a.createdate as createdate ,b.name as name ,a.gjlx as fltype, a.nr as nr from ywjhgjmx a inner join Account b on a.kh=b.id where a.createbyid='" + val + "' and a.is_deleted='0' " + datetime + " order by createdate desc";
+			// 	//alert(expresssql);
+			// 	//console.log(expresssql);
+			// 	axios.get('/distributor.action', {
+			// 		params: {
+			// 			serviceName: 'cqlQuery',
+			// 			objectApiName: 'ywjhgjmx',
+			// 			expressions: expresssql,
+			// 			binding: this.bindingcode
+			// 		}
+			// 	})
+			// 		.then(function (response) {
+			// 			that.gridData1 = response.data.data;
+			// 			console.log(that.gridData1);
+					
+			// 		})
+			// 		.catch(function (error) {
+			// 			console.log(error);
+			// 		});
+			// 	/**/
+			// },
+			Cancellation: function(val) { //传入客户id
+				var that = this;
+				//alert(val);
+				var expresssql = "kh='" + val + "' and is_deleted='0' order by createdate desc";
+				//alert(expresssql);;
+			
+			},
+			setback: function(val) { //传入结算单id, 从确认状态退回为未确认
+				var that = this;
+				//alert(val);
+				//var expresssql = "kh='" + val + "' and is_deleted='0' order by createdate desc";
+				//alert(expresssql);;
+				axios.get('/controller.action', {
+					params: {
+						name: 'jskpapi',
+						type: 'jsop_dqr_ht',
+						jsid: val
+					}
+				})
+				.then(function (response) {
+					alert("状态变更为未确认!");
+					//将结算单的状态改为确认, 将jsonarray collapselist2中对应jsid的jyzt改为已确认
+					that.collapselist2.forEach(function(item,index){
+						if(item.dljsmxid==val){
+							item.jyzt = "待确认";
+							return;
+						}
+					});
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			
+			},
+			confirmjs: function(val) { //传入结算单id
+				var that = this;
+				//alert(val);
+				//var expresssql = "kh='" + val + "' and is_deleted='0' order by createdate desc";
+				//alert(expresssql);;
+				axios.get('/controller.action', {
+					params: {
+						name: 'jskpapi',
+						type: 'jsop_dqr_qr',
+						jsid: val
+					}
+				})
+				.then(function (response) {
+					alert("状态变更为确认!");
+					//将结算单的状态改为确认, 将jsonarray collapselist2中对应jsid的jyzt改为已确认
+					that.collapselist2.forEach(function(item,index){
+						if(item.dljsmxid==val){
+							item.jyzt = "已确认";
+							return;
+						}
+					});
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			
+			},
+			editjs: function(val) { //传入结算单id
+				//var that = this;
+				//alert(val);
+				//var expresssql = "kh='" + val + "' and is_deleted='0' order by createdate desc";
+				//alert(expresssql);
+				this.openScroll_jsed = true;
+				this.form_jsed.jsid = val;
+			
+			},
+			closeScrollDialog_jsed() {
+				this.openScroll_jsed = false;
+				var that = this;
+				//alert(that.checkbox.value_js);
+				//alert(typeof(that.checkbox.value_js));
+				//controller.action?name=gkxgsyr&id="+cusid,
+				axios.get('/controller.action', {
+					params: {
+						name: 'jskpapi',
+						type: 'jsop_dqr_ed',
+						jsid: that.form_jsed.jsid,
+						dlfjsbl: that.form_jsed.dlfjsbl,
+						bz: that.form_jsed.bz
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.binding;
+					alert("成功修改结算单!");
+					//console.log(this.bindingcode);
+					that.collapselist2.forEach(function(item,index){
+						if(item.dljsmxid==that.form_jsed.jsid){
+							item.dlfjsbl = that.form_jsed.dlfjsbl;
+							item.bz = that.form_jsed.bz;
+							item.dlfjsje = item.cjzj * item.dlfjsbl /100;
+							return;
+						}
+					});
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			},
+			deletejs: function(val) { //传入结算单id
+				var that = this;
+				//alert(val);
+				//var expresssql = "kh='" + val + "' and is_deleted='0' order by createdate desc";
+				//alert(expresssql);;
+				axios.get('/controller.action', {
+					params: {
+						name: 'jskpapi',
+						type: 'jsop_dqr_sc',
+						jsid: val
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.binding;
+					alert("成功删除结算单!");
+					//console.log(this.bindingcode);
+					that.collapselist2.forEach(function(item,index){
+						if(item.dljsmxid==val){
+							//alert("index:"+index);
+							that.collapselist2.splice(index, 1);
+							return;
+						}
+					});
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			
+			},
+			showjsdetal: function(val) { //显示结算明细
+				var that = this;
+				val='\''+val.split(';').join('\'\,\'')+'\'';
+				//alert(val);
+				this.open1=!this.open1;
+				//select a.name as khnm,d.fh as fh,d.mj as mj,d.cjsj as cjdj, d.yzj as yzj,d.cjzj as cjzj, d.qysj as cjsj,d.dlfjsbl as dlfjsbl,d.dlfjsje as dlfjsje from dljsmxb d inner join Account a on a.id=d.khmc where d.id in ('a3920190A864DF3wx1KX','a39201938D95055A5wHE') and d.is_deleted='0' order by d.createdate desc
+				var expresssql="select a.name as khnm,d.fh as fh,d.mj as mj,d.cjsj as cjdj, d.yzj as yzj,d.cjzj as cjzj, d.qysj as cjsj,d.dlfjsbl as dlfjsbl,d.dlfjsje as dlfjsje from dljsmxb d inner join Account a on a.id=d.khmc where d.id in ("+val+") and d.is_deleted='0' order by d.createdate desc";
+				//alert(expresssql);
+				// //alert(expresssql);
+				axios.get('/distributor.action', {
+					params: {
+						serviceName: 'cqlQuery',
+						objectApiName: 'dljsmxb',
+						expressions:expresssql,
+						binding:this.bindingcode
+					}
+				})
+				.then(function (response) {
+					//alert(response.data.data);
+					that.dataForMessage=response.data.data;
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			
+			},
+			kptjsp: function(val) { //提交审批
+				var that = this;
+				//alert(val);
+				//var expresssql = "kh='" + val + "' and is_deleted='0' order by createdate desc";
+				//alert(expresssql);;
+				//http://test.cloudcc.cn/distributor.action?serviceName=submitForApproval&data={"relateId":"006201301758147lvLNb","appPath":"appPath.action","fprId":"005201401806096xFNr7"}&binding=D7941EED085C2E6F46F9A1174878AB0F
+				var data_sp={};
+				data_sp["relateId"] = val;
+				data_sp["appPath"] = null;
+				data_sp["fprId"] = that.managerId; //0052018FF9F7905NEd6u  管理员
+				axios.get('/distributor.action', {
+					params: {
+						serviceName: 'submitForApproval',
+						data: data_sp,
+						binding:that.bindingcode
+					}
+				})
+				.then(function (response) {
+					//alert(response.data.data);
+					alert('已提交审批!');
+					that.collapselist3.forEach(function(item,index){
+						if(item.kpsqid==val){
+							item.spzt = '审批中';
+							return;
+						}
+					});
+					//that.dataForMessage=response.data.data;
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			
+			},
+			kpdelete: function(val) { //提交审批
+				var that = this;
+				//alert(val);
+				//var expresssql = "kh='" + val + "' and is_deleted='0' order by createdate desc";
+				//alert(expresssql);;
+				//http://test.cloudcc.cn/distributor.action?serviceName=submitForApproval&data={"relateId":"006201301758147lvLNb","appPath":"appPath.action","fprId":"005201401806096xFNr7"}&binding=D7941EED085C2E6F46F9A1174878AB0F
+				axios.get('/controller.action', {
+					params: {
+						name: 'jskpapi',
+						type: 'kpop_cg_sc',
+						kpsqid: val
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.binding;
+					alert("成功删除开票申请!");
+					//console.log(this.bindingcode);
+					that.collapselist3.forEach(function(item,index){
+						if(item.kpsqid==val){
+							//alert("index:"+index);
+							that.collapselist3.splice(index, 1);
+							return;
+						}
+					});
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			
+			},
+			sjjb_get: function(val){
+				//alert("begin");
+				if(this.active==3&&this.tab_jb_ft){
+					//alert(this.jsrq_bd);
+					var that = this;
+					
+					axios.get('/controller.action', {
+						params: {
+							name:'jskpapi',
+					   		type:'sjjb_zb',
+							ksrq:that.ksrq_bd,
+							jsrq:that.jsrq_bd,
+					  		projectid_list: val
+						}
+					})
+					.then(function (response) {
+						//alert("ok!");
+						that.list_sjjb=response.data.data;
+						that.tab_jb_ft=false;
+						//console.log(this.bindingcode);
+					})
+					.catch(function (error) {
+						console.log(error);
+					});
+					//alert("end1!");
+				}
+				//alert("end2!");
+			},
+         customCompFunc(params){
+
+            //console.log(params);
+            if (params.type === 'detail'){ // do delete operatio
+                //this.$delete(this.tableData,params.index);
+				//alert(`行号：${params.index} 姓名：${params.rowData['xmmc']}`);
+                //alert(params.rowData['id']);
+                location.href = "controller.action?name=jskpxzsjb&project="+params.rowData['id']+"&ksrq="+this.ksrq_bd+"&jsrq="+this.jsrq_bd;
+            }//else if (params.type === 'edit'){ // do edit operatio
+            //     alert(`行号：${params.index} 姓名：${params.rowData['name']}`);
+            // }
+			//location.href = "controller.action?name=khjxsmxzb&ksrq="+ksj+"&jsrq="+jssj+"&project="+pj+"&val="+v;
+         },
+		 tzcy: function(val){
+			location.href = "controller.action?name=cyczym&kpsqid="+val;
+			//https://k8mm1amta1700adb471ba12b.cloudcc.com/customize/page/9291p1140/cyczym.jsp?name=cyczym&kpsqid=a0320191A4E7AC07cBi3
+		 }
+
+		},
+		computed: {
+			jskp_ljkpje: function(){
+				return (this.form_kp.ljyjsje*this.form_kp.bcjsbl/100).toFixed(2);
+			}
+		}
+    };
+	var Ctor = Vue.extend(Main)
+	new Ctor().$mount('#app')
+
+   // 自定义列组件
+    Vue.component('table-operation',{
+        template:`<span>
+        <a href="" @click.stop.prevent="detail(rowData,index)">项目明细</a>
+        </span>`,
+        props:{
+            rowData:{
+                type:Object
+            },
+            field:{
+                type:String
+            },
+            index:{
+                type:Number
+            }
+        },
+        methods:{
+            detail(){
+
+               // 参数根据业务场景随意构造
+               let params = {type:'detail',index:this.index,rowData:this.rowData};
+               this.$emit('on-custom-comp',params);
+            }
+        }
+    })
+</script >
+		</body>
+
+		</html>

@@ -1,0 +1,59 @@
+/*
+description:租赁到期时间及渠道限制
+1.当选择以前的物业类型就必须选择到期时间
+version: 1.0
+date:20180626
+author:tom
+log:
+20200325 添加渠道的限制,当选择了渠道客户就必须填入对应的渠道是谁,及转介人联系信息
+*/
+
+String xsywyqk = record_new.get("xsywyqk")==null?"":record_new.get("xsywyqk")+"";//现物业使用情况
+String zldqsj = record_new.get("zldqsj")==null?"":record_new.get("zldqsj")+"";//租赁到期时间
+
+
+
+if("自有物业".equals(xsywyqk)){
+    if(zldqsj.length()>0){
+        trigger.addErrorMessage("自有物业请勿填写租赁到期时间！");
+    }
+}else if("租赁物业".equals(xsywyqk)){
+    if(zldqsj.length()==0){
+        trigger.addErrorMessage("请填写租赁到期时间！");
+    }
+}else{
+
+}
+
+SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd"); 
+String crtdt = record_new.get("createdate")==null?sdf.format(new Date()):record_new.get("createdate")+"";//客户创建时间
+
+
+//SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd"); 
+Date ct=sdf.parse(crtdt); 
+Date et=sdf.parse("2020-03-28 00:00:00");
+// if(true){
+//     trigger.addErrorMessage(bt+";"+et);
+// }
+
+if (et.before(ct)){ 
+    //表示et小于ct,既客户创建时间在渠道上线之后
+    //trigger.addErrorMessage(bt+";"+et);
+
+    String rztj2 = record_new.get("rztj2")==null?"":record_new.get("rztj2")+"";//认知途径为 瑞信行渠道转介/甲方渠道转介
+    String qd = record_new.get("qd")==null?"":record_new.get("qd")+"";//渠道
+    String qddjrxm = record_new.get("qddjrxm")==null?"":record_new.get("qddjrxm")+"";//qddjrxm 渠道转介人姓名
+    String qddjrdh = record_new.get("qddjrdh")==null?"":record_new.get("qddjrdh")+"";//	qddjrdh 渠道转接人电话
+    
+    if("瑞信行渠道转介".equals(rztj2) || "甲方渠道转介".equals(rztj2)){
+        if(qd.length()==0){
+            trigger.addErrorMessage("转介客户必须选择转介的渠道!");
+        }
+        if(qddjrxm.length()==0){
+            trigger.addErrorMessage("转介客户必须填写渠道转接人的姓名!");
+        }
+        if(qddjrdh.length()==0){
+            trigger.addErrorMessage("转介客户必须填写渠道转接人的手机号!");
+        }
+    }
+}

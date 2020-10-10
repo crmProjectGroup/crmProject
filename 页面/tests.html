@@ -1,0 +1,94 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc>
+CCService cs = new CCService((UserInfo)userInfo);
+java.util.Calendar cal = java.util.Calendar.getInstance();
+cal.setTime(new Date());
+int year = cal.get(Calendar.YEAR);//当前年份
+int month = cal.get(Calendar.MONTH)+1;//当前月份
+
+List<CCObject> list = cs.cqlQuery("ryjx","select tdwj,xmjlrl,bkhr,xmmc,tddyyjmb,round(tddyyjwcs,2) as tddyyjwcs,ifnull(tdjs,0) as tdjsfz,round(xmdyldsmps) as xmdyldsmps,round(grdywcyjs,2) as grdywcyjs,id,recordtype,grdyyjmb from ryjx where nd='"+year+"' and yf ='8' and is_deleted = '0'");
+if(list.size()>0){
+      for(CCObject item:list){
+            String id = item.get("id")==null?"":item.get("id")+"";//id
+            String recordtype = item.get("recordtype")==null?"":item.get("recordtype")+"";//记录类型
+            double grdyyjmb = item.get("grdyyjmb")==null?0.0:Double.valueOf(item.get("grdyyjmb")+"");//当月业绩目标
+            double grdywcyjs = item.get("grdywcyjs")==null?0.0:Double.valueOf(item.get("grdywcyjs")+"");//当月业绩完成数
+            Integer xmdyldsmps = 0;
+            try{
+		xmdyldsmps = item.get("xmdyldsmps")==null?0:Integer.valueOf(item.get("xmdyldsmps")+"");//项目当月联动上门批次
+            }catch(NumberFormatException e) {
+		String ldsmps = item.get("xmdyldsmps")==null?"0.0":item.get("xmdyldsmps")+"";
+                if(ldsmps.trim().indexOf('.')>0){
+                      ldsmps = ldsmps.substring(0,ldsmps.indexOf('.'));
+                }
+                xmdyldsmps = Integer.valueOf(ldsmps);
+            }
+            double  tdjsfz = item.get("tdjsfz")==null?0.0:Double.valueOf(item.get("tdjsfz")+"");//团队建设
+
+            double tddyyjwcs = item.get("tddyyjwcs")==null?0.0:Double.valueOf(item.get("tddyyjwcs")+"");//团队业绩完成数
+            double tddyyjmb = item.get("tddyyjmb")==null?0.0:Double.valueOf(item.get("tddyyjmb")+"");//团队业绩目标
+
+            int rjpc = 0;//人均批次
+            double tdwjfz = 0.0;//团队稳健分值
+            double khfz = 0.0;//考核分值
+            double yjfz = 0.0;//业绩分值
+            double ldfz = 0.0;//转介联动分值
+            double khwh = 0.0;//客户满意度
+            
+            String xmmc = item.get("xmmc")==null?"":item.get("xmmc")+"";//项目名称id
+            String bkhr = item.get("bkhr")==null?"":item.get("bkhr")+"";//被考核人
+	    if("2018ED6B4DF92033DeWs".equals(recordtype)){
+                Integer rs = cs.cqlQuery("ProjectSaleGroup","select id from ProjectSaleGroup where is_deleted = '0' and xmmc ='"+xmmc+"' and xmjl = '"+bkhr+"'").size();
+		Double  xmjlrl = item.get("xmjlrl")==null?0.0:Double.parseDouble(item.get("xmjlrl")+"");
+            
+                         String txt = (xmdyldsmps/(xmjlrl+rs))+"";
+                         if(txt.trim().indexOf('.')>0){
+                              txt = txt.substring(0,txt.indexOf('.'));
+                         }
+                         if(!"".equals(txt)){
+                              rjpc = Integer.parseInt(txt.trim());
+                         }
+
+                         if(rjpc>0){
+                              ldfz = 20 + (rjpc-1)*10;
+                              
+                         }
+                   
+                   tdwjfz = item.get("tdwj")==null?0.0:item.get("tdwj")==""?0.0:Double.valueOf(item.get("tdwj")+"");
+
+            }else{
+                   ldfz = xmdyldsmps*10;
+                   List<CCObject> khwhlist = cs.cqlQuery("Account","select sum(ifnull(khmyd,0)) as khwh from Account where is_deleted = '0' and xmmc = '"+xmmc+"' and createbyid = '"+bkhr+"' and YEAR(createdate) = '"+year+"' and MONTH(createdate) = '8'");
+                   for(CCObject khwhitem:khwhlist){
+                        khwh = khwhitem.get("khwh")==""?0.0:khwhitem.get("khwh")==null?0.0:Double.valueOf(khwhitem.get("khwh")+"");//客户维护
+                   }
+                   cs.cqlQuery("ryjx","update ryjx set khwh = ifnull("+khwh+",0) where bkhr ='"+bkhr+"' and xmmc = '"+xmmc+"' and is_deleted = '0' and nd = '"+year+"' and yf = '8'");
+                   if(khwh>20)khwh=20;
+            }
+
+                 if("201884204B9C199odbgA".equals(recordtype)){//记录类型为业务员
+                  
+                      if(grdywcyjs>grdyyjmb && grdyyjmb>0){
+                         yjfz = 80;
+                      }else if(grdywcyjs<grdyyjmb && grdywcyjs>0){
+                         yjfz = (grdywcyjs/grdyyjmb)*80;
+                      }
+                 }else if("2018ED6B4DF92033DeWs".equals(recordtype)){//记录类型为项目经理
+                      if(tddyyjwcs>tddyyjmb && tddyyjmb>0){
+                         yjfz = 80;
+                      }else if(tddyyjwcs<tddyyjmb && tddyyjwcs>0){
+                         yjfz = (tddyyjwcs/tddyyjmb)*80;
+                      }
+                 }
+           
+            khfz=yjfz+ldfz+tdjsfz+khwh+tdwjfz;
+            if(khfz>100){
+                   khfz = 100;
+            }
+            CCObject obj = new CCObject("ryjx");
+            obj.put("id",id);
+            obj.put("khfz",khfz);
+            cs.updateLt(obj);
+      }		
+}
+</cc>

@@ -1,0 +1,41 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<script>
+ window.onload = function() {
+ 	if (navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i)) {
+ 		document.getElementById('sctype').style.display='none';
+		document.getElementById('sctype1').style.display=''
+                document.getElementById('sctype2').style.display='none';
+		document.getElementById('sctype3').style.display=''
+ 	} else {
+ 		document.getElementById('sctype').style.display='';
+		document.getElementById('sctype1').style.display='none'
+                document.getElementById('sctype2').style.display='';
+		document.getElementById('sctype3').style.display='none'
+ 	}
+ }
+</script>
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>基本地图展示</title>
+    <link rel="stylesheet" href="https://cache.amap.com/lbs/static/main1119.css"/>
+    <script src="https://cache.amap.com/lbs/static/es5.min.js"></script>
+    <script src="https://webapi.amap.com/maps?v=1.4.5&key=9f4e97c24e89ae646d883d5b4a2b0c02"></script>
+    <script type="text/javascript" src="https://cache.amap.com/lbs/static/addToolbar.js"></script>
+</head>
+<body>
+<div id="container"></div>
+
+<script>
+    var map = new AMap.Map('container', {
+        resizeEnable: true,
+        zoom:11,
+        center: [116.397428, 39.90923]
+    });
+
+</script>
+</body>
+</html>

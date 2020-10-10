@@ -1,0 +1,282 @@
+java.util.Calendar cal = java.util.Calendar.getInstance();
+cal.setTime(new Date());
+int year = cal.get(Calendar.YEAR);//当前年份
+int month = cal.get(Calendar.MONTH);//当前月份
+if(month==0){
+  year=year-1;
+	month=12; 
+}
+double grdywcyjs = 0.00;//个人当月完成业绩数
+String id = record_new.get("id")==null?"":record_new.get("id")+"";//id
+double cjmj = 0.0;
+String name = record_new.get("name")==null?"":record_new.get("name")+"";//业务机会名称
+String jieduan = record_new.get("jieduan")==null?"":record_new.get("jieduan")+"";//阶段
+String spzt = record_new.get("spzt")==null?"":record_new.get("spzt")+"";//审批状态
+String ownerid = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";//所有人id
+String spzt_old = record_old.get("spzt")==null?"":record_old.get("spzt")+"";//审批状态(旧)
+String xmmc = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";//项目名称
+String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
+
+
+if("审批通过".equals(spzt) && "成交".equals(jieduan) && "审批中".equals(spzt_old)){
+
+
+   //------------------------更新项目明细---------------------------
+     List<CCObject> lists = this.cquery("cjdw","ywjkmc = '"+id+"'");
+     if(lists.size()>0){
+           for(CCObject item:lists){
+                 String zt = "";//成交类型
+                 if("20183DD9667FA14v9YSK".equals(recordtype)){
+                      zt = "已售";
+                 }else{
+                      zt = "已租";
+                 }
+                 String mxid = item.get("cjdw")==null?"":item.get("cjdw")+"";//单位明细id
+                 String mx [] = mxid.split(",");
+                 for(int i=0;i<mx.length;i++){
+                     this.cqlQuery("ProjectDetail","update ProjectDetail set lfzt = '"+zt+"' where id = '"+mx[i]+"'");
+                 }
+           }
+     }
+     List<CCObject> cjdwlist = this.cqlQuery("cjdw","select sum(ifnull(mj,0)) as mj from cjdw where ywjkmc = '"+id+"' and is_deleted = '0'");
+
+     if(cjdwlist.size()>0){
+           cjmj = cjdwlist.get(0).get("mj")==null?0.0:Double.valueOf(cjdwlist.get(0).get("mj")+"");//面积
+     }
+
+     if(cjmj==0.0){
+           trigger.addErrorMessage("成交面积为0,请检查！");
+     }
+
+
+    List<CCObject> juge = this.cquery("Project","id='"+xmmc+"' and ssbm = '顾问部'");
+
+    if(juge.size()>0){
+        String cjdw = record_new.get("cjdw")==null?"":record_new.get("cjdw")+"";//成交单位
+        Double cjmjs = record_new.get("cjmj")==null?0.0:Double.valueOf(record_new.get("cjmj")+"");//成交面积
+        Double cjdj = record_new.get("cjdj")==null?0.0:Double.valueOf(record_new.get("cjdj")+"");//成交单价
+        Double zks = record_new.get("zks")==null?0.0:Double.valueOf(record_new.get("zks")+"");//折扣率
+        String khmc = record_new.get("khmc")==null?"":record_new.get("khmc")+"";//客户名称
+        String jfbz = record_new.get("jfbz")==null?"":record_new.get("jfbz")+"";//交付标准
+        String zlkssj = record_new.get("zlkssj")==null?"":record_new.get("zlkssj")+"";//租赁起始时间
+        String zlnx = record_new.get("zlnx")==null?"":record_new.get("zlnx")+"";//租赁年限
+        String zljssj = record_new.get("zljssj")==null?"":record_new.get("zljssj")+"";//租赁结束时间
+        String zjdzl = record_new.get("zjdzl")==null?"":record_new.get("zjdzl")+"";//租赁递增率
+
+        
+        Double jgzj = 0.0;
+        if(zks!=0){
+            jgzj = cjmjs*cjdj;
+        }
+        String htmc = "HT_"+name;
+
+        List<CCObject> cjdwslist = this.cqlQuery("cjdw","select distinct(htmc) as htmc from cjdw where is_deleted = '0' and htmc is not null");
+
+        CCObject contract = new CCObject("contract");
+        contract.put("chuzzj",jgzj);
+        contract.put("chuzdw",cjdw);
+        contract.put("chuzmj",cjmjs);
+        contract.put("zhuangtai","草稿");
+        contract.put("ownerid",ownerid);
+        contract.put("recordtype","2018688E6A16761lGRZm");
+        String htmcdx = "";
+        for(CCObject cjdwitem:cjdwslist){
+              if(!"".equals(htmcdx)){
+                    htmcdx +=";";
+              }
+              htmcdx += cjdwitem.get("htmc")==null?"":cjdwitem.get("htmc")+"";//合同名称 
+        }
+        
+        contract.put("nhhtmc",htmcdx);
+        contract.put("htmc",htmc);
+        contract.put("chuzqssj",zlkssj);
+        contract.put("chuzswyszt",jfbz);
+        contract.put("chuzjzsj",zljssj);
+        contract.put("chuznx",zlnx);
+        contract.put("zjdzs",zjdzl);
+        contract.put("cjrs",ownerid);
+
+
+
+        ServiceResult result = this.insert(contract);
+        String resultid = result.get("id")==null?"":result.get("id")+"";//id
+        List<CCObject> contractyjfclist = this.cquery("yjfc","ywjkmc='"+id+"'");
+        for(CCObject item:contractyjfclist){
+              String fcyh1 = item.get("fcyh1")==null?"":item.get("fcyh1")+"";
+              String fcyh2 = item.get("fcyh2")==null?"":item.get("fcyh2")+"";
+              String fcyh3 = item.get("fcyh3")==null?"":item.get("fcyh3")+"";
+              String fcyh4 = item.get("fcyh4")==null?"":item.get("fcyh4")+"";
+              String fcyh5 = item.get("fcyh5")==null?"":item.get("fcyh5")+"";
+              String fcbl1 = item.get("fcbl1")==null?"":item.get("fcbl1")+"";
+              String fcbl2 = item.get("fcbl2")==null?"":item.get("fcbl2")+"";
+              String fcbl3 = item.get("fcbl3")==null?"":item.get("fcbl3")+"";
+              String fcbl4 = item.get("fcbl4")==null?"":item.get("fcbl4")+"";
+              String fcbl5 = item.get("fcbl5")==null?"":item.get("fcbl5")+"";
+
+              CCObject contractobj = new CCObject("yjfcs");
+              contractobj.put("htmc",resultid);
+              contractobj.put("fyr1",fcyh1);
+              contractobj.put("fyr2",fcyh2);
+              contractobj.put("fyr3",fcyh3);
+              contractobj.put("fyr4",fcyh4);
+              contractobj.put("fyr5",fcyh5);
+              contractobj.put("fybl1",fcbl1);
+              contractobj.put("fybl2",fcbl2);
+              contractobj.put("fybl3",fcbl3);
+              contractobj.put("fybl4",fcbl4);
+              contractobj.put("fybl5",fcbl5);
+              this.insert(contractobj);
+        }
+
+
+    }else{
+     
+      //----------------------返写业绩---------------------
+      List<CCObject> yjfclist = this.cquery("yjfc","ywjkmc='"+id+"'");
+          if(yjfclist.size()>0){
+
+                if(yjfclist.size()==1){
+                      String fcyh1 = yjfclist.get(0).get("fcyh1")==null?"":yjfclist.get(0).get("fcyh1")+"";//分成用户1
+                      String fcyh2 = yjfclist.get(0).get("fcyh2")==null?"":yjfclist.get(0).get("fcyh2")+"";//分成用户2
+                      String fcyh3 = yjfclist.get(0).get("fcyh3")==null?"":yjfclist.get(0).get("fcyh3")+"";//分成用户3
+                      String fcyh4 = yjfclist.get(0).get("fcyh4")==null?"":yjfclist.get(0).get("fcyh4")+"";//分成用户4
+                      String fcyh5 = yjfclist.get(0).get("fcyh5")==null?"":yjfclist.get(0).get("fcyh5")+"";//分成用户5
+                      double fcbl1 = yjfclist.get(0).get("fcbl1")==null?0:Double.valueOf(yjfclist.get(0).get("fcbl1")+"");//分成比例1
+                      double fcbl2 = yjfclist.get(0).get("fcbl2")==null?0:Double.valueOf(yjfclist.get(0).get("fcbl2")+"");//分成比例2  
+                      double fcbl3 = yjfclist.get(0).get("fcbl3")==null?0:Double.valueOf(yjfclist.get(0).get("fcbl3")+"");//分成比例3   
+                      double fcbl4 = yjfclist.get(0).get("fcbl4")==null?0:Double.valueOf(yjfclist.get(0).get("fcbl4")+"");//分成比例4
+                      double fcbl5 = yjfclist.get(0).get("fcbl5")==null?0:Double.valueOf(yjfclist.get(0).get("fcbl5")+"");//分成比例5
+                      String xm1 = yjfclist.get(0).get("szxm")==null?"":yjfclist.get(0).get("szxm")+"";//所属项目
+                      String xm2 = yjfclist.get(0).get("szxm2")==null?"":yjfclist.get(0).get("szxm2")+"";
+                      String xm3 = yjfclist.get(0).get("szxm3")==null?"":yjfclist.get(0).get("szxm3")+"";
+                      String xm4 = yjfclist.get(0).get("szxm4")==null?"":yjfclist.get(0).get("szxm4")+"";
+                      String xm5 = yjfclist.get(0).get("szxm5")==null?"":yjfclist.get(0).get("szxm5")+"";
+
+                      List<CCObject> listt1 = this.cquery("ccuser","id='"+fcyh1+"' and department = '顾问部' and isusing = '1'");
+                      List<CCObject> listt2 = this.cquery("ccuser","id='"+fcyh2+"' and department = '顾问部' and isusing = '1'");
+                      List<CCObject> listt3 = this.cquery("ccuser","id='"+fcyh3+"' and department = '顾问部' and isusing = '1'");
+                      List<CCObject> listt4 = this.cquery("ccuser","id='"+fcyh4+"' and department = '顾问部' and isusing = '1'");
+                      List<CCObject> listt5 = this.cquery("ccuser","id='"+fcyh5+"' and department = '顾问部' and isusing = '1'");
+
+                      if(listt1.size()>0 || listt2.size()>0 || listt3.size()>0 || listt4.size()>0 || listt5.size()>0){
+                          List<CCObject> list = this.cquery("ryjx","nd='"+year+"' and yf='"+month+"' and bkhr = '"+ownerid+"' and xmmc ='"+xmmc+"' and recordtype='201884204B9C199odbgA'");
+                             if(list.size()==1){
+                                grdywcyjs = list.get(0).get("grdywcyjs")==null?0.0:Double.valueOf(list.get(0).get("grdywcyjs")+"");
+                                list.get(0).put("grdywcyjs",grdywcyjs+cjmj);
+                                this.update(list.get(0));
+                             }else if(list.size()==0){
+                                 trigger.addErrorMessage("本月未创建考核目标!或者考核目标审批未通过1!");
+                             }
+                 List<CCObject> ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '审批通过' and nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+xmmc+"' and recordtype = '2018ED6B4DF92033DeWs' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+ownerid+"' and is_deleted = '0')");
+                 if(ryjxlist.size()==1){
+                       double yj = ryjxlist.get(0).get("yj")==null?0.0:Double.valueOf(ryjxlist.get(0).get("yj")+"");
+                       ryjxlist.get(0).put("tddyyjwcs",yj+cjmj);
+                       this.update(ryjxlist.get(0));
+                 }else if(ryjxlist.size()==0){
+                       trigger.addErrorMessage("本月未创建考核目标!或者考核目标审批未通过2!");
+                 }
+
+
+                      }else{
+if(fcyh1.length()>0){
+                               List<CCObject> list1 = this.cquery("ryjx","nd = '"+year+"' and yf = '"+month+"' and xmmc='"+xm1+"' and bkhr = '"+fcyh1+"'");
+                               if(list1.size()==0)trigger.addErrorMessage("本月分成用户中包含未创建考核数据");
+                               grdywcyjs = list1.get(0).get("grdywcyjs")==null?0.0:Double.valueOf(list1.get(0).get("grdywcyjs")+"");
+                               //int frmj = list1.get(0).get("frmj")==null?0:Integer.valueOf(list1.get(0).get("frmj")+"");
+                               list1.get(0).put("grdywcyjs",grdywcyjs+(cjmj*fcbl1)/100);
+                               //list1.get(0).put("frmj",frmj+(cjmj*fcbl1)/100);
+                               this.update(list1.get(0));
+                               List<CCObject> ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '草稿' and nd = '"+year+"' and yf = '"+month+"' and xmmc = '"+xm1+"' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+fcyh1+"' and is_deleted = '0')");
+                               if(ryjxlist.size()==1){
+                                    double yj = ryjxlist.get(0).get("yj")==null?0.0:Double.valueOf(ryjxlist.get(0).get("yj")+"");
+                                    ryjxlist.get(0).put("tddyyjwcs",yj+(cjmj*fcbl1)/100);
+                                    this.update(ryjxlist.get(0));
+                               }
+}
+                      if(fcyh2.length()>0){
+                               List<CCObject> list2 = this.cquery("ryjx","nd = '"+year+"' and yf = '"+month+"' and xmmc='"+xm2+"' and bkhr = '"+fcyh2+"'");
+                               if(list2.size()==0)trigger.addErrorMessage("本月分成用户中包含未创建考核数据");
+                               grdywcyjs = list2.get(0).get("grdywcyjs")==null?0.0:Double.valueOf(list2.get(0).get("grdywcyjs")+"");
+                               //int frmj = list2.get(0).get("frmj")==null?0:Integer.valueOf(list2.get(0).get("frmj")+"");
+                               list2.get(0).put("grdywcyjs",grdywcyjs+(cjmj*fcbl2)/100);
+                               //list2.get(0).put("frmj",frmj+(cjmj*fcbl2)/100);
+                               this.update(list2.get(0));
+                               List<CCObject> ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '草稿' and nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+xm2+"' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+fcyh2+"' and is_deleted = '0')");             
+                               if(ryjxlist.size()==1){
+                                    double yj = ryjxlist.get(0).get("yj")==null?0.0:Double.valueOf(ryjxlist.get(0).get("yj")+"");
+                                    ryjxlist.get(0).put("tddyyjwcs",yj+(cjmj*fcbl2)/100);
+                                    this.update(ryjxlist.get(0));
+                               }
+}
+                      if(fcyh3.length()>0){
+                               List<CCObject> list3 = this.cquery("ryjx","nd = '"+year+"' and yf = '"+month+"' and xmmc='"+xm3+"' and bkhr = '"+fcyh3+"'");
+                               if(list3.size()==0)trigger.addErrorMessage("本月分成用户中包含未创建考核数据");
+                               grdywcyjs = list3.get(0).get("grdywcyjs")==null?0.0:Double.valueOf(list3.get(0).get("grdywcyjs")+"");
+                               //int frmj = list3.get(0).get("frmj")==null?0:Integer.valueOf(list3.get(0).get("frmj")+"");
+                               list3.get(0).put("grdywcyjs",grdywcyjs+(cjmj*fcbl3)/100);
+                               //list3.get(0).put("frmj",frmj+(cjmj*fcbl3)/100);
+                               this.update(list3.get(0));
+                               List<CCObject> ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '草稿' and nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+xm3+"' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+fcyh3+"' and is_deleted = '0')");
+                               if(ryjxlist.size()==1){
+                                    double yj = ryjxlist.get(0).get("yj")==null?0.0:Double.valueOf(ryjxlist.get(0).get("yj")+"");
+                                    ryjxlist.get(0).put("tddyyjwcs",yj+(cjmj*fcbl3)/100);
+                                    this.update(ryjxlist.get(0));
+                               }
+}
+                      if(fcyh4.length()>0){
+                               List<CCObject> list4 = this.cquery("ryjx","nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+xm4+"' and bkhr = '"+fcyh4+"'");
+                               if(list4.size()==0)trigger.addErrorMessage("本月分成用户中包含未创建考核数据");
+                               grdywcyjs = list4.get(0).get("grdywcyjs")==null?0.0:Double.valueOf(list4.get(0).get("grdywcyjs")+"");
+                               //int frmj = list4.get(0).get("frmj")==null?0:Integer.valueOf(list4.get(0).get("frmj")+"");
+                               list4.get(0).put("grdywcyjs",grdywcyjs+(cjmj*fcbl4)/100);
+                               //list4.get(0).put("frmj",frmj+(cjmj*fcbl4)/100);
+                               this.update(list4.get(0));
+                               List<CCObject> ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '草稿' and nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+xm4+"' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+fcyh4+"' and is_deleted = '0')");
+                               if(ryjxlist.size()==1){
+                                    double yj = ryjxlist.get(0).get("yj")==null?0.0:Double.valueOf(ryjxlist.get(0).get("yj")+"");
+                                    ryjxlist.get(0).put("tddyyjwcs",yj+(cjmj*fcbl4)/100);
+                                    this.update(ryjxlist.get(0));
+                               }
+}
+                      if(fcyh5.length()>0){
+                               List<CCObject> list5 = this.cquery("ryjx","nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+xm5+"' and bkhr = '"+fcyh5+"'");
+                               if(list5.size()==0)trigger.addErrorMessage("本月分成用户中包含未创建考核数据");
+                               grdywcyjs = list5.get(0).get("grdywcyjs")==null?0.0:Double.valueOf(list5.get(0).get("grdywcyjs")+"");
+                               //int frmj = list5.get(0).get("frmj")==null?0:Integer.valueOf(list5.get(0).get("frmj")+"");
+                               list5.get(0).put("grdywcyjs",grdywcyjs+(cjmj*fcbl5)/100);
+                               //list5.get(0).put("frmj",frmj+(cjmj*fcbl5)/100);
+                               this.update(list5.get(0));
+                               List<CCObject> ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '草稿' and nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+xm5+"' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+fcyh5+"' and is_deleted = '0')");
+                               if(ryjxlist.size()==1){
+                                    double yj = ryjxlist.get(0).get("yj")==null?0.0:Double.valueOf(ryjxlist.get(0).get("yj")+"");
+                                    ryjxlist.get(0).put("tddyyjwcs",yj+(cjmj*fcbl5)/100);
+                                    this.update(ryjxlist.get(0));
+                               }
+}
+
+                      }
+                       
+                                      }
+          }else{
+                 List<CCObject> list = this.cquery("ryjx","nd='"+year+"' and yf='"+month+"' and xmmc = '"+xmmc+"' and bkhr = '"+ownerid+"' and (recordtype='201884204B9C199odbgA' or recordtype='2018823B69C69F6L92FH')");
+                 if(list.size()==1){
+                         grdywcyjs = list.get(0).get("grdywcyjs")==null?0.0:Double.valueOf(list.get(0).get("grdywcyjs")+"");
+                         list.get(0).put("grdywcyjs",grdywcyjs+cjmj);
+                         this.update(list.get(0));
+                 }else if(list.size()==0){
+                       trigger.addErrorMessage("本月未创建考核目标!或者考核目标审批未通过3");
+                 }
+                 List<CCObject> ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where xmmc='"+xmmc+"' and spzt = '审批通过' and nd = '"+year+"' and yf = '"+month+"' and recordtype='2018ED6B4DF92033DeWs' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+ownerid+"' and is_deleted = '0')");
+                 if(ryjxlist.size()==1){
+                       double yj = ryjxlist.get(0).get("yj")==null?0.0:Double.valueOf(ryjxlist.get(0).get("yj")+"");
+                       ryjxlist.get(0).put("tddyyjwcs",yj+cjmj);
+                       this.update(ryjxlist.get(0));
+                 }else if(ryjxlist.size()==0){
+                       trigger.addErrorMessage("本月未创建考核目标!或者考核目标审批未通过4!");
+                 }
+          }
+
+   }
+
+
+}

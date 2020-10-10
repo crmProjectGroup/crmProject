@@ -1,0 +1,28 @@
+String xmxsy = record_old.get("xmxsy")==null?"":record_old.get("xmxsy")+"";
+
+String xmmc = record_old.get("xmmc")==null?"":record_old.get("xmmc")+"";
+
+
+List<CCObject> list = this.cqlQuery("Account","select id from Account where xmmc = '"+xmmc+"' and ownerid = '"+xmxsy+"' and is_deleted = '0'");
+List<CCObject> ccuserlist = this.cqlQuery("ccuser","select manager from ccuser where id = '"+xmxsy+"'");
+
+
+
+for(CCObject item:list){
+          String accountid = item.get("id")==null?"":item.get("id")+"";//id记录
+          CCObject obj = new CCObject("Account");
+          obj.put("id",accountid);
+          if(ccuserlist.size()>0){
+                String manager = ccuserlist.get(0).get("manager")+"";
+                obj.put("ownerid",manager);
+          }else{
+                obj.put("ownerid","005201827888B25tm2iq");
+          }
+          this.updateLt(obj);
+          CCObject account_share=new CCObject("Account",CCObject.IS_SHARED);//新增一条实施项目共享记录
+          account_share.put("parentid",accountid);//共享哪条记录
+          account_share.put("accesslevel","Write");//共享权限 读写：Write 只读：Read
+          account_share.put("rowcause","Manual");
+	  account_share.put("userorgroupid",xmxsy);//共享的人
+	  this.insertLt(account_share);//执行插入共享的操作
+}

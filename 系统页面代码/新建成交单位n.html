@@ -1,0 +1,232 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" isELIgnored="false" />
+<cc!>
+/*
+description:选择成交单位
+version: 1.0
+date:201200810
+author:tom
+log:
+*/
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+    throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+        parameterValue = new String(iso, "UTF-8");
+        return parameterValue;
+    }
+}
+return parameterValue;
+}
+</cc>
+<cc>
+    CCService cs = new CCService(userInfo);
+    //String profile = userInfo.getProfileId();
+    //JSONObject dwjson = new JSONObject();
+	//JSONArray dwjsonarr = new JSONArray(); 
+    String jsa =""; 
+    
+    //获取业务机会的id,以便获取已经选择的成交单位
+    String oppoid = request.getParameter("oppoid")==null?"":encodeParameters(request.getParameter("oppoid")+"");//业务机会id
+
+    //判断业务机会的状态,以确定是否还能做修改
+
+    List<CCObject> cjdwlist = cs.cqlQuery("cjdw","select cjdw from cjdw where ywjkmc='"+oppoid+"' and is_deleted='0'");
+    JSONArray yxcjdwjsonArray = JSONArray.fromObject(cjdwlist);
+    String yxcjdwjsonArray_s = yxcjdwjsonArray.toString(); 
+    // String dws[] = new String[cjdwlist.size()];
+    // for (int j = 0; j < cjdwlist.size(); j++) {
+    //     dws[j] = cjdwlist.get(j).get("cjdw")==null?"":cjdwlist.get(j).get("cjdw") + ""; 
+    // }
+    // String dws_str = Arrays.toString(dws);
+    // out.print(dws_str);
+
+    //数据结构:  项目,楼栋,楼层,单元,建筑面积,状态
+    String xmid = request.getParameter("xmid")==null?"":encodeParameters(request.getParameter("xmid")+"");//获取项目id
+    List<CCObject> ldlist = cs.cqlQuery("ldxx","select id,ldmc as name from ldxx where xmmc ='"+xmid+"' and is_deleted ='0'");
+
+    //JSONArray ldjsonArray = JSONArray.fromObject(ldlist); 
+    JSONArray ldjsonArray = new JSONArray(); 
+    //String ldjsonArray_s = ldjsonArray.toString();
+
+    //List<CCObject> floorlist = cs.cqlQuery("ProjectDetail","select distinct lc from ProjectDetail where ldmc= '"+ldid+"' and is_deleted ='0' order by lc+0 desc");
+
+    for(CCObject lditem:ldlist){ //楼栋 -> 楼层 ->单元
+        //out.print("1");
+        JSONObject ldjson = new JSONObject();
+        String ldid = lditem.get("id")==null?"":lditem.get("id") + ""; 
+        String ldnm = lditem.get("name")==null?"":lditem.get("name") + ""; 
+        JSONArray lcjsonArray = new JSONArray(); 
+        List<CCObject> floorlist = cs.cqlQuery("ProjectDetail","select distinct lc from ProjectDetail where ldmc= '"+ldid+"' and is_deleted ='0' order by lc+0");
+        for(CCObject flooritem:floorlist){
+            //out.print("2");
+            JSONObject lcjson = new JSONObject();
+            int lc = flooritem.get("lc")==null?0:Integer.parseInt(flooritem.get("lc")+""); 
+            JSONArray dwjsonArray = new JSONArray(); 
+            List<CCObject> dwlist = cs.cqlQuery("ProjectDetail","select id,dw,jzmjs,lfzt from ProjectDetail where ldmc= '"+ldid+"' and lc ="+lc+" and is_deleted ='0' order by dw ");
+            for(CCObject dwitem:dwlist){
+                //out.print("3");
+                JSONObject dwjson = new JSONObject();
+                String dwid = dwitem.get("id")==null?"":dwitem.get("id") + ""; 
+                String dw = dwitem.get("dw")==null?"":dwitem.get("dw") + ""; 
+                String jzmjs = dwitem.get("jzmjs")==null?"":dwitem.get("jzmjs") + ""; 
+                String lfzt = dwitem.get("lfzt")==null?"":dwitem.get("lfzt") + ""; 
+                dwjson.put("dwid",dwid);
+                dwjson.put("dw",dw);
+                dwjson.put("jzmjs",jzmjs);
+                dwjson.put("lfzt",lfzt);
+                dwjsonArray.add(dwjson);
+            }
+            lcjson.put("lc",lc);
+            lcjson.put("dwxx",dwjsonArray);
+            lcjsonArray.add(lcjson);
+        }
+        ldjson.put("xmid",xmid);
+        ldjson.put("ldid",ldid);
+        ldjson.put("ldnm",ldnm);
+        ldjson.put("lcxx",lcjsonArray);
+        ldjsonArray.add(ldjson);
+    }
+
+    jsa=ldjsonArray.toString(); 
+
+    //List<CCObject> floorlist = cs.cqlQuery("ProjectDetail","select distttinct lc from ProjectDetail where ldmc= '"+id+"' and is_deleted ='0' order by lc+0 desc");
+    
+    //out.print(jsa);
+    </cc>
+<HTML>
+	<head>
+		<!--<meta http-equiv="refresh" content="5">-->
+		<script src="//unpkg.com/vue/dist/vue.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <!-- 引入样式 -->
+        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+        <!-- 引入组件库 -->
+        <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+	</head>
+<body>
+    <div id="app">
+        <el-row :gutter="12" >
+            <el-col :span="12">
+                <el-select v-model="ld_option" placeholder="请选择">
+                    <el-option
+                      v-for="item in collapselist1"
+                      :key="item.ldid"
+                      :label="item.ldnm"
+                      :value="item">
+                    </el-option>
+                </el-select>
+            </el-col>
+            <el-col :span="12">
+                <el-button type="primary" @click="addDw">确定</el-button>
+                <el-button type="success" @click="cancelAdd">取消</el-button>
+            </el-col>
+        </el-row>
+        <!-- <div>{{ld_option}}</div> -->
+        <el-checkbox-group v-model="checkeddws" @change="handleCheckedDwsChange">
+        <el-row :gutter="12" v-for="(lcitem,indeidx) in ld_option.lcxx">
+            <el-col :span="3">
+                <el-card shadow="always">
+                  {{lcitem.lc}}
+                </el-card>
+            </el-col>
+            <el-col :span="21">
+                <el-col :span="8" v-for="ditem in lcitem.dwxx">
+                  <el-card shadow="always">
+                    <el-checkbox :label="ditem.dwid" :key="ditem.dwid" :disabled="(ditem.lfzt==='已售'||ditem.lfzt==='已租'||ditem.lfzt==='已锁定')" >{{ditem.dw}},{{ditem.lfzt}},{{ditem.jzmjs}}</el-checkbox>
+                  </el-card>
+                </el-col>
+            </el-col>
+        </el-row>
+        </el-checkbox-group>
+    </div>
+
+</body>
+<script>
+    var Main = {
+      data () {
+        return {
+            panel: '',
+            collapselist1: <cc:outprint>jsa</cc:outprint>,
+            yxcjdw:<cc:outprint>yxcjdwjsonArray_s</cc:outprint>,
+            ld_option:'',
+            checkeddws:[],
+            oppoid:'<cc:outprint>oppoid</cc:outprint>',
+            xmid:'<cc:outprint>xmid</cc:outprint>',
+        }
+      },
+      created: function(){
+        this.yxcjdwf();
+      },
+      methods: {
+        yxcjdwf: function(){
+            //alert(this.yxcjdw);
+            var that = this;
+            this.yxcjdw.forEach(function(item,index){
+                //alert(that.checkeddws);
+				that.checkeddws.push(item.cjdw);
+			});
+        },
+        addDw: function() {
+            // alert(val);
+			// for(var i = 0; i < val.length; i++){
+            //     alert(val[i]);
+            // }
+            var that = this;
+            //console.log(this.checkeddws);
+            var params = new URLSearchParams();
+            var str0 =JSON.stringify(this.checkeddws);
+            //var params = new FormData();
+            params.append('dwids', encodeURI(str0));
+            //alert(params);
+            //console.log(that.ld_option);
+            //alert(that.ld_option.ldid);
+            //alert(that.ld_option.ldnm);
+            // axios({
+            //     url:'/customize/page/9291p1140/cjapi.jsp?name=cjapi&type=adddw',
+            //     method: 'post',
+            //     data: params,
+            //     headers: {
+            //       'Content-type': 'application/x-www-form-urlencoded'
+            //     }
+            // })
+            axios.get('/controller.action', {
+					params: {
+						name :'cjapi',
+                        type :'adddw',
+						dwids : encodeURI(str0),
+                        oppoid: that.oppoid,
+                        xmid: that.xmid,
+                        ldid: that.ld_option.ldid,
+                        ldnm: that.ld_option.ldnm,
+					}
+			})
+            .then(function (response) {
+				alert("新建成功!");
+                //window.close();
+                //window.history.back();  //返回上一页
+                window.location.href="/query.action?m=query&id="+that.oppoid;
+				//that.list_sjjb=response.data.data;
+			})
+            .catch(function (error) {
+				console.log(error);
+			});
+		},
+        handleCheckedDwsChange(val){
+            //console.log(val);
+        },
+        cancelAdd(){
+            window.location.href="/query.action?m=query&id="+this.oppoid;
+        }
+      }
+    };
+    var Ctor = Vue.extend(Main)
+    new Ctor().$mount('#app')
+</script>

@@ -1,0 +1,12 @@
+String id = record_new.get("id")==null?"":record_new.get("id")+"";//id
+
+String xmda = record_new.get("xmda")==null?"":record_new.get("xmda")+"";//项目档案
+
+List<CCObject> list = this.cqlQuery("ldda","select name from ldda where is_deleted = '0' and xmmc = '"+xmda+"'");
+
+for(CCObject item:list){
+      CCObject obj = new CCObject("ldxx");
+      obj.put("ldmc",item.get("name")+"");
+      obj.put("xmmc",id);
+      this.insert(obj);
+}

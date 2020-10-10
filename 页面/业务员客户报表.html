@@ -1,0 +1,198 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+    throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+        parameterValue = new String(iso, "UTF-8");
+        return parameterValue;
+    }
+}
+return parameterValue;
+}
+</cc>
+<cc>
+        CCService cs = new CCService(userInfo);
+        java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        String nowday = df.format(new Date());
+        String ksrq = request.getParameter("startTime")==null?nowday:request.getParameter("startTime")+"";//开始日期
+        String jsrq = request.getParameter("endTime")==null?nowday:request.getParameter("endTime")+"";//结束日期
+        String uid = userInfo.getUserId();//当前登录用户id
+        String roleid = userInfo.getRoleId();//角色id
+        List<CCObject> ywylist = null;
+        List<CCObject> list = null;//饼图数据源
+        List<CCObject> list1 = null;//下拉框数据源
+        String ljqymj = "";//累计签约面积
+        String scqymj = "";//市场签约面积
+        String symj = "";//可销售面积
+        String ywy = "";
+        String jxkh = "";
+        String smkh = "";
+        String zjkh = "";
+        String xm = request.getParameter("xm")==null?"":request.getParameter("xm")+"";
+        String cond = "";
+        String datetime = " and a.createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+        if(!"".equals(xm)){
+             cond = " and g.xmmc = '"+xm+"'";
+        }
+    try {
+                String ywysql = "select c.id as id,c.name as name from ccuser c left join ProjectSaleGroup g on g.xmxsy=c.id where g.is_deleted = '0' and isusing='1' "+cond+" order by c.createdate desc";
+                String sql = "SELECT b.zid, b.aid, b.cid, a.jxid FROM ccuser c LEFT JOIN ( SELECT c.id AS cid, COUNT(a.recordtype) AS jxid FROM ccuser c LEFT JOIN Account a ON a.createbyid = c.id LEFT JOIN zjnr z ON z.zjkh = a.id WHERE a.is_deleted = '0' "+datetime+" AND a.recordtype = '2018525F215221DtlTXV' GROUP BY c.id ) a ON c.id = a.cid LEFT JOIN ( SELECT c.id AS cid, COUNT(a.recordtype) AS aid, COUNT(z.id) AS zid FROM ccuser c LEFT JOIN Account a ON a.createbyid = c.id LEFT JOIN zjnr z ON z.zjkh = a.id WHERE a.is_deleted = '0' "+datetime+" AND (a.recordtype = '2018496272C934EtLhWs' OR a.recordtype = '20186166515AE4A8ZfOc') GROUP BY c.id ) b ON b.cid = c.id LEFT JOIN ProjectSaleGroup g ON g.xmxsy = c.id WHERE c.isusing = '1' AND g.is_deleted = '0' "+cond+" order by c.createdate desc";
+
+                String sql1 = "select id,name from Project where is_deleted = '0' and id in (select distinct(xmmc) from ProjectSaleGroup where is_deleted='0' and xmxsy in (select id from ccuser where isusing='1' and role in (select roleid from role where parentrole_id='"+roleid+"' and gap > 0))) ";
+                list = cs.cqlQuery("Account",sql);        
+                list1 = cs.cqlQuery("Project",sql1);       
+                ywylist = cs.cqlQuery("ccuser",ywysql);
+    if(ywylist.size()>0){
+        for(CCObject ywyitem:ywylist){
+            ywy+=ywyitem.get("name")==null?"":"'"+ywyitem.get("name")+"',";
+        }
+        ywy = ywy.substring(0,ywy.lastIndexOf(","));
+    }
+    
+    if(list.size()>0){
+        for(CCObject item:list){
+            jxkh+=item.get("jxid")==null?"'0',":"'"+item.get("jxid")+"',";
+            zjkh+=item.get("zid")==null?"'0',":"'"+item.get("zid")+"',";
+            smkh+=item.get("aid")==null?"'0',":"'"+item.get("aid")+"',";
+        }
+        jxkh = jxkh.substring(0,jxkh.lastIndexOf(","));
+        zjkh = zjkh.substring(0,zjkh.lastIndexOf(","));
+        smkh = smkh.substring(0,smkh.lastIndexOf(","));
+    }
+     
+    } catch (Exception e) {
+         e.printStackTrace();
+    }
+</cc>
+<html>
+<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1526972355175tvSWZ3EL"></script>
+<head>
+<title>业务员客户报表</title>
+</head>
+<body>
+<div class="title" align="center">
+      <h1 align="center"><font size="4px">业务员客户报表</font></h1>
+    <form action="" method="post" name="theform" id="theform">
+    <h2 align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h2>
+<div class="cloudbox3" align="center" >
+    <select name="xm" id="xm">
+        <option value=''>全部</option>
+        <cc>for(CCObject list2:list1){
+         if(xm.equals(list2.get("id"))){</cc>
+           <option selected value='<cc:outprint>list2.get("id")</cc:outprint>'><cc:outprint>list2.get("name")</cc:outprint></option>
+           <cc>}else{</cc>
+           <option value='<cc:outprint>list2.get("id")</cc:outprint>'><cc:outprint>list2.get("name")</cc:outprint></option>
+        <cc>}}</cc>
+        </select id="xm">&nbsp;&nbsp;&nbsp;
+开始日期&nbsp;&nbsp;<input id="startTime" name="startTime" class="datepicker" type="text" value="<cc:outprint>ksrq</cc:outprint>">
+&nbsp;&nbsp;截止日期&nbsp;&nbsp;<input id="endTime" name="endTime" class="datepicker" type="text" value="<cc:outprint>jsrq</cc:outprint>">
+    <input type="submit"  value=" 查 询 " class="input01"/><br><br>   
+    <br>
+<div id="chart" style="width: 100%;height:400px;" valign="middle" align="center"></div>
+</div>
+</form>
+</div>
+
+</body>
+<script type="text/javascript">
+   var echartsPie;  
+    
+    var option = {
+    title : {
+        text: '客户情况',
+        subtext: ''
+    },
+    tooltip : {
+        trigger: 'axis'
+    },
+    legend: {
+        data:['进线客户','上门客户','转介客户']
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : {show: true},
+            dataView : {show: true, readOnly: false},
+            magicType : {show: true, type: ['line', 'bar']},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    calculable : true,
+    xAxis : [
+        {
+            type : 'category',
+            data :  [<cc:outprint>ywy</cc:outprint>]
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value'
+        }
+    ],
+    series : [
+        {
+            name:'进线客户',
+            type:'bar',
+            data:[<cc:outprint>jxkh</cc:outprint>],
+            markPoint : {
+                data : [
+                    {type : 'max', name: '最大值'},
+                    {type : 'min', name: '最小值'}
+                ]
+            },
+            markLine : {
+                data : [
+                    {type : 'average', name: '平均值'}
+                ]
+            }
+        },
+        {
+            name:'上门客户',
+            type:'bar',
+            data:[<cc:outprint>smkh</cc:outprint>],
+            markPoint : {
+                data : [
+                    {type : 'max', name: '最大值'},
+                    {type : 'min', name: '最小值'}
+                ]
+            },
+            markLine : {
+                data : [
+                    {type : 'average', name : '平均值'}
+                ]
+            }
+        },{
+            name:'转介客户',
+            type:'bar',
+            data:[<cc:outprint>zjkh</cc:outprint>],
+            markPoint : {
+                data : [
+                    {type : 'max', name: '最大值'},
+                    {type : 'min', name: '最小值'}
+                ]
+            },
+            markLine : {
+                data : [
+                    {type : 'average', name : '平均值'}
+                ]
+            }
+        }
+    ]
+};
+      
+    echartsPie = echarts.init(document.getElementById('chart'));  
+    $(function(){ 
+        echartsPie.setOption(option); 
+    }); 
+</script>
+</html>

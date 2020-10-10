@@ -1,0 +1,149 @@
+java.text.SimpleDateFormat sdf= new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+java.util.Calendar cal = java.util.Calendar.getInstance();
+cal.setTime(new Date());
+int year = cal.get(Calendar.YEAR);//当前年份
+int month = cal.get(Calendar.MONTH)+1;//当前月份
+int day = cal.get(Calendar.DATE);//当前天数
+String uid = userInfo.getUserId();//当前登录用户标识
+String spzt = record_new.get("spzt")==null?"":record_new.get("spzt")+"";//审批状态
+String id = record_new.get("id")==null?"":record_new.get("id")+"";//唯一标识
+String khlb = record_new.get("khlb")==null?"":record_new.get("khlb")+"";//客户类别
+String spzt_old = record_old.get("spzt")==null?"":record_old.get("spzt")+"";//审批状态(旧)
+String ownerid = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";//所有人id
+String szxm = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";//所在项目
+String managerid = userInfo.getManagerId();
+
+if("审批通过".equals(spzt) && "审批中".equals(spzt_old)){
+       String zjmb = record_new.get("zjmb")==null?"":record_new.get("zjmb")+"";//转介目标
+       String xmmc = record_new.get("zjxm")==null?"":record_new.get("zjxm")+"";//转介项目
+
+       List<CCObject> ccuserlist = this.cqlQuery("ccuser","select profile from ccuser where id = '"+ownerid+"' and isusing='1'");
+
+
+       if(ccuserlist.size()>0){
+       //-------------获取转介目标项目--------------
+
+       if(xmmc.length()==0){
+if(!"aaa201858C360ADNceRX".equals(ccuserlist.get(0).get("profile"))){
+                  List<CCObject> zjmblist = cqlQuery("ProjectSaleGroup","select xmmc from ProjectSaleGroup where xmxsy = '"+zjmb+"' and is_deleted = '0'");
+            if(zjmblist.size()==1){
+                 xmmc = zjmblist.get(0).get("xmmc")==null?"":zjmblist.get(0).get("xmmc")+"";//目标项目
+            }
+
+       }
+       
+       }
+     String name = record_new.get("name")==null?"":record_new.get("name")+"";//企业名称
+       String xwyqzsj = record_new.get("xwyqzsj")==null?"":record_new.get("xwyqzsj")+"";//现物业起始时间
+       String xbgqy = record_new.get("xbgqy")==null?"":record_new.get("xbgqy")+"";//现办公区域
+   
+       String qyztmc = record_new.get("gmqc")==null?"":record_new.get("gmqc")+"";//签约主体名称
+       String spfhys = record_new.get("spfhys")==null?"":record_new.get("spfhys")+"";//是否符合预算
+       String xb = record_new.get("sex1")==null?"":record_new.get("sex1")+"";//性别
+       String sfjxzsm = record_new.get("sfjxzsm")==null?"":record_new.get("sfjxzsm")+"";//是否进线转上门
+       String zldqsj = record_new.get("zldqsj")==null?"":record_new.get("zldqsj")+"";//租赁到期时间
+       String dbjp = record_new.get("dbjp")==null?"":record_new.get("dbjp")+"";//对比竞品
+       String qyclsj = record_new.get("qyclsj")==null?"":record_new.get("qyclsj")+"";//企业成立时间
+       String zlzq = record_new.get("zlzq")==null?"":record_new.get("zlzq")+"";//找楼周期
+       String gsgm = record_new.get("gsgm")==null?"":record_new.get("gsgm")+"";//公司规模
+       String xbgwyjg = record_new.get("xbgwyjg")==null?"":record_new.get("xbgwyjg")+"";//现办公物业价格
+       String gmyy = record_new.get("gmyy")==null?"":record_new.get("gmyy")+"";//购买原因
+       String xmrkd = record_new.get("xmrkd")==null?"":record_new.get("xmrkd")+"";//项目认可点
+       String sptlfkfs = record_new.get("sptlfkfs")==null?"":record_new.get("sptlfkfs")+"";//是否讨论付款方式
+       String jynr = record_new.get("jynr")==null?"":record_new.get("jynr")+"";//经营内容
+       String spmqsyrq = record_new.get("spmqsyrq")==null?"":record_new.get("spmqsyrq")+"";//是否明确使用日期
+       String spmqsdfh = record_new.get("spmqsdfh")==null?"":record_new.get("spmqsdfh")+"";//是否明确锁定房号
+       String qyqc = record_new.get("qyqc")==null?"":record_new.get("qyqc")+"";//统一社会信用代码
+       String zsdj2 = record_new.get("zsdj2")==null?"":record_new.get("zsdj2")+"";//租售动机2
+       String lxrxm = record_new.get("lxrxm")==null?"":record_new.get("lxrxm")+"";//联系人姓名
+       String sfzjkh = record_new.get("sfzjkh")==null?"":record_new.get("sfzjkh")+"";//是否转介客户
+       String xqmj = record_new.get("xqmj")==null?"":record_new.get("xqmj")+"";//需求面积
+       String lxrdh = record_new.get("lxrdh")==null?"":record_new.get("lxrdh")+"";//联系人电话
+       String zsdj1 = record_new.get("zsdj1")==null?"":record_new.get("zsdj1")+"";//租售动机1
+       String spphzx = record_new.get("spphzx")==null?"":record_new.get("spphzx")+"";//是否配合征信
+       String xbgmj = record_new.get("xbgmj")==null?"":record_new.get("xbgmj")+"";//现办公面积
+       String spqtyhtj = record_new.get("spqtyhtj")==null?"":record_new.get("spqtyhtj")+"";//是否洽谈优惠条件
+       String kxwt = record_new.get("kxwt")==null?"":record_new.get("kxwt")+"";//抗性问题
+       String zclxfs = record_new.get("zclxfs")==null?"":record_new.get("zclxfs")+"";//注册联系方式
+       String zlyy = record_new.get("zlyy")==null?"":record_new.get("zlyy")+"";//租赁原因
+       String zjys = record_new.get("zjys")==null?"":record_new.get("zjys")+"";//租金预算
+       String sfgzzlcb = record_new.get("sfgzzlcb")==null?"":record_new.get("sfgzzlcb")+"";//是否关注租赁成本
+       String xbgdx = record_new.get("xbgdx")==null?"":record_new.get("xbgdx")+"";//现办公大厦
+       String xylx = record_new.get("xylx")==null?"":record_new.get("xylx")+"";//行业类型
+       String spjczqzygyn = record_new.get("spjczqzygyn")==null?"":record_new.get("spjczqzygyn")+"";//是否决策周期在一个月内
+       String zczj = record_new.get("zczj")==null?"":record_new.get("zczj")+"";//注册资金
+       String qylx = record_new.get("qylx")==null?"":record_new.get("qylx")+"";//企业类型
+       String rztj2 = record_new.get("rztj2")==null?"":record_new.get("rztj2")+"";//认知途径2
+       String lxrzw = record_new.get("lxrzw")==null?"":record_new.get("lxrzw")+"";//联系人职务
+       String spjcrsm = record_new.get("spjcrsm")==null?"":record_new.get("spjcrsm")+"";//是否决策人上门
+       String xsywyqk = record_new.get("xsywyqk")==null?"":record_new.get("xsywyqk")+"";//现使用物业情况
+       String spqthtxj = record_new.get("spqthtxj")==null?"":record_new.get("spqthtxj")+"";//是否洽谈合同细节
+       String xbgdz = record_new.get("xbgdz")==null?"":record_new.get("xbgdz")+"";//现办公地址
+       String rztj1 = record_new.get("rztj1")==null?"":record_new.get("rztj1")+"";//认知途径1
+       String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
+       String zcdz = record_new.get("khdd")==null?"":record_new.get("khdd")+"";//注册地址
+       String khdj = record_new.get("khdj")==null?"":record_new.get("khdj")+"";//客户等级
+       
+
+       if("销售客户".equals(khlb)){
+            recordtype="2018496272C934EtLhWs";
+       }
+       if("租赁客户".equals(khlb)){
+            recordtype="20186166515AE4A8ZfOc";
+       }
+
+       List<CCObject> flaglist = this.cqlQuery("Account","select id from Account where lxrdh = '"+lxrdh+"' and xmmc = '"+xmmc+"' and is_deleted ='0'");
+
+     
+
+       if(flaglist.size()==0){
+           //-------------新建客户记录----------------
+       CCObject iaccount = new CCObject("Account");
+       iaccount.put("name",name);
+       iaccount.put("zclxfs",zclxfs);
+       iaccount.put("jynr",jynr);
+       iaccount.put("zczj",zczj);
+       iaccount.put("zcdz",zcdz);
+       iaccount.put("qyqc",qyqc);
+       iaccount.put("qyclsj",qyclsj);
+       iaccount.put("sex1",xb);
+       iaccount.put("lxrxm",lxrxm);
+       iaccount.put("lxrzw",lxrzw);
+       iaccount.put("lxrdh",lxrdh);
+       iaccount.put("qylx",qylx);
+       iaccount.put("xylx",xylx);
+       iaccount.put("gsgm",gsgm);
+       iaccount.put("xbgqy",xbgqy);
+       iaccount.put("xbgdx",xbgdx);
+       iaccount.put("xbgmj",xbgmj);
+       iaccount.put("xbgdz",xbgdz);
+       iaccount.put("xsywyqk",xsywyqk);
+       iaccount.put("xbgwyjg",xbgwyjg);
+       iaccount.put("xwyqzsj",xwyqzsj);
+       iaccount.put("rztj1",rztj1);
+       iaccount.put("rztj2",rztj2);
+       iaccount.put("zsdj1",zsdj1);
+       iaccount.put("zsdj2",zsdj2);
+       iaccount.put("zlzq",zlzq);
+       iaccount.put("dbjp",dbjp);
+       iaccount.put("xmrkd",xmrkd);
+       iaccount.put("kxwt",kxwt);
+       iaccount.put("xqmj",xqmj);
+       iaccount.put("spjczqzygyn",spjczqzygyn);
+       iaccount.put("qyztmc",qyztmc);
+       iaccount.put("spjcrsm",spjcrsm);
+       iaccount.put("spqthtxj",spqtyhtj);
+       iaccount.put("spmqsdfh",spmqsdfh);
+       iaccount.put("ownerid",zjmb);  
+       iaccount.put("spzt","草稿");
+       iaccount.put("xmmc",xmmc);
+       iaccount.put("khdj",khdj);
+       iaccount.put("recordtype",recordtype);
+
+       this.insertLt(iaccount);
+         }else{
+                 id = flaglist.get(0).get("id")==null?"":flaglist.get(0).get("id")+"";//更新id
+         } 
+
+}
+}

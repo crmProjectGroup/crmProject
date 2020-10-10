@@ -1,0 +1,449 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+<html><head><title>定位管理系统</title></head><body>
+<div class="wrap">
+<div class="cloudcenter">
+<!DOCTYPE>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<meta http-equiv="Content-Type" content="text/html; charset=gbk" />
+<title>定位页面</title>
+<style type="text/css">
+* {
+	margin:0;
+	padding:0;
+	font-size:12px;
+	line-height:180%;
+}
+.btn-block {
+-webkit-border-radius: 0;
+-moz-border-radius: 0;
+-pie-border-radius: 0;
+border-radius: 0;
+color: white;
+display: inline-block;
+height: auto;
+line-height: 100%;
+padding: 8px;
+margin: 5px auto;
+font-size: 12px;
+font-family: "微软雅黑";
+position: relative;
+border: 1px solid #004A7E;
+-moz-border-radius: 3px;
+-webkit-border-radius: 3px;
+}
+
+.bg-gradient-darkblue {
+font-family: "微软雅黑", "黑体";
+background: #025995;
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #0582B7), color-stop(29%, #0478AF), color-stop(85%, #025C98), color-stop(100%, #035995));
+-pie-background: linear-gradient(top, #0582b7 0, #035995);
+behavior: url(/common/assets/css/pie/PIE.html);
+}
+
+img {
+	border:none;
+	vertical-align:middle
+}
+html {
+	height:100%
+}
+body {
+	height:100%;
+	margin:0px;
+	padding:0px
+}
+#container {
+	height:100%
+}
+
+.box3title h2 {
+height: 35px;
+width:97%;
+line-height: 35px;
+text-align: left;
+background: #CCC;
+text-indent: 12px;
+color: #333;
+}
+
+input[type=text] {
+	padding:5px;
+	width:120px;
+        height:16px;
+}
+</style>
+<link href="https://api.map.baidu.com/library/TrafficControl/1.4/src/TrafficControl_min.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="https://api.map.baidu.com/library/DistanceTool/1.2/src/DistanceTool_min.js"></script>
+<script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&ak=1RhYWp1gUFgAx19Pz3gWAZ5M&s=1"></script>
+<script type="text/javascript" src="https://api.map.baidu.com/library/TrafficControl/1.4/src/TrafficControl_min.js"></script>
+<cc>
+CCService cs = new CCService(userInfo);
+String sql = "select a.id,ifnull(c.name,'') as cname,a.name as name,ifnull(qyqc,'') as qyqc from account a left join ccuser c on a.ownerid = c.id where a.is_deleted = 0";//sql语句
+List<CCObject> list = cs.cqlQuery("account",sql);
+
+</cc>
+</head>
+<body style="background:white">
+<script>
+ function showDiv() {
+ 	if (navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i)) {
+ 	        document.getElementById("customer").style.display = "";
+ 	} else {
+ 		javascript:openLookup('/platform/lookup/lookup.action?lkfm=editPage&lknm=ffe201100003451XKACg&lktp=' + getElementByIdCS('ffe201100003451XKACg_lktp').value,670,'1','&lksrch=' + escapeUTF(getElementByIdCS('ffe201100003451XKACg_lkid').value.substring(0, 80)));
+ 	}
+ }
+ function evaluates(name,id){
+         document.getElementById("ffe201100003451XKACg").value = name;
+         document.getElementById("ffe201100003451XKACg_lkid").value = id;
+         document.getElementById("customer").style.display = "none";
+ }
+</script>
+<div id="customer" style="display:none;background:#e7e7e7;width:100%;border:1px solid  #ccc;position:absolute;left:-3px;top:20px;z-index:9999">
+      <table class="cloudbiaoge" border="0" cellspacing="0" cellpadding="0">
+          <tr class="bgtitle">
+                <td  class="">客户名称</td>
+		
+		<td  class="">企业全称</td>
+		
+		<td  class="">所有人</td>
+          </tr>
+        <cc>
+         for(CCObject item:list){
+        </cc>
+         <tr>
+                <td class="dataCell"><a href="javascript:void(0);" onclick="evaluates('<cc:outprint>item.get("name")</cc:outprint>','<cc:outprint>item.get("id")</cc:outprint>')"><cc:outprint>item.get("name")</cc:outprint></a></td>
+                <td class="dataCell"><cc:outprint>item.get("qyqc")</cc:outprint></td>
+                <td class="dataCell"><cc:outprint>item.get("cname")</cc:outprint></td>
+         </tr>
+         <cc>
+         }
+         </cc>
+      </table>
+</div>
+<div id="container" style="height:814px;overflow:hidden;position:relative" ></div>
+
+<div id="leftdiv" style="background:#e7e7e7;width:300px;border:1px solid  #ccc;position:absolute; top:17px; left:4px;z-index:999;filter:alpha(opacity:30); opacity:0.8;  -moz-opacity:0.8;-khtml-opacity: 0.8">
+ <form id="showForm" name="showForm" method="post">
+    <div style="overflow:hidden; margin-bottom:10px;float:left">
+      <table width="100%">
+        <tbody>
+          <tr>
+            <td align="center" width="20%">
+              <p><input id = "wdxm" type="checkbox" onclick="showTubiao('wdxm')" />自有项目</p></td>
+<td align="center" width="20%">
+              <p><input id = "tzxm" type="checkbox" onclick="showTubiao('tzxm')" />拓展项目</p></td>
+<td align="center" width="20%">
+              <p><input id = "scqtxm" type="checkbox" onclick="showTubiao('scqtxm')" />市场其它项目</p></td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+  <div class="box3title" style="padding-left:0px">
+    <h2>客户迁徙轨迹查询</h2>
+  </div>
+  <div class="listBody" style="padding-top:10px; margin-bottom:10px;">
+    <table>
+      <tr>
+        <td width="3%">&nbsp;</td>
+        <td align="left" valign="middle" style="line-height:35px;white-space:nowrap;">选择客户 ：
+<input autocomplete="off" type='text' name='ffe201100003451XKACg' id='ffe201100003451XKACg' value='' onchange="getElementByIdCS('ffe201100003451XKACg_lkid').value='';getElementByIdCS('ffe201100003451XKACg_mod').value='1';"/>
+<input type='hidden' name='ffe201100003451XKACg_lkid' id='ffe201100003451XKACg_lkid' value='' />
+<input type='hidden' name='ffe201100003451XKACg_lkold' id='ffe201100003451XKACg_lkold' name='ffe201100003451XKACg' value='' />
+<input type='hidden' name='ffe201100003451XKACg_lktp' id='ffe201100003451XKACg_lktp' value='001' />
+<input type='hidden' name='ffe201100003451XKACg_lspf' id='ffe201100003451XKACg_lspf' value='0' />
+<input type='hidden' name='ffe201100003451XKACg_lspfsub' id='ffe201100003451XKACg_lspfsub' value='0' />
+<input type='hidden' name='ffe201100003451XKACg_mod' id='ffe201100003451XKACg_mod' value='0' />
+<a href="javascript:void(0);" onclick="showDiv()">[查找] </a>
+<span class='errorMsg' name='errorMsg' id='ffe201100003451XKACg_errorMsg'></span>
+      </tr>
+    </table>
+<table>
+ <tr>   <td><input value="轨迹查询" style="cursor:pointer" onmouseover = "this.style.curson='hand'" class="btn-block bg-gradient-darkblue"  type="button" onClick="searchYggj()">
+          &nbsp;&nbsp;
+          <input value="清空" style="cursor:pointer" onmouseover = "this.style.curson='hand'" class="btn-block bg-gradient-darkblue" type="button" onClick="clearOver()">
+          &nbsp;&nbsp;
+          <input value="当前位置" style="cursor:pointer" onmouseover = "this.style.curson='hand'" class="btn-block bg-gradient-darkblue" type="button" ></td></tr>
+</table>
+  </div>
+   
+  </form>
+</div>
+
+ <!-- ********************页脚开始******************** -->
+ 
+	<div>&nbsp;</div>
+    <div class="cloudfooter" style="background: #0c84ae!important;position:fixed;left:0;bottom:-10px;"><p>© 2008-2018 cloudcc.com,inc. 公司版权所有。保留所有权利。客户服务热线：400-642-2008</p></div>
+
+
+ <!-- ********************页脚结束******************** -->
+</body>
+</html>
+<script>
+      //初始化地图，将标准地图控件添加到地图中
+      var map = new BMap.Map("container");    
+      map.centerAndZoom(new BMap.Point(114.060075,22.549316),12);    
+      map.addControl(new BMap.NavigationControl()); //添加地图控件
+    
+      map.enableScrollWheelZoom();//启用滚轮放大缩小
+ 
+      var myDis = new BMapLib.DistanceTool(map);//测距
+
+      //向地图添加一个平移缩放控件、一个比例尺控件和一个缩略图控件   
+      map.addControl(new BMap.ScaleControl());    
+      map.addControl(new BMap.OverviewMapControl());    
+      map.addControl(new BMap.MapTypeControl());    
+      map.setCurrentCity("深圳市"); // 仅当设置城市信息时，MapTypeControl的切换功能才能可用  
+    
+      var myGeo = new BMap.Geocoder();   // 创建地址解析器实例  
+      //添加全景控件
+      var stCtrl = new BMap.PanoramaControl();  
+      stCtrl.setOffset(new BMap.Size(35,55));  
+      map.addControl(stCtrl);
+      
+      var myIcon;
+      var adds = [];
+      var index = 0;
+      var obj = [];
+      var wdxmobj = [];
+      var tzxmobj = [];
+      var scqtxmobj = [];
+      var type = "";
+
+    function test(){
+          clearOver();//清除地图所有标注
+                   if(document.getElementById("tzxm").checked){
+                           showTubiao("tzxm");
+                   }
+                   if(document.getElementById("scqtxm").checked){
+                           showTubiao("scqtxm");
+                   }
+    }
+
+    function showTubiao(obj){
+         if(obj=="wdxm"){
+             index = 0;
+             adds = [];
+             var checkbox = document.getElementById("wdxm");
+             if(checkbox.checked){
+                Ext.Ajax.request({
+			url:"/customize/page/9291p1140/hqbz.jsp",
+			timeout:5000,
+			success:function(response){
+		             var dp = response.responseText;
+                             var data = eval('('+dp+')');
+                             var url = "/images/cloudcc/v5/ygx.png";
+                             type ="wdxm";
+                              for ( var i = 0; i < data.length; i++ ){
+						 var item = data[i];
+						 var weizhi = item.weizhi;
+						 var xmmc = item.xmmc;
+						 adds.push(weizhi);
+                                                 wdxmobj.push(weizhi);
+			                     }
+                                             myIcon = new BMap.Icon("/staticResource.action?m=getResource&resourceId=1523864942601kiqsHvYq",new BMap.Size(23,33),{anchor: new BMap.Size(11.5, 33) ,offset: new BMap.Size(0, 0),imageOffset: new BMap.Size(0, 0)}); 
+                                             setTimeout(window.bdGEO,300);
+			},
+			failure: function () {
+				alert("查询失败");
+			},
+			params: {'wdxm':'1'}
+                 });
+            }else{
+                     var allOverlay = map.getOverlays();
+                     for(var j = 0;j<wdxmobj.length;j++){
+                         for(var i=0;i<allOverlay.length;i++){
+                             if(allOverlay[i].toString() == "[object Marker]"){
+                             alert(allOverlay[i].getTitle());
+                             var address = allOverlay[i].getLabel().content;
+                                  if(address==wdxmobj[j]){
+                                       map.removeOverlay(allOverlay[i]);  
+                                  }
+                             }
+                         }
+                     }   
+            }
+ 
+         }else if(obj=="tzxm"){
+             index = 0;
+             adds = [];
+             var checkbox = document.getElementById("tzxm");
+             if(checkbox.checked){
+		 Ext.Ajax.request({
+					url:"/customize/page/9291p1140/hqbz.jsp",
+					timeout:5000,
+					success:function(response){
+					     var dp = response.responseText;
+					     var data = eval('('+dp+')');
+                                             var type ="tzxm";
+					     for ( var i = 0; i < data.length; i++ ){
+						 var item = data[i];
+						 var weizhi = item.weizhi;
+						 var xmmc = item.xmmc;
+						 adds.push(weizhi);
+			                     }
+                                             myIcon = new BMap.Icon("/staticResource.action?m=getResource&resourceId=1523870699019SkmePJkR",new BMap.Size(23,33),{anchor: new BMap.Size(11.5, 33) ,offset: new BMap.Size(0, 0),imageOffset: new BMap.Size(0, 0)}); 
+                                             setTimeout(window.bdGEO,300);
+					},
+					failure: function () {
+						alert("查询失败");
+					},
+					params: {'tzxm':'1'}
+		     });
+               }else{
+                   clearOver();//清除地图所有标注
+                   if(document.getElementById("wdxm").checked){
+                           showTubiao("wdxm");
+                   }
+                   if(document.getElementById("scqtxm").checked){
+                           showTubiao("scqtxm");
+                   }
+               }
+         }else if(obj=="scqtxm"){
+             var checkbox = document.getElementById("scqtxm");
+             if(checkbox.checked){
+             index = 0;
+             adds = [];
+                Ext.Ajax.request({
+					url:"/customize/page/9291p1140/hqbz.jsp",
+					timeout:5000,
+					success:function(response){
+					     var dp = response.responseText;
+					     var data = eval('('+dp+')');
+                                             type = "scqtxm";
+					     for ( var i = 0; i < data.length; i++ ){
+						 var item = data[i];
+						 var weizhi = item.weizhi;
+						 var xmmc = item.xmmc;
+                                                 adds.push(weizhi);
+			                      }	
+                                              myIcon = new BMap.Icon("/staticResource.action?m=getResource&resourceId=1523870709711M1QuX82w",new BMap.Size(23,33),{anchor: new BMap.Size(11.5, 33) ,offset: new BMap.Size(0, 0),imageOffset: new BMap.Size(0, 0)});
+                                              setTimeout(window.bdGEO,300);
+					},
+					failure: function () {
+						alert("查询失败");
+					},
+					params: {'scqtxm':'1'}
+		}); 
+                  }else{
+                             clearOver();//清除地图所有标注
+                   if(document.getElementById("wdxm").checked){
+                           adds = [];
+                           index = 0;
+                           showTubiao("wdxm");
+                   }
+                   if(document.getElementById("tzxm").checked){
+                           adds = [];
+                           index = 0;
+                           showTubiao("tzxm");
+                   }
+              }
+         }
+     } 
+     
+     function searchYggj(){//客户迁移轨迹查询
+		var yg = document.getElementById("ffe201100003451XKACg_lkid").value;
+		if(yg==""||yg==null||yg=="undefined"){
+			  alert("请选择客户");return;
+		}
+		clearOver();//清空之前的所有节点
+		document.getElementById("tzxm").checked = false;
+                document.getElementById("wdxm").checked = false;
+                document.getElementById("scqtxm").checked = false; 
+		Ext.Ajax.request({
+					url:"/customize/page/9291p1140/hqbz.jsp",
+					timeout:50000,
+					success:function(response){
+					     var dp = response.responseText;
+					     var data = eval('('+dp+')');
+                                             if(data.length==0){
+                                                    alert("没有查询到当前客户的轨迹");return;
+                                             }
+                                             var myGeo = new BMap.Geocoder();   // 创建地址解析器实例    
+					     for (var i =0; i < data.length; i++ ){
+						    var item = data[i];   //得到数组中的第i个元素(第i个对象)
+						    var weizhi= item.weizhi;            
+                                                    adds.push(weizhi);
+			                    }
+                                            gjbdGEO();
+					},
+					failure: function () {
+						alert("查询失败");
+					},
+					params: {'khgj':'1','khid':yg}
+				 });
+                                 
+    }
+   
+
+    function gjbdGEO(){
+		var add = adds[index];
+		gjgeocodeSearch(add);
+		index++;
+	}
+	function gjgeocodeSearch(add){
+		if(index < adds.length){
+			setTimeout(window.gjbdGEO,300);
+		} 
+		myGeo.getPoint(add, function(point){
+			if (point) {
+                                myIcon = myIcon;
+				var address = new BMap.Point(point.lng, point.lat);
+                                var marker = new BMap.Marker(address,{icon:myIcon});
+				map.addOverlay(marker);
+                                marker.setLabel(new BMap.Label(index+":"+add,{offset:new BMap.Size(20,-10)}));
+                                obj.push(address);
+			}
+		}, "深圳市");
+
+                if((index)==adds.length){ 
+                    var polyline =new BMap.Polyline(obj, {
+                    strokeWeight:'8',//折线的宽度，以像素为单位
+                    strokeOpacity: 0.8,//折线的透明度，取值范围0 - 1
+                    strokeColor:"#18a45b" //折线颜色
+                 });
+                    map.addOverlay(polyline);          //增加折线
+                    obj = [];
+                }
+	}
+    function bdGEO(){
+		var add = adds[index];
+		geocodeSearch(add);
+		index++;
+	}
+	function geocodeSearch(add){
+		myGeo.getPoint(add, function(point){
+			if (point) {
+				var address = new BMap.Point(point.lng, point.lat);
+				var marker;
+                                if(type=="wdxm"){
+                                    marker = new BMap.Marker(address,{icon:myIcon},{title:"自有项目"});
+                                }else if(type=="tzxm"){
+                                    marker = new BMap.Marker(address,{icon:myIcon},{title:"拓展项目"});                               
+                                }else if(type=="scqtxm"){
+                                    marker = new BMap.Marker(address,{icon:myIcon},{title:"市场其他项目"});
+                                }
+                                marker.setLabel(new BMap.Label(add,{offset:new BMap.Size(20,-10)}));
+                                map.addOverlay(marker);
+			}
+		}, "深圳市");
+                if(index < adds.length){
+			setTimeout(window.bdGEO,300);
+		} 
+	}
+
+    function clearOver(){
+       adds = [];
+       index = 0;
+       myIcon = "";
+       map.clearOverlays();//清除地图覆盖物  
+    }
+</script>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+/*
+description:项目撤场客户转移&项目经理变更
+version: 1.1
+date:2018-11-02
+author:tom
+log:
+20190712 项目经理的变动和项目销售的不一致造成业务机会数据和考核等一系列问题, 增加经理变更
+20190723 当项目结束时候填写项目有效日期
+20191129 当项目结束时候填写项目有效日期(bug修复,sql语句错误)
+*/
+
+String xmzt_old = record_old.get("xmzt")==null?"":record_old.get("xmzt")+"";//项目状态（旧）
+String xmzt_new = record_new.get("xmzt")==null?"":record_new.get("xmzt")+"";//项目状态（新）
+
+if("代理中".equals(xmzt_old) && "已结束".equals(xmzt_new)){//字段值是否发生改变
+     String id = record_new.get("id")==null?"":record_new.get("id")+"";
+     List<CCObject> list = this.cqlQuery("Account","select id,ownerid from Account where xmmc = '"+id+"' and is_deleted = '0'");
+     for(CCObject item:list){
+          String ownerid = item.get("ownerid")==null?"":item.get("ownerid")+"";//所有人id
+          String accountid = item.get("id")==null?"":item.get("id")+"";//id记录
+          CCObject obj = new CCObject("Account");
+          obj.put("id",accountid);
+          obj.put("ownerid","005201827888B25tm2iq");
+          this.updateLt(obj);
+          CCObject account_share=new CCObject("Account",CCObject.IS_SHARED);//新增一条实施项目共享记录
+          account_share.put("parentid",accountid);//共享哪条记录
+          account_share.put("accesslevel","Write");//共享权限 读写：Write 只读：Read
+          account_share.put("rowcause","Manual");
+	  account_share.put("userorgroupid",ownerid);//共享的人
+	  this.insertLt(account_share);//执行插入共享的操作
+     }
+     this.cqlQuery("Project","update Project set xmyxrq = sysdate() where id = '"+id+"' and is_deleted = '0'");
+}
+
+String xmjl_old = record_old.get("xmjl")==null?"":record_old.get("xmjl")+"";//项目经理（旧）
+String xmjl_new = record_new.get("xmjl")==null?"":record_new.get("xmjl")+"";//项目经理（新）
+
+if(!xmjl_new.equals(xmjl_old)){//项目经理字段发生变化
+    String id = record_new.get("id")==null?"":record_new.get("id")+"";
+    List<CCObject> list = this.cqlQuery("ProjectSaleGroup","select * from ProjectSaleGroup where xmmc = '"+id+"' and is_deleted = '0'");
+    for(CCObject item:list){
+        String xmjl = item.get("xmjl")==null?"":item.get("xmjl")+"";//项目经理
+        String psgid = item.get("id")==null?"":item.get("id")+"";//id记录
+        CCObject obj = new CCObject("ProjectSaleGroup");
+        obj.put("id",psgid);
+        obj.put("xmjl",xmjl_new);
+        this.updateLt(obj);
+    }
+}

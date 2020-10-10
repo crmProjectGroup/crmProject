@@ -1,0 +1,44 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc>
+/**
+*描述：自动创建工作日报
+*      
+*创建人：刘东
+*创建时间：2018/06/10
+*最后修改时间：2018/07/10
+*/
+//获取CCS
+CCService ccs = new CCService((UserInfo)userInfo);
+java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyyMMdd"); //日期 MM需大写
+String date=sdf.format(new Date());
+//-----------------获取所有启用用户id-------------------
+List<CCObject> list = ccs.cquery("ccuser","isusing = '1' and profile in ('aaa201723453E5EBNtzU','aaa2018A38306ED9syVe','aaa2018A4671C21Hu0yi','aaa201858C360ADNceRX')");
+int i = 0;
+ //--------------------循环添加工作日报-----------------
+         for(CCObject item:list){
+                   String id = item.get("id")==null?"":item.get("id")+"";//id
+                   String name = item.get("name")==null?"":item.get("name")+"";//姓名
+                   String profile = item.get("profile")==null?"":item.get("profile").toString();//简档
+		   CCObject obj = new CCObject("DailyReport");
+		 if("aaa2018A38306ED9syVe".equals(profile) || "aaa2018A4671C21Hu0yi".equals(profile)){              
+                   obj.put("name",name+date);
+                   obj.put("ownerid",id);
+                   obj.put("createbyid",id);
+                   obj.put("lastmodifybyid",id);
+		   obj.put("recordtype","20183BC7190A67ELt92g");
+                   //ccs.insertLt(obj);
+                   i++;
+                 }else{
+                   obj.put("name",name+date);
+                   obj.put("ownerid",id);
+                   obj.put("createbyid",id);
+                   obj.put("lastmodifybyid",id);
+		   obj.put("recordtype","2018DD9D1CC8460ZOydm");
+                   //ccs.insertLt(obj);
+                   i++;		 				 
+		 }							 
+}
+out.print(list.size()+"");
+
+
+</cc>

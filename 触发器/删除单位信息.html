@@ -1,0 +1,41 @@
+/*
+description:成交单位-删除单位信息
+version: 1.1
+date:20180720
+author:tom
+log:
+1.20190719 删除成交单位的时候,提出面积和成交的单位名, 解决之前唯一一个单位删不掉的bug
+*/
+
+String ywjkmc = record_old.get("ywjkmc")==null?"":record_old.get("ywjkmc")+"";//业务机会唯一标识
+Double mj = record_old.get("mj")==null?0.0:Double.valueOf(record_old.get("mj")+"");//面积
+String cjsw = record_old.get("cjsw")==null?"":record_old.get("cjsw")+"";//房号
+
+List<CCObject> list = this.cquery("Opportunity","id = '"+ywjkmc+"'");
+
+if(list.size()>0){
+    CCObject obj = list.get(0);
+    Double cjmj = obj.get("cjmj")==null?0.0:Double.valueOf(obj.get("cjmj")+"");//面积
+    String cjdw = obj.get("cjdw")==null?"":obj.get("cjdw")+"";//单位
+    
+    if(cjdw.trim().length()>0){
+        int index = Integer.valueOf(cjdw.indexOf(cjsw)+"");
+        int index1 = Integer.valueOf(cjdw.indexOf(",")+""); //判断现在成交单位是否多个(含有逗号)
+        int length = cjsw.length();
+        if(index>0){ //成交单位不是第一个
+            obj.put("cjmj",cjmj-mj);
+            cjdw = cjdw.replace(","+cjsw,"");
+            obj.put("cjdw",cjdw);
+        }else if(index==0 && index1!=-1){ //成交单位是第一个,有多个成交单位
+            obj.put("cjmj",cjmj-mj);
+            cjdw = cjdw.replace(cjsw+",","");
+            obj.put("cjdw",cjdw);
+        }else if(index==0 && index1==-1){ //成交单位是第一个且唯一一个
+            obj.put("cjmj",cjmj-mj);
+            cjdw = cjdw.replace(cjsw,"");
+            obj.put("cjdw",cjdw);
+        }
+    }
+
+    this.updateLt(obj);
+}

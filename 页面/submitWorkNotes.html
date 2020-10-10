@@ -1,0 +1,108 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc>
+CCService cs = new CCService(userInfo);
+String languageLocaleKey = userInfo.getLanguage();
+String bgid = request.getParameter("id");
+String pyzt = new String(String.valueOf(
+            request.getParameter("pyzt")==null?"":request.getParameter("pyzt"))
+            .getBytes("ISO-8859-1"), "UTF-8");//批阅状态
+String pyzd = new String(String.valueOf(
+            request.getParameter("pyr")==null?"":request.getParameter("pyr"))
+            .getBytes("ISO-8859-1"), "UTF-8");//批阅人
+
+	
+		
+	
+		
+		UserInfo user = (UserInfo)userInfo;
+		String userid = user.getUserId();//当前登陆人
+		java.text.SimpleDateFormat sdf=new java.text.SimpleDateFormat("yyyy-MM-dd"); 
+		String date=sdf.format(new Date()); //当前时间
+		List<CCObject> htList = cs.cquery("TheWorkReport","id__c='"+bgid+"'");
+		if(htList.size()>0&&htList!=null){
+			String ownerid = htList.get(0).get("ownerid")==null?"":String.valueOf(htList.get(0).get("ownerid"));//记录所有人
+			String tjr = htList.get(0).get("owneridccname")==null?"":String.valueOf(htList.get(0).get("owneridccname"));//提交人
+			String ksrq = htList.get(0).get("ksrq")==null?"":String.valueOf(htList.get(0).get("ksrq"));//开始日期
+			String jsrq = htList.get(0).get("jsrq")==null?"":String.valueOf(htList.get(0).get("jsrq"));//结束日期
+			String bglx = htList.get(0).get("bglx")==null?"":String.valueOf(htList.get(0).get("bglx"));//报告类型
+			String pyr = htList.get(0).get("pyr")==null?"":String.valueOf(htList.get(0).get("pyr"));//批阅人
+			String csr = htList.get(0).get("csr")==null?"":String.valueOf(htList.get(0).get("csr"));//抄送人
+			if(!userid.equals(ownerid)){
+				
+				if("zh".equals(languageLocaleKey)){
+					out.print("<script>alert('您不是提交人，不能提交该工作报告！');window.location.href='/query.action?id="+bgid+"&m=query'</script>");
+				}else{
+					out.print("<script>$('title').html('');$('title').html('Submit work report');alert('You are not the author and can not submit the work report');window.location.href='/query.action?id="+bgid+"&m=query'</script>");
+				}
+				
+			}else{
+				try{
+					CCObject htObj = htList.get(0);
+					htObj.put("pyzt","未批阅");
+					cs.update(htObj);
+				}catch(Exception e){
+					if("zh".equals(languageLocaleKey)){
+						out.print("<script>alert('提交失败，请联系管理员！');</script>");
+					}else{
+					out.print("<script>$('title').html('');$('title').html('Submit work report');alert('Submission failure, please contact the administrator!');</script>");
+					}
+					
+				}
+				CCObject fwyh_share = new CCObject("TheWorkReport",CCObject.IS_SHARED);
+				/**
+				*给共享对象赋值
+				*/
+				fwyh_share.put("parentid",bgid);//要共享的记录id
+				fwyh_share.put("accesslevel","Write");//访问权限级别，取值范围（全部：Read只读）
+				fwyh_share.put("rowcause","Manual");
+				//fwyh_share.put("rowcause","Owner");//原因（手动共享：Manual,所有人：Owner）
+				fwyh_share.put("userorgroupid",pyr);//共享给用户、角色等（要取ID值）
+				//批阅人插入共享表
+				cs.insert(fwyh_share);
+				String []toAddress = new String[1];
+				List<CCObject> uList = cs.cquery("user","id = '"+pyr+"'");
+				if(uList.size()>0){
+					String uemail = uList.get(0).get("email")==null?"":String.valueOf(uList.get(0).get("email"));//批阅人邮箱
+					toAddress[0] = uemail;
+				}
+				String []ccAddress = {};
+				String subject = "工作报告批阅提醒";
+				String content = "您好,</br>&nbsp;&nbsp;&nbsp;&nbsp;"+tjr+"提交的【"+bglx+"】开始日期:"+ksrq+"结束日期:"+jsrq+"需要您批阅,请知悉！";
+				String cccontent = "您好,"+tjr+"提交的【"+bglx+"】开始日期:"+ksrq+"结束日期:"+jsrq+"批阅抄送给您,请知悉！";
+				if("en".equals(languageLocaleKey)){
+					subject = "The work report examines remind";
+					content="Hello,</br>&nbsp;&nbsp;&nbsp;&nbsp;"+tjr+"submitted【"+bglx+"】start date:"+ksrq+"end date:"+jsrq+"you need to read, please note!";
+					cccontent = "";
+				}
+				if(!"".equals(csr)){
+					String[] csrs = csr.split(";");
+					ccAddress = new String[csrs.length];
+					for(int i=0;i<csrs.length;i++){
+						CCObject bg_share = new CCObject("TheWorkReport",CCObject.IS_SHARED);
+						/**
+						*给共享对象赋值
+						*/
+						bg_share.put("parentid",bgid);//要共享的记录id
+						bg_share.put("accesslevel","Read");//访问权限级别，取值范围（全部：Read只读）
+						bg_share.put("rowcause","Manual");
+						//fwyh_share.put("rowcause","Owner");//原因（手动共享：Manual,所有人：Owner）
+						bg_share.put("userorgroupid",csrs[i]);//共享给用户、角色等（要取ID值）
+						//批阅人插入共享表
+						cs.insert(bg_share);
+						List<CCObject> useList = cs.cquery("user","id = '"+csrs[i]+"'");
+						if(useList.size()>0){
+							String useemail = useList.get(0).get("email")==null?"":String.valueOf(useList.get(0).get("email"));//批阅人邮箱
+							ccAddress[i] = useemail;
+						}
+					}
+				}
+				SendEmail sendEmail = new SendEmail(userInfo);
+				sendEmail.sendMailFromSystem(toAddress,ccAddress,null,subject,content,false);
+				List<CCObject> upList = cs.cqlQuery("TheWorkReport","update TheWorkReport set is_locked = 'true' where id__c='"+bgid+"'");
+				out.print("<script>$('title').html('');$('title').html('Submit work report');window.location.href='/query.action?id="+bgid+"&m=query'</script>");
+			}
+		}
+	
+
+
+</cc>

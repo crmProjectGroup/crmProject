@@ -1,0 +1,620 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" isELIgnored="false" />
+<cc!>
+/*
+description:项目经理排班页面
+version: 1.0
+date:20190531
+author:tom
+log:
+
+*/
+
+/** * 将ISO-8859-1编码格式的字符串转码为UTF-8 * 
+ * * @param parameterValue 
+ * * @return 
+ * * @throws UnsupportedEncodingException 
+ * */ 
+private static String encodeParameters(String parameterValue) throws UnsupportedEncodingException { 
+	if (parameterValue != null && parameterValue.length()> 0) { 
+		byte[] iso = parameterValue.getBytes("ISO-8859-1"); 
+		if (parameterValue.equals(new String(iso, "ISO-8859-1"))) { 
+			parameterValue= new String(iso, "UTF-8"); 
+			return parameterValue; 
+		} 
+	} 
+	return parameterValue; 
+}
+</cc>
+<cc>
+    //获取用户信息,一定要是项目经理,获取项目信息,获取业务员信息,组数据调用接口插入数据
+	CCService cs = new CCService(userInfo); 
+	String uid = userInfo.getUserId();//当前登录用户id 
+	List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'"); //登录人的账号
+	String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; 
+	
+	//String uid = "0052018470A714CaerX7"; //李荣武id 测试用   项目id a052019DFB116D4CRqGz
+	String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id 
+	String managerId = userInfo.getManagerId();
+    //String userName = userInfo.getUserName();//getUserName 
+    
+    //进入页面的用户控制, 项目经理只看到自己负责的项目, 其他能进入该页面的可以看到所有项目
+    List<CCObject> projectlist = new ArrayList();
+    
+    if("aaa2018A38306ED9syVe".equals(profid)){ //项目经理
+		//projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'");
+		projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'");
+	} else{
+        projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部','代理二部') and xmzt='代理中' and is_deleted='0'"); //所有代理项目
+    }
+	
+	JSONArray jsonArray = JSONArray.fromObject(projectlist); 
+    String projectlist_1=jsonArray.toString();
+    out.print("项目列表java:"+projectlist_1);
+
+    
+    // //获取项目信息
+    // String xmid ="";
+    // String xmnm ="";
+    // JSONObject pbjson = new JSONObject();
+	// JSONArray pbjsonarr = new JSONArray(); 
+    // List<CCObject> projectl = cs.cqlQuery("ccuser","SELECT id, name  FROM project WHERE xmjl = '"+uid+"' and is_deleted='0' and xmzt='代理中'"); 
+    // if(projectl.size()>0){ 
+    //     xmid = projectl.get(0).get("id")==null?"":projectl.get(0).get("id")+""; //项目id debug a052019DFB116D4CRqGz
+    //     xmnm = projectl.get(0).get("name")==null?"":projectl.get(0).get("name")+""; //项目名称
+    //     List<CCObject> psglist = cs.cqlQuery("ProjectSaleGroup" ,"SELECT c.name as name,c.id as id FROM ProjectSaleGroup p inner join ccuser c on p.xmxsy=c.id where p.xmmc='"+xmid+"' and p.is_deleted ='0'"); //ProjectSaleGroup 项目销售小组
+    //     for(CCObject item:psglist){ 
+    //         String userid = item.get("id")==null?"":item.get("id")+"";
+    //         String usernm = item.get("name")==null?"":item.get("name")+"";
+    //         pbjson.put("id",userid);
+    //         pbjson.put("name",userid);
+    //     }
+    // }
+
+	
+	// //日期的处理
+	// java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
+	// String nowday = df.format(new Date());
+	// Calendar cal = Calendar.getInstance();
+	// int year = cal.get(Calendar.YEAR);
+	// String begin_day=year+"-01-01";
+    // //out.print(nowday);
+    // String ksrq = request.getParameter("startTime")==null?begin_day:request.getParameter("startTime")+"";//开始日期
+    // //out.print(ksrq);
+    // //out.print(ksrq);
+    // String jsrq = request.getParameter("endTime")==null?nowday:request.getParameter("endTime")+"";//结束日期
+    // //out.print(jsrq);
+    // String datetime = " and a.createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+  
+    
+
+
+</cc>
+
+<link rel="stylesheet" href="//unpkg.com/element-ui@2.13.1/lib/theme-chalk/index.css">
+
+<!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
+<script src="https://unpkg.com/vue@2.6.11/dist/vue.js"></script>
+<script src="//unpkg.com/element-ui@2.13.1/lib/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.26.0/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
+<style>
+    .grid-content {
+        border-radius: 4px;
+        min-height: 36px;
+    }
+    .bg-purple-dark {
+        background: #99a9bf;
+    }
+    .bg-purple {
+        background: #d3dce6;
+    }
+</style>
+<div id="app">
+  <template>
+    <!-- <div style="margin-top: 20px">
+      <div @click="lastweek">上一周</div>
+      <div @click="nextweek">上一周</div>
+      <div>
+        <span>{{thismonday}}</span>
+        <span>星期一</span>
+        <span>--</span>
+        <span>{{thissunday}}</span>
+        <span>星期日</span>
+      </div>
+    </div> -->
+    <el-row>
+        <el-col :span="4"><div class="grid-content bg-purple-dark">项目名称:<el-select v-model="projectid" placeholder="请选择" @change="getSales">
+        <el-option
+          v-for="item in projectnm"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id">
+        </el-option>
+  </el-select></div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple">A:早班</div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple-dark">B:正常班</div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple">C:跑盘/陌拜</div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple-dark">D:借调</div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple">E:返司开会/培训</div></el-col>
+    </el-row>
+    <el-row>
+        <el-col :span="4"><div class="grid-content bg-purple-dark">考勤月份:{{kaoqinmonth}}</div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple">事:事假</div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple-dark">病:病假</div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple">年:年假</div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple-dark">休:节假日/调休</div></el-col>
+        <el-col :span="4"><div class="grid-content bg-purple">婚/产/陪/丧</div></el-col>
+    </el-row>
+    <el-row>
+        <div style="margin-top: 20px">
+            <el-col :span="3"><el-button @click="lastweek">上一周</el-button></el-col>
+            <el-col :span="3"><el-button @click="nextweek">下一周</el-button> </el-col>
+            <el-col :span="18">
+                <div>
+                    <span>{{thismonday}}</span>
+                    <span>星期一</span>
+                    <span>--</span>
+                    <span>{{thissunday}}</span>
+                    <span>星期日</span>
+                </div>
+            </el-col>
+        </div>
+    </el-row>   
+  </template>
+  <template>
+      <el-table
+        ref="multipleTable"
+        :data="tableData"
+        tooltip-effect="dark"
+        style="width: 100%">
+        <!-- @selection-change="handleSelectionChange"> -->
+        <!-- <el-table-column
+          type="selection"
+          width="55">
+        </el-table-column> -->
+        <el-table-column
+          label="姓名"
+          width="120">
+          <template slot-scope="scope">{{ scope.row.name }}</template>
+        </el-table-column>
+        <el-table-column
+          prop="name"
+          :label="'周一'+thismonday"
+          width="120">
+            <template slot-scope="scope">
+                <el-select v-model="scope.row.d1" >
+                    <el-option
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value">
+                    </el-option>
+              </el-select>
+            </template>
+        </el-table-column>
+        <el-table-column
+          prop="name"
+          :label="'周二'+thistuesday"
+          width="120">
+            <template slot-scope="scope">
+                <el-select v-model="scope.row.d2" placeholder="请选择">
+                    <el-option
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value">
+                    </el-option>
+                </el-select>
+            </template>
+        </el-table-column>
+        <el-table-column
+          prop="name"
+          :label="'周三'+thiswednesday"
+          width="120">
+            <template slot-scope="scope">
+                <el-select v-model="scope.row.d3" placeholder="请选择">
+                    <el-option
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value">
+                    </el-option>
+                </el-select>
+            </template>
+        </el-table-column>
+        <el-table-column
+          prop="name"
+          :label="'周四'+thisthrusday"
+          width="120">
+            <template slot-scope="scope">
+                <el-select v-model="scope.row.d4" placeholder="请选择">
+                    <el-option
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value">
+                    </el-option>
+                </el-select>
+            </template>
+        </el-table-column>
+        <el-table-column
+          prop="name"
+          :label="'周五'+thisfriday"
+          width="120">
+            <template slot-scope="scope">
+                <el-select v-model="scope.row.d5" placeholder="请选择">
+                    <el-option
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value">
+                    </el-option>
+                </el-select>
+            </template>
+        </el-table-column>
+        <el-table-column
+          prop="name"
+          :label="'周六'+thissatday"
+          width="120">
+            <template slot-scope="scope">
+                <el-select v-model="scope.row.d6" placeholder="请选择">
+                    <el-option
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value">
+                    </el-option>
+                </el-select>
+            </template>
+        </el-table-column>
+        <el-table-column
+          prop="name"
+          :label="'周天'+thissunday"
+          width="120">
+            <template slot-scope="scope">
+                <el-select v-model="scope.row.d7" placeholder="请选择">
+                    <el-option
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value">
+                    </el-option>
+                </el-select>
+            </template>
+        </el-table-column>
+        
+      </el-table>
+
+    
+    <!-- <div style="margin-top: 20px">
+      <el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button>
+      <el-button @click="toggleSelection()">取消选择</el-button>
+    </div> -->
+    <el-button @click="submitkq">提交</el-button>
+    <div>{{this.tableData}}</div>
+    <div>{{this.thisweek}}</div>
+    <div>{{this.outarrary}}</div>
+  </template>
+</div>
+
+<script> 
+    var Main = {
+        data() {
+            return {
+                userName:'<cc:outprint>userName</cc:outprint>',
+                tableData:[],
+                // tableData: [{
+                //   id: '00520189B4D0562UAl9O',
+                //   name: '李荣威',
+                //   d1:'B',
+                //   d2:'B',
+                //   d3:'B',
+                //   d4:'B',
+                //   d5:'B',
+                //   d6:'B',
+                //   d7:'B',
+                // }, {
+                //     id: '00520189B4D0562UAl91',
+                //   name: '曹坤',
+                //   d1:'B',
+                //   d2:'B',
+                //   d3:'B',
+                //   d4:'B',
+                //   d5:'B',
+                //   d6:'B',
+                //   d7:'B',
+                // }, {
+                //     id: '00520189B4D0562UAl92',
+                //   name: '侯绵芳', 
+                //   d1:'B',
+                //   d2:'B',
+                //   d3:'B',
+                //   d4:'B',
+                //   d5:'B',
+                //   d6:'B',
+                //   d7:'B',
+                // }, {
+                //     id: '00520189B4D0562UAl93',
+                //   name: '游果',
+                //   d1:'B',
+                //   d2:'B',
+                //   d3:'B',
+                //   d4:'B',
+                //   d5:'B',
+                //   d6:'B',
+                //   d7:'B',
+                // }, {
+                //     id: '00520189B4D0562UAl94',
+                //   name: '王金杰',
+                //   d1:'B',
+                //   d2:'B',
+                //   d3:'B',
+                //   d4:'B',
+                //   d5:'B',
+                //   d6:'B',
+                //   d7:'B',
+                // }, {
+                //     id: '00520189B4D0562UAl95',
+                //   name: '黄梦甜',
+                //   d1:'B',
+                //   d2:'B',
+                //   d3:'B',
+                //   d4:'B',
+                //   d5:'B',
+                //   d6:'B',
+                //   d7:'B',
+                // }],
+                multipleSelection: [],
+                thismonday: '',
+                thistuesday:'',
+                thiswednesday:'',
+                thisthrusday:'',
+                thisfriday:'',
+                thissatday:'',
+                thissunday: '', 
+                thisweek:[],
+                options:[{
+                          value: 'A',
+                          label: 'A'
+                        }, {
+                          value: 'B',
+                          label: 'B'
+                        }, {
+                          value: 'C',
+                          label: 'C'
+                        }, {
+                          value: 'D',
+                          label: 'D'
+                        }, {
+                          value: 'E',
+                          label: 'E'
+                        }, {
+                          value: '事',
+                          label: '事'
+                        }, {
+                          value: '病',
+                          label: '病'
+                        },{
+                          value: '年',
+                          label: '年'
+                        },{
+                          value: '休',
+                          label: '休'
+                        },{
+                          value: '婚/产/陪/丧',
+                          label: '婚/产/陪/丧'
+                        }],
+                projectnm:<cc:outprint>projectlist_1</cc:outprint>,
+                projectid:'',
+                kaoqinmonth:'2020-06',
+                mmt_monday:null,
+                outarrary:[],
+                bindingcode:'',
+                insStatus: false,
+            }
+        },
+
+        created: function() {
+            //获取bindcode
+            this.getBinding();
+            //document.write("项目选择"+this.projectid);
+            var weekOfday = moment().format('E');//计算今天是这周第几天
+            document.write(weekOfday);
+            this.mmt_monday = moment().subtract(weekOfday-1, 'days');
+            document.write(this.mmt_monday.format('YYYY/MM/DD'));
+            this.compute_days();
+
+            //给一个初始的项目选项
+            this.projectid = this.projectnm[0].id;
+            //根据id获取人员
+            this.getSales(this.projectid);
+        }, 
+ 
+        methods: {
+            getBinding: function() {
+                console.log("get bindcode!!!")
+    			var that = this;
+    			axios.get('/distributor.action', {
+    				params: {
+    			    	serviceName: 'cssoLogin',
+    			    	userName: that.userName,
+    			    	authCode: '6b42a467259407218c0e6acdfc978c01'
+    			  }
+    			})
+    			  .then(function (response) {
+    			    that.bindingcode = response.data.binding;
+    			    //console.log(this.bindingcode);
+    			  })
+    			  .catch(function (error) {
+    			    console.log(error);
+    			  });
+    		},
+            lastweek(val){
+                this.mmt_monday=moment(this.mmt_monday).subtract(7,'days');
+                this.compute_days();
+                this.getSalesn(this.projectid);
+            },
+            nextweek(){
+                this.mmt_monday=moment(this.mmt_monday).add(7,'days');
+                this.compute_days();
+                this.getSalesn(this.projectid);
+            },
+            compute_days(){
+                this.thismonday = moment(this.mmt_monday).format('YYYY/MM/DD');
+                this.thistuesday = moment(this.mmt_monday).add(1,'days').format('YYYY/MM/DD');
+                this.thiswednesday = moment(this.mmt_monday).add(2,'days').format('YYYY/MM/DD');
+                this.thisthrusday = moment(this.mmt_monday).add(3,'days').format('YYYY/MM/DD');
+                this.thisfriday = moment(this.mmt_monday).add(4,'days').format('YYYY/MM/DD');
+                this.thissatday = moment(this.mmt_monday).add(5,'days').format('YYYY/MM/DD');
+                this.thissunday = moment(this.mmt_monday).add(6,'days').format('YYYY/MM/DD');
+                this.thisweek = new Array(this.thismonday,this.thistuesday,this.thiswednesday,this.thisthrusday,this.thisfriday,this.thissatday,this.thissunday);
+            },
+            submitkq(){
+                this.outarrary =[]; 
+                //document.write(this.tableData.length);
+                for(var i=0;i<this.tableData.length;i++){
+                    //pbscjson.put("userid",userid);
+                    var userid = this.tableData[i]["id"]; //用户id
+                    for (var j = 0; j< 7; j++) { 
+                        var pbscjson= {};
+                        var date = this.thisweek[j]//日期
+                        var banci = this.tableData[i]["d"+(j+1)]//类型
+                        //pbscjson.put("date",date);
+                        pbscjson["pbdx"] = userid;
+                        pbscjson["pbrq"] = date;
+                        pbscjson["pblx"] = banci;
+                        pbscjson["xmmc"] = this.projectid;
+                        pbscjson["ownerid"] = userid; //ownerid
+                        //pbscjson.put("banci",banci);
+                        //outarrary.add(pbscjson);
+                        this.outarrary.push(pbscjson);
+                    }
+
+                }
+                console.log(this.outarrary);
+                var params = new URLSearchParams();
+                var str0 =JSON.stringify(this.outarrary);
+                //var params = new FormData();
+                params.append('pbmx', encodeURI(str0));
+                //axios.post('/controller.action?serviceName=insert&objectApiName=ccschedule&binding='+this.bindingcode, params)
+                // axios({
+                //     url:'/controller.action?serviceName=insert&objectApiName=ccschedule&binding='+this.bindingcode,
+                //     method: 'post',
+                //     data: params,
+                //     headers: {
+                //       'Content-type': 'application/x-www-form-urlencoded'
+                //      }
+                // })
+                axios({
+                    url:'/customize/page/9291p1140/pbbapi.jsp?name=pbbapi&type=insertpb',
+                    method: 'post',
+                    data: params,
+                    headers: {
+                      'Content-type': 'application/x-www-form-urlencoded'
+                     }
+                })
+                // axios.post('/controller.action?serviceName=insert&objectApiName=ccschedule&binding='+this.bindingcode, {
+				// 	// params: {
+				// 	// 	serviceName :'insert ',
+                //     //     objectApiName :'ccschedule',
+				// 	// 	//data : this.outarrary,
+				// 	// 	binding : this.bindingcode
+                //     // },
+                //     //data : encodeURI(this.outarrary),
+                //     data : this.outarrary,
+				// },{
+                //       'Content-type': 'application/x-www-form-urlencoded'
+                // })
+				.then(function (response) {
+					alert("ok!");
+					//that.list_sjjb=response.data.data;
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+            },
+            getSales(val){
+                console.log("getsale");
+                var that = this;
+                axios.get('/controller.action', {
+					params: {
+						name :'pbbapi',
+                        type :'getsales',
+						projectid : that.projectid
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.data;
+					//that.tableData= response.data.data;
+                    //Vue.set(that.tableData, response.data.data);
+                    Vue.set(that,'tableData', response.data.data);
+                    console.log(that.tableDate);
+                    for(var i=0;i<that.tableData.length;i++){
+                        Vue.set(that.tableData[i],'d1', 'B');
+                        Vue.set(that.tableData[i],'d2', 'B');
+                        Vue.set(that.tableData[i],'d3', 'B');
+                        Vue.set(that.tableData[i],'d4', 'B');
+                        Vue.set(that.tableData[i],'d5', 'B');
+                        Vue.set(that.tableData[i],'d6', 'B');
+                        Vue.set(that.tableData[i],'d7', 'B');
+                        // that.tableData[i]["d1"]='B';
+                        // that.tableData[i]["d2"]='B';
+                        // that.tableData[i]["d3"]='B';
+                        // that.tableData[i]["d4"]='B';
+                        // that.tableData[i]["d5"]='B';
+                        // that.tableData[i]["d6"]='B';
+                        // that.tableData[i]["d7"]='B';
+                    }
+					//console.log(this.bindingcode);
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+            },
+            getSalesn(val){
+                console.log("getsalen");
+                var that = this;
+                axios.get('/controller.action', {
+					params: {
+						name :'pbbapi',
+                        type :'getsalesn',
+						projectid : that.projectid,
+                        sdate:that.thismonday,
+                        edate:that.thissunday,
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.data;
+					//that.tableData= response.data.data;t
+                    Vue.set(that,'insStatus', response.data.message);
+                    Vue.set(that,'tableData', response.data.data);
+                    console.log(that.tableDate);
+                    if(!that.insStatus){
+                        for(var i=0;i<that.tableData.length;i++){
+                            Vue.set(that.tableData[i],'d1', 'B');
+                            Vue.set(that.tableData[i],'d2', 'B');
+                            Vue.set(that.tableData[i],'d3', 'B');
+                            Vue.set(that.tableData[i],'d4', 'B');
+                            Vue.set(that.tableData[i],'d5', 'B');
+                            Vue.set(that.tableData[i],'d6', 'B');
+                            Vue.set(that.tableData[i],'d7', 'B');
+                            // that.tableData[i]["d1"]='B';
+                            // that.tableData[i]["d2"]='B';
+                            // that.tableData[i]["d3"]='B';
+                            // that.tableData[i]["d4"]='B';
+                            // that.tableData[i]["d5"]='B';
+                            // that.tableData[i]["d6"]='B';
+                            // that.tableData[i]["d7"]='B';
+                        }
+                    }
+					//console.log(this.bindingcode);
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+            }
+        }
+      }
+    var Ctor = Vue.extend(Main)
+    new Ctor().$mount('#app')
+</script>   

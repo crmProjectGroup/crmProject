@@ -1,0 +1,175 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc>
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy");
+CCService cs = new CCService(userInfo);
+String roleid = userInfo.getRoleId();
+
+String yjtype = request.getParameter("yjtype")==null?"全部":request.getParameter("yjtype")+"";//业绩类别
+String year = request.getParameter("year")==null?sdf.format(new Date()):request.getParameter("year")+"";//获取项目条件
+List<CCObject> projectlist = cs.cqlQuery("Project","select name,id from Project where is_deleted = '0' and xmzt = '代理中'");
+List<CCObject> datelist = cs.cqlQuery("Opportunity","select DATE_FORMAT(cjsj,'%Y') as year from Opportunity where is_deleted = '0' and spzt = '审批通过' and cjsj is not null group by DATE_FORMAT(cjsj,'%Y') order by DATE_FORMAT(cjsj,'%Y') desc");
+
+String date_sql = " and YEAR(cjsj) = '"+year+"'";
+String yj_sql = "";
+if("销售业绩".equals(yjtype)){
+     yj_sql = " and recordtype = '20183DD9667FA14v9YSK'";
+}else if("租赁业绩".equals(yjtype)){
+     yj_sql = " and recordtype = '2018BD60B25D1A2mLTd7'";
+}
+
+List<CCObject> list = cs.cqlQuery("Opportunity","select round(sum(cjmj),2) as cjmj,DATE_FORMAT(cjsj,'%m') as yf from Opportunity where is_deleted = '0' "+yj_sql+"  and xmmc in (select id from Project where is_deleted = '0' and (ssbm='代理一部' or ssbm = '代理二部' or ssbm = '代理三部')) and ownerid in (select id from ccuser where isusing='1' and role in (select roleid from role where parentrole_id='"+roleid+"' and gap > 0)) and xmmc !='a0520185EBB3D10krexE' and spzt = '审批通过' "+date_sql+" group by DATE_FORMAT(cjsj,'%Y-%m') order by cjsj desc");
+
+String topic = "";
+String data = "";
+
+for(CCObject item:list){
+    topic += item.get("yf")==null?"":"'"+item.get("yf")+"',";
+    data += item.get("cjmj")==null?"":"{url:'controller.action?name=xmyjfbb&date="+item.get("yf")+"&year="+year+"',y:"+item.get("cjmj")+"},";
+}
+if(topic.length()>0){
+    topic = topic.substring(0,topic.lastIndexOf(","));
+    data = data.substring(0,data.lastIndexOf(","));
+}
+
+</cc>
+<html>
+<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1526971505862XW1lYoGh"></script>
+<script src="https://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+<head>业绩报表</head>
+<body>
+<form action="" method="post" name="theform" id="theform">
+<!--项目：
+<select id="project" name="project">
+<option value="全部">全部</option>
+<cc>
+for(CCObject projectitem:projectlist){
+</cc>
+<option value=<cc:outprint>projectitem.get("id")</cc:outprint>><cc:outprint>projectitem.get("name")</cc:outprint></option>
+<cc>
+}
+</cc>
+</select>
+-->
+业绩类别：
+<select id="yjtype" name="yjtype">
+<option value="全部">全部</option>
+<option value="租赁业绩">租赁业绩</option>
+<option value="销售业绩">销售业绩</option>
+
+</select>
+&nbsp&nbsp
+时间：<select id="year" name="year"> 
+<cc>
+for(CCObject dateitem:datelist){
+</cc>
+<option value = "<cc:outprint>dateitem.get("year")</cc:outprint>"><cc:outprint>dateitem.get("year")</cc:outprint></option>
+<cc>
+}
+</cc>
+</select>
+&nbsp&nbsp
+<script>
+document.getElementById("yjtype").value = "<cc:outprint>yjtype</cc:outprint>";
+document.getElementById("year").value = "<cc:outprint>year</cc:outprint>";
+</script>
+<input type="submit" value=" 查 询 " class="input01"/>
+<div id="container" style="width: 100%;height:600px;" valign="middle" align="center"></div>
+</form>
+</body>
+</html>
+<script>
+$(document).ready(function(){ 
+    hideHeader();
+});
+function hideHeader() 
+    { 
+        $('#daima').attr('val','');
+       var links=document.getElementsByTagName('div');
+       for (var i = 0; i <links.length; i++) {
+            if (links[i].getAttribute("class") == "ui-header ui-bar-b ui-header-fixed slidedown"){
+                // 上一步
+                links[i].style.display="none";
+                break;
+            }
+       }
+    }
+
+
+</script>
+<script>
+$(document).ready(function() {  
+   var chart = {
+      type: 'column'
+   };
+   var title = {
+      text: '业绩分析'   
+   };
+   var subtitle = {
+      text: ''  
+   };
+   var xAxis = {
+      categories: [<cc:outprint>topic</cc:outprint>],
+      crosshair: true
+     
+   };
+   var yAxis = {
+      min: 0,
+      title: {
+         text: '面积 (㎡)'         
+      }      
+   };
+   var tooltip = {
+      headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+      pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+         '<td style="padding:0"><b>{point.y:.1f} ㎡</b></td></tr>',
+      footerFormat: '</table>',
+      shared: true,
+      useHTML: true
+   };
+   var plotOptions = {
+      column: {
+         pointPadding: 0.2,
+         dataLabels:{                //柱状图数据标签
+
+             enabled:true,              //是否显示数据标签
+
+             formatter: function() {        //格式化输出显示
+
+                  return (this.y)+"㎡";
+
+              },
+
+    },
+         borderWidth: 0,
+         cursor: 'pointer',
+         events: {
+            click: function(e) {
+            location.href = e.point.url;
+        }
+    }
+}
+   };  
+   var credits = {
+      enabled: false
+   };
+   
+   var series= [{
+        name: '业绩值',
+            data: [<cc:outprint>data</cc:outprint>]
+        }];     
+      
+   var json = {};   
+   json.chart = chart; 
+   json.title = title;   
+   json.subtitle = subtitle; 
+   json.tooltip = tooltip;
+   json.xAxis = xAxis;
+   json.yAxis = yAxis;  
+   json.series = series;
+   json.plotOptions = plotOptions;  
+   json.credits = credits;
+   $('#container').highcharts(json);
+  
+});
+
+</script>

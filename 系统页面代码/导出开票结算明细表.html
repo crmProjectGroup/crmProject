@@ -1,0 +1,224 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+	<style>
+		.tdTitle { text-align:center}
+		.tdTitle_h { text-align:center}
+		.dataCell_h {text-align:center }
+	</style>
+	<cc>
+		CCService cs = new CCService(userInfo);
+		String id = request.getParameter("id")==null?"":request.getParameter("id")+""; //获取开票申请记录id
+		String sql0 ="select * from kpsq where id = '"+id+"' and is_deleted = '0'"; //获取id后取得对应的开票申请记录
+		List<CCObject> list0 = cs.cqlQuery("kpsq",sql0);//执行sql0,取得对应的开票申请记录
+		String xmmc = list0.get(0).get("xmmc")==null?"":list0.get(0).get("xmmc")+""; //获取项目名称
+		List<CCObject> Projectlist = cs.cqlQuery("Project","select name from Project where id = '"+xmmc+"'"); //读项目名字
+		//out.print(Projectlist.size()+"!!");
+		xmmc =Projectlist.get(0).get("name")==null?"":Projectlist.get(0).get("name")+"";
+		String dljsmxb = list0.get(0).get("jsmx")==null?"":list0.get(0).get("jsmx")+""; //获取选取的结算明细
+		//out.print(dljsmxb+"!!");
+		dljsmxb="'"+dljsmxb.replace(";","','")+"'"; 
+		//out.print(dljsmxb+"!!");
+		String sql="select * from dljsmxb where id in ("+dljsmxb+") and is_deleted = '0'";// and jyzt = '已确认'"; //编辑sql
+		//out.print(sql+"!!");
+		List<CCObject> list = cs.cqlQuery("dljsmxb",sql);//执行sql
+		//out.print(list.size()+"!!");
+		
+		String bcjsbls = list0.get(0).get("bcjsbl")==null?"":list0.get(0).get("bcjsbl")+""; //本次结算比例bcjsbl
+		double bcjsbl = 0.0; //本次结算比例
+		if(bcjsbls.length()>0){
+			bcjsbl = Double.parseDouble(bcjsbls);
+		}
+		String fpje = list0.get(0).get("fpje")==null?"":list0.get(0).get("fpje")+""; //开票金额fpje
+		//out.print(fpje+"!!");
+		Double fpjed= Double.parseDouble(fpje); 
+		DecimalFormat df = new DecimalFormat("0.00");
+		fpje = df.format(fpjed); 
+
+		double mjtotal = 0.0;//面积总计
+		double jetotal = 0.0;//累计开票金额
+		double dbkpje = 0.0; //用于分开计算单笔开票金额
+		String dbkpjes = ""; 
+		//out.print(ksrq+"----"+jsrq+"-----"+datetime+"-------"+sql);
+
+		//年月
+		java.util.Calendar cal = java.util.Calendar.getInstance();
+		cal.setTime(new Date());
+		int year = cal.get(Calendar.YEAR);//当前年份
+		int month = cal.get(Calendar.MONTH)+1;//当前月份
+
+		java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd"); //日期 MM需大写
+		String date=sdf.format(new Date());
+		
+		String stype = "";//租售类型
+		String recordtype=list.get(0).get("recordtype")==null?"":list.get(0).get("recordtype")+"";
+		if("201877BBCEB2536vZE9X".equals(recordtype)){
+			stype = "租赁";
+		} else {
+			stype = "销售";
+		}
+		String table_name = "瑞信行-"+xmmc+"项目代理"+stype+"结算明细表"; //结算表名称
+		//out.print(table_name);
+
+		String file_name = new String("代理结算明细表.xls".getBytes(), "ISO-8859-1"); //导出文件名(考虑加上项目和月份!)
+
+		response.setHeader("Content-disposition","attachment;filename="+file_name);
+		response.setContentType("application/vnd.ms-excel;charset=UTF-8");
+
+		
+	</cc>
+		<html>
+			<head>
+				<title></title>
+			</head>
+			<body>
+				<div class="cloudbox3" >
+
+					<table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+						<tr style="height: 35px">
+							<td rowspan="1" colspan="13" NOWRAP="NOWRAP" class="tdTitle">
+							<span style="font-size: 14pt;font-wight:bold"><strong><cc:outprint>table_name</cc:outprint></strong></span>
+							</td>
+						</tr>
+						<tr>
+							<td rowspan="1" colspan="13" NOWRAP="NOWRAP">结算时间:<cc:outprint>date</cc:outprint></td>
+						</tr>
+						<cc>
+							if("租赁".equals(stype)){
+						</cc>
+						<tr>
+							<td NOWRAP="NOWRAP">序号</td>
+							<td NOWRAP="NOWRAP">房号</td>
+							<td NOWRAP="NOWRAP">客户名称</td>
+							<td NOWRAP="NOWRAP">来访渠道</td>
+							<td NOWRAP="NOWRAP">面积m²</td>
+							<td NOWRAP="NOWRAP">成交租金单价(元)</td>
+							<td NOWRAP="NOWRAP">月租金(总价)</td>
+							<td NOWRAP="NOWRAP">确认时间</td>
+							<td NOWRAP="NOWRAP">签约时间</td>
+							<td NOWRAP="NOWRAP">代理费结算比例</td>
+							<td NOWRAP="NOWRAP">本次结算比例</td>
+							<td NOWRAP="NOWRAP">代理费结算金额(开票额)</td>
+							<td NOWRAP="NOWRAP">备注</td>
+						</tr>
+						
+						<cc>
+							for(CCObject item:list){
+								List<CCObject> khlist = cs.cqlQuery("Account","select name from Account where id = '"+item.get("khmc")+"'"); //读客户名字
+								dbkpje = item.get("dlfjsje")==null?0.0:Double.valueOf(item.get("dlfjsje")+"");
+								dbkpje = dbkpje*bcjsbl/100;
+								dbkpjes = df.format(dbkpje); 
+								mjtotal += item.get("mj")==null?0.0:Double.valueOf(item.get("mj")+"");//累加面积
+								jetotal += dbkpje;//累计金额dlfjsje
+						</cc>
+						<tr>
+							<td  class="dataCell_h"><cc:outprint>item.get("name")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("fh")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>khlist.get(0).get("name")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("lfqd")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("mj")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("cjsj")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("yzj")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>(item.get("qrsj")+"").substring(0,10)</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>(item.get("qysj")+"").substring(0,10)</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("dlfjsbl")</cc:outprint>%</td>
+							<td  class="dataCell_h"><cc:outprint>bcjsbl</cc:outprint>%</td>
+							<td  class="dataCell_h"><cc:outprint>dbkpjes</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("bz")==null?"":item.get("bz")</cc:outprint></td>
+						</tr>
+						<cc>
+							 }
+							} else {
+						</cc>
+						<tr class="tabtitle">
+							<td NOWRAP="NOWRAP">序号</td>
+							<td NOWRAP="NOWRAP">房号</td>
+							<td NOWRAP="NOWRAP">业主名称</td>
+							<td NOWRAP="NOWRAP">来访渠道</td>
+							<td NOWRAP="NOWRAP">面积m²</td>
+							<td NOWRAP="NOWRAP">成交单价(元)</td>
+							<td NOWRAP="NOWRAP">成交总价</td>
+							<td NOWRAP="NOWRAP">认购时间</td>
+							<td NOWRAP="NOWRAP">签约时间</td>
+							<td NOWRAP="NOWRAP">代理费结算比例</td>
+							<td NOWRAP="NOWRAP">本次结算比例</td>
+							<td NOWRAP="NOWRAP">结算代理费金额(开票额)</td>
+							<td NOWRAP="NOWRAP">备注</td>
+						</tr>
+						<cc>
+							for(CCObject item:list){
+								List<CCObject> khlist = cs.cqlQuery("Account","select name from Account where id = '"+item.get("khmc")+"'"); //读客户名字
+								dbkpje = item.get("dlfjsje")==null?0.0:Double.valueOf(item.get("dlfjsje")+"");
+								dbkpje = dbkpje*bcjsbl/100;
+								dbkpjes = df.format(dbkpje); 
+								mjtotal += item.get("mj")==null?0.0:Double.valueOf(item.get("mj")+"");//累加面积
+								jetotal += dbkpje;//累计金额dlfjsje
+						</cc>
+						<tr>
+							<td  class="dataCell_h"><cc:outprint>item.get("name")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("fh")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>khlist.get(0).get("name")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("lfqd")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("mj")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("cjsj")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("cjzj")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>(item.get("rgsj")+"").substring(0,10)</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>(item.get("qysj")+"").substring(0,10)</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("dlfjsbl")</cc:outprint>%</td>
+							<td  class="dataCell_h"><cc:outprint>bcjsbl</cc:outprint>%</td>
+							<td  class="dataCell_h"><cc:outprint>item.get("dlfjsje")</cc:outprint></td>
+							<td  class="dataCell_h"><cc:outprint>item.get("bz")==null?"":item.get("bz")</cc:outprint></td>
+						</tr>
+						<cc>
+							}
+							}
+						</cc>
+						<tr class="tabtitle" style="height: 35px;color: blue" >
+							<td colspan="6" class="tdTitle">面积合计：<cc:outprint>mjtotal</cc:outprint>㎡</td>
+							<td colspan="7" class="tdTitle">金额总计：<cc:outprint>df.format(jetotal)</cc:outprint>(元)</td>
+						</tr>
+					</table>
+					<table border=0 width="100%" frame=void>
+						<tr></tr>
+						<tr></tr>
+						<tr border="0">
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP">甲方审核(盖章)</td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP">乙方审核(盖章)</td>
+						</tr>
+						<tr></tr>
+						<tr></tr>
+						<tr></tr>
+						<tr>
+							<td NOWRAP="NOWRAP" style="border-style:none"></td>
+							<td NOWRAP="NOWRAP" style="border-style:none"></td>
+							<td NOWRAP="NOWRAP" style="border-style:none"></td>
+							<td NOWRAP="NOWRAP" style="border-style:none">甲方负责人签字</td>
+							<td NOWRAP="NOWRAP" style="border-style:none"></td>
+							<td NOWRAP="NOWRAP" style="border-style:none"></td>
+							<td NOWRAP="NOWRAP" style="border-style:none"></td>
+							<td NOWRAP="NOWRAP" style="border-style:none"></td>
+							<td NOWRAP="NOWRAP" style="border-style:none">乙方负责人签字</td>
+						</tr>
+						<tr>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP">时间</td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP" style="border-style:none"></td>
+							<td NOWRAP="NOWRAP"></td>
+							<td NOWRAP="NOWRAP">时间</td>
+						</tr>
+
+					
+						
+					</table>
+				</div>
+			</body>
+		</html>

@@ -1,0 +1,48 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+    throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+        parameterValue = new String(iso, "UTF-8");
+        return parameterValue;
+    }
+}
+return parameterValue;
+}
+</cc>
+<cc>
+JSONObject jsonmsg = new JSONObject();
+CCService cs = new CCService(userInfo);
+try {
+	String id = request.getParameter("id")==null?"":encodeParameters(request.getParameter("id")+"");
+        String recordtype = request.getParameter("recordtype")==null?"":encodeParameters(request.getParameter("recordtype")+"");//记录类型
+        String sql = "update Project set ";
+        if("2018F64617D5E9AyCtLa".equals(recordtype)){
+            sql += " recordtype='2018786219AE553vMnXC' where id = '"+id+"'";
+        }else{
+            sql += " recordtype='2018F64617D5E9AyCtLa' where id = '"+id+"'";
+        }
+        List<CCObject> list = cs.cqlQuery("Project",sql);//客户记录类型变更
+
+        if(list.size()>0){
+             jsonmsg.put("success", true);
+        }else{
+             jsonmsg.put("success", false);
+        }
+} catch (Exception e) {
+	jsonmsg.put("success", false);
+        
+	jsonmsg.put("message", e.getMessage());
+}
+request.setAttribute("jsonmsg", jsonmsg.toString());
+</cc>
+<cc:forward page="/platform/activity/task/getNodes.jsp"/>

@@ -1,0 +1,20 @@
+//对象:考勤补录
+//限制考勤补录次数
+CCService cs = new CCService((UserInfo)userInfo);
+
+//查下本月已经补录了多少次
+String ownerid = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";
+String blrq = record_new.get("blrq")==null?"":record_new.get("blrq")+"";
+//SimpleDateFormat f = new SimpleDateFormat("yyyy年MM月dd日");
+//SimpleDateFormat sDateFormat=new SimpleDateFormat("yyyy-MM-dd");
+//Date blrqdate=sDateFormat.parse(blrq);
+//本月所有考勤补录,未删除,所有人, 审批状态
+//if(true) trigger.addErrorMessage(blrqdate);
+String sql="select * from kqbl where is_deleted = '0' and Month(blrq) = Month('"+blrq+"') and ownerid ='"+ownerid+"'";
+//List<CCObject> list = cs.cqlQuery("kqbl","select * from kqbl where is_deleted = '0' and Month(blrq) = Month("+blrqdate+") and ownerid ='"+ownerid+"' and spzt ='审批通过' "); 
+List<CCObject> list = cs.cqlQuery("kqbl",sql); 
+//判断补录次数,之前报错
+//if(true) trigger.addErrorMessage(String.valueOf(list.size()));
+if(list.size()>=3){
+	trigger.addErrorMessage("本月补录次数已经达到上限");
+}

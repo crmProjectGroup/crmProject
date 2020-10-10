@@ -1,0 +1,58 @@
+String spzt = record_new.get("spzt")==null?"":record_new.get("spzt")+"";
+String jieduan = record_new.get("jieduan")==null?"":record_new.get("jieduan")+"";
+String id = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";//项目id
+String spzt_old = record_old.get("spzt")==null?"":record_old.get("spzt")+"";//审批状态(旧)
+String khmc = record_new.get("khmc")==null?"":record_new.get("khmc")+"";//客户名称id
+String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
+String xmmc = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";//项目名称
+String cjdw = record_new.get("cjdw")==null?"":record_new.get("cjdw")+"";//成交单位
+String ownerid = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";//所有人id
+
+if("审批通过".equals(spzt) && "成交".equals(jieduan) && "审批中".equals(spzt_old)){
+      List<CCObject> accountlist = this.cqlQuery("Account","select lxrxm from Account where id = '"+khmc+"' and is_deleted = '0'");
+      List<CCObject> projectlist = this.cqlQuery("Project","select name from Project where id = '"+xmmc+"' and is_deleted = '0'");
+      List<CCObject> userlist = this.cqlQuery("ccuser","select name,mobile from ccuser where isusing = '1' and id = '"+ownerid+"'");
+      if(accountlist.size()>0)khmc = accountlist.get(0).get("lxrxm")+"";
+      if(projectlist.size()>0)xmmc = projectlist.get(0).get("name")+"";
+      String username = "";
+      String mobile = "";
+      if(userlist.size()>0)username = userlist.get(0).get("name")+""; mobile = userlist.get(0).get("mobile")+"";
+      String txt = "";
+      if("2018BD60B25D1A2mLTd7".equals(recordtype)){
+          txt = "尊敬的"+khmc+"您好！恭喜您成功租赁"+xmmc+"项目"+cjdw+"单位，我将在后期协助您完成交款、合同签订等工作；感谢您选择该物业及支持我们的工作，如在过程中有不满意之处、有其他疑问或需要了解工商地产相关资讯，请随时致电我(姓名："+username+"  电话："+mobile+")。愿成为您以后工商地产选择的得力助手，谢谢！【深圳瑞信行】";
+      }else if("20183DD9667FA14v9YSK".equals(recordtype)){
+          txt = "尊敬的"+khmc+"您好！恭喜您成功购买"+xmmc+"大厦项目"+cjdw+"单位，我将在后期协助您完成交款、合同签订等工作；感谢您选择该物业及支持我们的工作，如在过程中有不满意之处、有其他疑问或需要了解工商地产相关资讯，请随时致电我(姓名："+username+"  电话："+mobile+")。愿成为您以后工商地产选择的得力助手，谢谢！【深圳瑞信行】";
+      }
+  if(!"".equals(mobile)){
+           String result = "-20";
+           String urls ="";
+         
+           urls = "http://smsapi.c123.cn/OpenPlatform/OpenApi?action=sendOnce&ac=1001@1775810010&authkey=0d9f091e6cb422ef8d5c&cgid=0&csid=0&m="+mobile+"&c=【深圳瑞信行】"+java.net.URLEncoder.encode(txt,"utf-8");
+           
+
+           java.net.HttpURLConnection httpconn = null;
+           try{
+		result = urls;
+		java.net.URL url = new java.net.URL(urls);
+		httpconn = (java.net.HttpURLConnection) url.openConnection();
+		java.io.BufferedReader rd = new java.io.BufferedReader(new java.io.InputStreamReader(httpconn.getInputStream()));
+		String resultxml = rd.readLine();
+		result = resultxml.indexOf("result=") != -1?resultxml.substring(resultxml.indexOf("result=\"")+8,resultxml.indexOf("\">")):"";
+                rd.close();
+                
+               }catch (java.net.MalformedURLException e) {
+			e.printStackTrace();
+	       }catch (java.io.IOException e) {
+			e.printStackTrace();
+               }catch (Exception e){
+			e.printStackTrace();
+	       }finally{
+                       if (httpconn != null) {
+				httpconn.disconnect();
+				httpconn = null;
+			}
+               }
+       
+  }
+
+}

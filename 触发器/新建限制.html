@@ -1,0 +1,44 @@
+/*
+description:新建限制 触发器, 1907添加一个同步所有人为被考核人的步骤
+1.结算接口:传入一个或者多个业务机会id,备注, 代理费结算比例; type(js),oppoid,bz,dlfjsbl
+version: 1.0
+date:20190614
+author:tom
+log:
+20181115 增加新建控制项目经理创建目标时候重复建立下面业务员和自己的考核表,防止核算时候出现错误
+20190711 取消同步所有人和被考核人,改由共享去控制, 这样可以避免业务员自己修改考核内容
+*/
+
+java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd"); //日期 MM需大写
+String uid = userInfo.getUserId();//获取操作人id
+String year = record_new.get("nd")==null?"":record_new.get("nd")+"";//年度
+String month = record_new.get("yf")==null?"":record_new.get("yf")+"";//月份
+String szxm = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";//考核项目
+String ownerid = record_new.get("bkhr")==null?"":record_new.get("bkhr")+"";//新建绩效被考核人id
+String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
+
+
+if(!"0052018FF9F7905NEd6u".equals(uid)){ //判断操作对象非管理员
+	//控制日期内才能创建
+	String date=sdf.format(new Date());
+	date = date.substring(8,10);
+	int day = Integer.valueOf(date);
+	if(day<25 && day>20){
+		trigger.addErrorMessage("5-25号之间无法新建考核表!");
+	}
+
+}
+
+if("201884204B9C199odbgA".equals(recordtype)){
+	//201884204B9C199odbgA 业务员, 2018ED6B4DF92033DeWs项目经理
+	List<CCObject> zjlist = this.cquery("ryjx","nd='"+year+"' and yf='"+month+"' and xmmc = '"+szxm+"' and recordtype='201884204B9C199odbgA' and bkhr = '"+ownerid+"' and is_deleted = '0'");
+	//if(true) {trigger.addErrorMessage(String.valueOf(zjlist.size()));};
+	if(zjlist.size()>=1){
+		trigger.addErrorMessage("该被考核人当月目标已经创建!");
+	}
+}else {
+	List<CCObject> zjlist1 = this.cquery("ryjx","nd='"+year+"' and yf='"+month+"' and xmmc = '"+szxm+"' and recordtype='2018ED6B4DF92033DeWs' and bkhr = '"+uid+"' and is_deleted = '0'");
+	if(zjlist1.size()>=1){
+		trigger.addErrorMessage("该被考核人当月目标已经创建!");
+	}
+}

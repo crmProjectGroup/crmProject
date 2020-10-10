@@ -1,0 +1,19 @@
+String ywjkmc = record_new.get("ywjkmc")==null?"":record_new.get("ywjkmc")+"";//业务机会唯一标识
+Double mj = record_new.get("mj")==null?0.0:Double.valueOf(record_new.get("mj")+"");//面积
+Double dj = record_new.get("dj")==null?0.0:Double.valueOf(record_new.get("dj")+"");//单价
+String cjsw = record_new.get("cjsw")==null?"":record_new.get("cjsw")+"";//房号
+
+List<CCObject> list = this.cquery("Opportunity","id = '"+ywjkmc+"'");
+
+if(list.size()>0){
+    CCObject obj = list.get(0);
+    Double cjmj = obj.get("cjmj")==null?0.0:Double.valueOf(obj.get("cjmj")+"");//面积
+    String cjdw = obj.get("cjdw")==null?"":obj.get("cjdw")+"";//单位
+    obj.put("cjmj",cjmj+mj);
+    if(cjdw.trim().length()>0){
+        obj.put("cjdw",cjdw+","+cjsw);
+    }else{
+        obj.put("cjdw",cjsw);
+    }
+    this.updateLt(obj);
+}

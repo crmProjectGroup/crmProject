@@ -1,0 +1,15 @@
+Double ljqymj = record_new.get("ljqymj")==""?0:record_new.get("ljqymj")==null?0:Double.valueOf(record_new.get("ljqymj")+"");//累计签约面积
+Double scqymj = record_new.get("scqymj")==""?0:record_new.get("scqymj")==null?0:Double.valueOf(record_new.get("scqymj")+"");//市场签约面积
+String xmmc = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";//项目id
+
+List<CCObject> list = this.cqlQuery("Project","select xmbdmj from Project where id = '"+xmmc+"'");
+
+Double symj = 0.0;
+for(CCObject item:list){
+      Double xmbdmj = item.get("xmbdmj")==null?0:Double.valueOf(item.get("xmbdmj")+"");//项目标的面积
+      if(xmbdmj>0){
+            symj = xmbdmj - (ljqymj + scqymj);
+      }
+}
+
+this.cqlQuery("Project","update Project set symji='"+symj+"' where id = '"+xmmc+"' and is_deleted = '0'");

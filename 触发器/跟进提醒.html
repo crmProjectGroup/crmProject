@@ -1,0 +1,42 @@
+String bfkh=null==record_new.get("kfs")?"":String.valueOf(record_new.get("kfs"));//客户id
+String ownerid=null==record_new.get("ownerid")?"":String.valueOf(record_new.get("ownerid"));//所有人
+String xcbfsj=null==record_new.get("xcgjsj")?"":String.valueOf(record_new.get("xcgjsj"));//下次跟进时间
+String khmc="";//客户名称
+
+List<CCObject> Accountlist = this.cquery("Kfs", "id='" + bfkh+ "'");// 根据gjdx查询该客户
+if(Accountlist.size()>0){
+     khmc= Accountlist.get(0).get("name") == null ? "" : (String) Accountlist.get(0).get("name");// 获取客户名称
+}
+
+if(!"".equals(xcbfsj)){
+                DateFormat fmt =new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		java.util.Date xcgjdate = fmt.parse(xcbfsj);
+		long xcgjrq=xcgjdate.getTime();
+		long jssj=xcgjrq+(long)120*(long)60*(long)1000;
+		long txsj=xcgjrq-(long)15*(long)60*(long)1000;
+	        Date jsdate = new Date(jssj);
+		Date txdate = new Date(txsj);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String jsrq=dateFormat.format(jsdate);
+		String txrq=dateFormat.format(txdate);
+                String remark="在"+xcbfsj+"拜访"+khmc;
+                String dqsj= xcbfsj.substring(0,10);
+		CCObject Event= new CCObject("Event");	
+		Event.put("belongtoid",ownerid);//被分配人
+		Event.put("ownerid",ownerid);//所有人
+		Event.put("name","拜访"+khmc);//事件名称          
+		Event.put("relateid",bfkh);
+		Event.put("begintime",xcbfsj);
+		Event.put("endtime",jsrq);
+		Event.put("subject","拜访"+khmc);//主题
+		Event.put("remark",remark);//内容            
+		Event.put("isemailnotification","false");//是否邮件通知
+		Event.put("isremider","true");//是否提醒
+		Event.put("expiredate",dqsj);
+		Event.put("remindertime",txrq);
+		Event.put("relateobj","001");	
+		Event.put("istask","0");
+                Event.put("sjlx","预约联系");	
+		Event.put("status","进行中");		
+		this.insert(Event);
+}

@@ -1,0 +1,21 @@
+/**
+*描述：创建日报补上项目字段
+*      
+*创建人：何俊
+*创建时间：2018/11/01
+*最后修改时间：2018/11/01
+*/
+
+
+CCService cs = new CCService((UserInfo)userInfo);
+
+List<CCObject> dailyreport_list = this.cquery("DailyReport","is_deleted = '0' and  TO_DAYS(createdate) = TO_DAYS(NOW())");
+for(CCObject item:dailyreport_list){
+	String id = item.get("ownerid")==null?"":item.get("ownerid")+"";//考勤所有人
+	List<CCObject> list1 = cs.cquery("ProjectSaleGroup","xmxsy= '"+id+"'");
+	if(list1.size()>0){ //业务员在多个项目的
+		String xmmc = list1.get(0).get("xmmc")==null?"":list1.get(0).get("xmmc")+"";//项目名称
+		item.put("xmmc",xmmc);
+		cs.updateLt(item);
+	}     
+}

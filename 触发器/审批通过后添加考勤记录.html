@@ -1,0 +1,120 @@
+//对象:考勤补录
+//审批通过后根据补录内容insert或者update考勤记录
+CCService cs = new CCService((UserInfo)userInfo);
+
+String spzt = record_new.get("spzt")==null?"":record_new.get("spzt")+"";
+String spzt_old = record_old.get("spzt")==null?"":record_old.get("spzt")+"";
+
+//if(true) trigger.addErrorMessage(spzt+"|"+spzt_old);
+	
+if("审批通过".equals(spzt) && "审批中".equals(spzt_old)){
+
+	//获取日期和类型
+	String blrq = record_new.get("blrq")==null?"":record_new.get("blrq")+"";
+	blrq = blrq.substring(0,10);
+	//if(true) trigger.addErrorMessage(blrq);
+	if("".equals(blrq)) trigger.addErrorMessage("补录时间为空!");
+	String blrq1 = blrq +" 09:00:00";
+	String blrq2 = blrq +" 18:00:00";
+
+	//String ksrq = request.getParameter("startTime")==null?nowday.substring(0,nowday.lastIndexOf("-"))+"-01":request.getParameter("startTime")+"";//开始日期
+	//String jsrq = request.getParameter("endTime")==null?nowday:request.getParameter("endTime")+"";//结束日期
+	String datetime = " and createdate >= str_to_date('"+blrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('"+blrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+
+	String ownerid = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";//所有人id
+
+	Date dtime = new Date();
+	SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd hh:mm:ss");
+
+	dtime = ft.parse(blrq1);
+	//System.out.println(ft.parse(blrq1));
+	//if(true) trigger.addErrorMessage(dtime.toString());
+
+	//获取补录类型
+	String bllx = record_new.get("bllx")==null?"":record_new.get("bllx")+"";
+
+	String bllxs ="";
+	String sql ="";
+	//if(true) trigger.addErrorMessage(bllx);
+	if("签到".equals(bllx) || "签到;".equals(bllx)) {
+		bllxs = "签到";
+		//先找到当天对应的记录
+		sql ="select id from attendance where is_deleted = '0' and ownerid = '"+ownerid+"' "+datetime+"";
+		List<CCObject> kqlist = cs.cqlQuery("attendance",sql);
+		//if(true) trigger.addErrorMessage(String.valueOf(kqlist.size()));
+		//if(true) trigger.addErrorMessage(sql);
+		if(kqlist.size()==0) trigger.addErrorMessage("当天无签退记录!");
+		String id = kqlist.get(0).get("id")==null?"":kqlist.get(0).get("id")+"";
+		CCObject obj = new CCObject("attendance");
+		obj.put("id",id);
+		obj.put("qdtype","内勤");
+		obj.put("qdwz","补签到");
+		obj.put("qdzb","0.000000,0.000000");
+		obj.put("qdsj",blrq1);
+		obj.put("bz","补签到");
+		cs.updateLt(obj);
+	} else if ("签退".equals(bllx)  || "签退;".equals(bllx)){
+		bllxs="签退";
+		sql ="select id from attendance where is_deleted = '0' and ownerid = '"+ownerid+"' "+datetime+"";
+		List<CCObject> kqlist = cs.cqlQuery("attendance",sql);
+		//if(true) trigger.addErrorMessage(String.valueOf(kqlist.size()));
+		//if(true) trigger.addErrorMessage(sql);
+		if(kqlist.size()==0) trigger.addErrorMessage("当天无签到记录!");
+		String id = kqlist.get(0).get("id")==null?"":kqlist.get(0).get("id")+"";
+		CCObject obj = new CCObject("attendance");
+		obj.put("id",id);
+		obj.put("qttype","内勤");
+		obj.put("qtwz","补签退");
+		obj.put("qtzb","0.000000,0.000000");
+		obj.put("qtsj",blrq2);
+		obj.put("bz","补签退");
+		cs.updateLt(obj);
+	} else if ("签到;签退".equals(bllx) || "签退;签到".equals(bllx)) {
+		bllxs="both";
+		//新建代理结算明细对象
+		CCObject obj = new CCObject("attendance");
+		obj.put("rq",blrq);
+		obj.put("bz","补签到退");
+
+		obj.put("qdtype","内勤");
+		obj.put("qdwz","补签到");
+		obj.put("qdzb","0.000000,0.000000");
+		obj.put("qdsj",blrq1);
+
+		obj.put("qttype","内勤");
+		obj.put("qtwz","补签退");
+		obj.put("qtzb","0.000000,0.000000");
+		obj.put("qtsj",blrq2);
+
+		List<CCObject> salegrouplist = cs.cqlQuery("ProjectSaleGroup","select xmmc from ProjectSaleGroup where is_deleted = '0' and xmxsy = '"+ownerid+"'");
+		String xmmc = "";
+		if(salegrouplist.size()>0){ //有项目销售小组的,业务员
+			for(CCObject saleobj:salegrouplist){
+				xmmc = saleobj.get("xmmc")==null?"":saleobj.get("xmmc")+"";//项目名称
+			}
+		} else{ //项目经理
+			List<CCObject> projectlist = cs.cqlQuery("Project","select id from Project where is_deleted = '0' and xmjl = '"+ownerid+"' and xmzt = '代理中'");
+			for(CCObject project:projectlist){
+				xmmc = project.get("id")==null?"":project.get("id")+"";//项目id
+			}
+		}
+		List<CCObject> userlist = cs.cqlQuery("ccuser","select gh from ccuser where isusing = '1' and id = '"+ownerid+"'");
+		String gh = "";
+		for(CCObject userobj:userlist){
+			gh = userobj.get("gh")==null?"":userobj.get("gh")+"";//工号
+		}
+		obj.put("xmmc",xmmc);
+		obj.put("gh",gh);
+		obj.put("ownerid",ownerid);  //ownerid赋值为业务机会对应的项目经理
+		obj.put("createbyid",ownerid);  //createbyid赋值为项目经理
+		obj.put("createdate",blrq1); //createdate
+		cs.insert(obj);//添加记录
+	} else{
+		trigger.addErrorMessage("补录类型错误");
+	}
+
+
+	//if(true) trigger.addErrorMessage(bllxs);
+
+
+}

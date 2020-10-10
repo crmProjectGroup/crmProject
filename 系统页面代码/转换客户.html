@@ -1,0 +1,118 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc!>
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+* 
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+    throws UnsupportedEncodingException {
+if (parameterValue != null && parameterValue.length() > 0) {
+    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+        parameterValue = new String(iso, "UTF-8");
+        return parameterValue;
+    }
+}
+return parameterValue;
+}
+</cc>
+<cc>
+JSONObject jsonmsg = new JSONObject();
+CCService cs = new CCService(userInfo);
+try {
+	String id = request.getParameter("id")==null?"":encodeParameters(request.getParameter("id")+"");
+        String khlb = request.getParameter("khlb")==null?"":encodeParameters(request.getParameter("khlb")+"");//客户类别
+        String ownerid = request.getParameter("ownerid")==null?"":encodeParameters(request.getParameter("ownerid")+"");//所有人
+        String xmmc = request.getParameter("xmmc")==null?"":encodeParameters(request.getParameter("xmmc")+"");//项目名称
+        String lxrdh = request.getParameter("lxrdh")==null?"":encodeParameters(request.getParameter("lxrdh")+"");//联系人电话
+
+         String Projectname = "";//项目名称
+         String ProjectAddress = "";//项目地址
+         String mobile = "";//手机号码
+         String department = "";//部门
+         String username = "";
+                  
+         List<CCObject> profilelist = cs.cqlQuery("ccuser","select profile from ccuser where id = '"+ownerid+"' and isusing = '1'");
+         String profileid = "";
+         if(profilelist.size()>0){
+            profileid = profilelist.get(0).get("profile")==null?"":profilelist.get(0).get("profile")+"";//简档id
+         }
+
+         List<CCObject> xmlist = cs.cqlQuery("Project","select ssbm,name from Project where id='"+xmmc+"' and is_deleted = '0'");
+         if(xmlist.size()>0){
+              department = xmlist.get(0).get("ssbm")==null?"":xmlist.get(0).get("ssbm")+"";//部门
+              Projectname = xmlist.get(0).get("name")==null?"":xmlist.get(0).get("name")+"";//项目名称
+              ProjectAddress = xmlist.get(0).get("lpdz")==null?"":xmlist.get(0).get("lpdz")+"";//项目地址
+         }
+         List<CCObject> userlist = cs.cquery("ccuser","id = '"+ownerid+"'");
+
+         if(userlist.size()>0){
+                mobile = userlist.get(0).get("mobile")==null?"":userlist.get(0).get("mobile")+"";//业务员手机
+                username = userlist.get(0).get("name")==null?"":userlist.get(0).get("name")+"";//业务员名称
+         }
+
+String smmb = "尊敬的客户您好！感谢您莅临"+Projectname+"项目，我是接待您的置业顾问"+username+"，如有其他疑问或需要了解工商地产相关资讯，请随时致电我，电话："+mobile+"，愿成为您以后工商地产选择的得力助手。为了帮助我们更好的提升服务质量，请对接待您的员工进行满意度评价，回复1、满意;2、不满意。再次感谢您的参与！";//上门模板
+
+if(!"aaa201858C360ADNceRX".equals(profileid)){
+ if(!"".equals(lxrdh)){
+           String result = "-20";
+           String urls ="";
+           if("顾问部".equals(department)){
+                  urls = "http://smsapi.c123.cn/OpenPlatform/OpenApi?action=sendOnce&ac=1001@1775810010&authkey=0d9f091e6cb422ef8d5c&cgid=0&csid=0&m="+lxrdh+"&c=【深圳瑞信行】"+java.net.URLEncoder.encode(smmb,"utf-8");
+           }else{
+                  urls = "http://smsapi.c123.cn/OpenPlatform/OpenApi?action=sendOnce&ac=1001@1775810010&authkey=0d9f091e6cb422ef8d5c&cgid=0&csid=0&m="+lxrdh+"&c=【"+Projectname+"】"+java.net.URLEncoder.encode(smmb,"utf-8");
+           }
+           java.net.HttpURLConnection httpconn = null;
+           try{
+		result = urls;
+		java.net.URL url = new java.net.URL(urls);
+		httpconn = (java.net.HttpURLConnection) url.openConnection();
+		java.io.BufferedReader rd = new java.io.BufferedReader(new java.io.InputStreamReader(httpconn.getInputStream()));
+		String resultxml = rd.readLine();
+		result = resultxml.indexOf("result=") != -1?resultxml.substring(resultxml.indexOf("result=\"")+8,resultxml.indexOf("\">")):"";
+                rd.close();
+                
+               }catch (java.net.MalformedURLException e) {
+			e.printStackTrace();
+	       }catch (java.io.IOException e) {
+			e.printStackTrace();
+               }catch (Exception e){
+			e.printStackTrace();
+	       }finally{
+                       if (httpconn != null) {
+				httpconn.disconnect();
+				httpconn = null;
+			}
+               }
+       
+ }
+
+}
+
+String recordtype = "";//记录类型
+        String sql = "update Account set ";
+        if("销售客户".equals(khlb)){
+            sql += " recordtype='2018496272C934EtLhWs',sfjxzsm = '是' where id = '"+id+"'";
+        }else{
+            sql += " recordtype='20186166515AE4A8ZfOc',sfjxzsm = '是' where id = '"+id+"'";
+        }
+        List<CCObject> accountlist = cs.cqlQuery("Account",sql);//客户记录类型变更
+
+        if(accountlist.size()>0){
+             jsonmsg.put("success", true);
+        }else{
+             jsonmsg.put("success", false);
+        }
+
+
+} catch (Exception e) {
+	jsonmsg.put("success", false);
+        
+	jsonmsg.put("message", e.getMessage());
+}
+request.setAttribute("jsonmsg", jsonmsg.toString());
+</cc>
+<cc:forward page="/platform/activity/task/getNodes.jsp"/>

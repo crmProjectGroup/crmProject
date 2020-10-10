@@ -1,0 +1,164 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc>
+//-------------------获取系统当前时间-------------------
+  java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+  String nowday = sdf.format(new Date());
+
+CCService cs = new CCService((UserInfo)userInfo);
+//-------------------筛选未成交与成交信息--------------------
+List<CCObject> list = cs.cqlQuery("Opportunity","select o.id,o.ownerid,o.khmc,o.createdate,o.xmmc from Opportunity o,Account a where o.is_deleted='0' and jieduan <> '成交' and jieduan <> '未成交' and o.xmmc <> 'a052018F7FCFA55YIdRp' and a.ghkh = '否' and a.id = o.khmc");
+
+if(list.size()>0){
+       for(CCObject item:list){
+              String id = item.get("id")==null?"":item.get("id")+"";//记录id
+              String ownerid = item.get("ownerid")==null?"":item.get("ownerid")+"";//所有人
+              String khmc = item.get("khmc")==null?"":item.get("khmc")+"";//客户id
+              String xmmc = item.get("xmmc")==null?"":item.get("xmmc")+"";//项目id
+              
+              List<CCObject> detaillist = cs.cqlQuery("ywjhgjmx","select * from ywjhgjmx where ywjhmc = '"+id+"' order by createdate desc");//跟进详情
+              if(detaillist.size()>0){
+                    /*String createdate = detaillist.get(0).get("createdate")==null?"":detaillist.get(0).get("createdate")+"";//创建时间
+                    long time1 = sdf.parse(nowday).getTime();
+                    long time2 = sdf.parse(createdate).getTime();
+                    long day = (time1-time2)/(24*60*60*1000);
+                    List<CCObject> ccuserlist = cs.cqlQuery("ccuser","select manager,name from ccuser where id = '"+ownerid+"'");
+                    List<CCObject> accountlist = cs.cqlQuery("Account","select name from Account where is_deleted = '0' and id='"+khmc+"'");
+                    String accountname = "";
+                    String name = "";
+                    String manager = "";
+                    if(ccuserlist.size()>0){
+                       name = ccuserlist.get(0).get("name")+"";
+                       manager = ccuserlist.get(0).get("manager")+"";
+                    }
+                    out.print(day+"---");
+                    if(accountlist.size()>0)accountname = accountlist.get(0).get("name")+"";
+                    if(day==7){
+                         out.print("七天未跟进"+accountname);
+                         CCObject Event = new CCObject("Event");	  
+                         Event.put("remark","七天未跟进"+accountname); 	
+		         Event.put("begintime",sdf.format(new Date()).substring(0,10)+" 8:00:00");
+		         Event.put("endtime",sdf.format(new Date()).substring(0,10)+" 10:00:00");
+		         Event.put("belongtoid",ownerid);//被分配人
+		         Event.put("ownerid",ownerid);//所有人
+	         	 Event.put("name","跟进提醒");//事件名称          
+         		 Event.put("relateid",khmc);
+		         Event.put("subject","七天未跟进客户提醒");//主题
+		         Event.put("isemailnotification","false");//是否邮件通知
+	         	 Event.put("isremider","true");//是否提醒
+	         	 Event.put("remindertime",sdf.format(new Date()).substring(0,10)+" 9:00:00");//提醒时间
+		         Event.put("relateobj","001");	
+		         Event.put("istask","0");
+                         Event.put("sjlx","预约联系");	
+		         Event.put("status","进行中");
+                         Event.put("expiredate",nowday.substring(0,10));
+                         Event.put("createbyid","0052018FF9F7905NEd6u");
+                         cs.insert(Event);
+                         if(ccuserlist.size()>0){
+                                CCObject events = new CCObject("Event");
+                               events.put("belongtoid",manager);
+                               events.put("subject",name+"七天未跟进客户提醒");//主题
+                               events.put("ownerid",manager);
+                               events.put("name","业务员七天未跟进提醒");//事件名称
+                               events.put("remark",name+"七天未跟进"+accountname);
+                               events.put("relateobj","001");	
+		               events.put("istask","0");
+                               events.put("createbyid","0052018FF9F7905NEd6u");
+                               events.put("expiredate",nowday.substring(0,10));
+	         	       events.put("remindertime",sdf.format(new Date()).substring(0,10)+" 9:00:00");//提醒时间
+ 		               events.put("isemailnotification","false");//是否邮件通知
+	         	       events.put("isremider","true");//是否提醒
+                               events.put("sjlx","预约联系");	
+		               events.put("status","进行中");
+		               events.put("begintime",sdf.format(new Date()).substring(0,10)+" 8:00:00");
+		               events.put("endtime",sdf.format(new Date()).substring(0,10)+" 10:00:00");
+                               cs.insert(events);
+                         }
+                         
+                    }else if(day>=14){
+                         
+                         if(ccuserlist.size()>0){
+                               CCObject Account = new CCObject("Account");
+                               Account.put("id",khmc);
+                               Account.put("ownerid",manager);
+                               Account.put("ghkh","是");
+                               CCObject Opportunity = new CCObject("Opportunity");
+                               Opportunity.put("id",id);
+                               Opportunity.put("ownerid",manager);
+                               cs.updateLt(Account);
+                               cs.updateLt(Opportunity);
+                         }
+
+                        List<CCObject> share_list = cs.cquery("Account","parentid='"+khmc+"'",false);
+                         if(share_list.size()==0){
+                            List<CCObject> grouplist = cs.cquery("ProjectSaleGroup","xmmc = '"+xmmc+"'");
+                            for(CCObject groupitem:grouplist){
+                               String uid = groupitem.get("xmxsy")==null?"":groupitem.get("xmxsy")+"";
+                               CCObject accountshare = new CCObject("Account",CCObject.IS_SHARED);
+                               accountshare.put("parentid",khmc);
+                               accountshare.put("accesslevel", "Read");
+                               accountshare.put("rowcause", "Manual");
+                               accountshare.put("userorgroupid",uid);
+                               cs.insertLt(accountshare);
+                            }
+                         }
+                    }*/
+}else{
+                    String createdate = item.get("createdate")==null?"":item.get("createdate")+"";//创建时间
+                    long time1 = sdf.parse(nowday).getTime();
+                    long time2 = sdf.parse(createdate).getTime();
+                    long day = (time1-time2)/(24*60*60*1000);
+                    List<CCObject> ccuserlist = cs.cqlQuery("ccuser","select manager,name from ccuser where id = '"+ownerid+"'");
+                    List<CCObject> accountlist = cs.cqlQuery("Account","select name from Account where is_deleted = '0' and id='"+khmc+"'");
+                    String accountname = "";
+                    String name = "";
+                    String manager = "";
+                    if(ccuserlist.size()>0){
+                       name = ccuserlist.get(0).get("name")+"";
+                       manager = ccuserlist.get(0).get("manager")+"";
+                    }
+                    if(accountlist.size()>0)accountname = accountlist.get(0).get("name")+"";
+out.print(day+"-");
+                    if(day==7){
+                         CCObject Event= new CCObject("Event");	  
+                         Event.put("remark","七天未跟进"+accountname); 	
+		         Event.put("begintime",sdf.format(new Date()).substring(0,10)+" 8:00:00");
+		         Event.put("endtime",sdf.format(new Date()).substring(0,10)+" 10:00:00");
+		         Event.put("belongtoid",ownerid);//被分配人
+		         Event.put("ownerid",ownerid);//所有人
+	         	 Event.put("name","跟进提醒");//事件名称          
+         		 Event.put("relateid",khmc);
+		         Event.put("subject","七天未跟进客户提醒");//主题
+		         Event.put("isemailnotification","false");//是否邮件通知
+	         	 Event.put("isremider","true");//是否提醒
+	         	 Event.put("remindertime",sdf.format(new Date()).substring(0,10)+" 9:00:00");//提醒时间
+		         Event.put("relateobj","001");	
+		         Event.put("istask","0");
+                         Event.put("sjlx","预约联系");	
+		         Event.put("status","进行中");
+                         Event.put("createbyid","0052018FF9F7905NEd6u");
+                         Event.put("expiredate",nowday.substring(0,10));
+                         cs.insert(Event);
+                         if(ccuserlist.size()>0){
+                               CCObject events = new CCObject("Event");
+                               events.put("belongtoid",manager);
+                               events.put("subject",name+"七天未跟进客户提醒");//主题
+                               events.put("ownerid",manager);
+                               events.put("name","业务员七天未跟进提醒");//事件名称
+                               events.put("remark",name+"七天未跟进"+accountname);
+                               events.put("relateobj","001");	
+		               events.put("istask","0");
+                               events.put("createbyid","0052018FF9F7905NEd6u");
+                               events.put("expiredate",nowday.substring(0,10));
+	         	       events.put("remindertime",sdf.format(new Date()).substring(0,10)+" 9:00:00");//提醒时间
+ 		               events.put("isemailnotification","false");//是否邮件通知
+	         	       events.put("isremider","true");//是否提醒
+                               events.put("sjlx","预约联系");	
+		               events.put("status","进行中");
+		               events.put("begintime",sdf.format(new Date()).substring(0,10)+" 8:00:00");
+		               events.put("endtime",sdf.format(new Date()).substring(0,10)+" 10:00:00");
+                               cs.insert(events);
+                         }
+                    }
+       }}
+}
+</cc>

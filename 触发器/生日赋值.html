@@ -1,0 +1,14 @@
+String id = record_new.get("id")==null?"":record_new.get("id")+"";//记录id
+String sfzh = record_new.get("sfzh")==null?"":record_new.get("sfzh")+"";//身份证号
+
+if(sfzh.length()==18){
+      sfzh = sfzh.substring(6,14);
+      String year = sfzh.substring(0,4);
+      String month = sfzh.substring(4,6);
+      String day = sfzh.substring(6,8);
+      String datetime = year+"-"+month+"-"+day;
+      this.cqlQuery("Contact","update Contact set csrq = '"+datetime+"' where id = '"+id+"'");
+}else if(sfzh.length()>0 && sfzh.length()<18){
+      trigger.addErrorMessage("身份证号码必须为18位!");
+}
+

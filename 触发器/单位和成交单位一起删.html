@@ -1,0 +1,2 @@
+String id = record_old.get("id")==null?"":record_old.get("id")+"";//id
+this.cqlQuery("cjdw","update cjdw set is_deleted = '1' where cjdw = '"+id+"' and is_deleted = '0'");

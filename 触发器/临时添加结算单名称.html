@@ -1,0 +1,20 @@
+CCService cs = new CCService(userInfo);
+
+List<CCObject> list = cs.cqlQuery("dljsmxb","select * from dljsmxb where is_deleted = '0'");
+
+if(list.size()>0){
+	for(CCObject item:list){
+		String khmc = item.get("khmc")==null?"":item.get("khmc")+"";//客户名称
+		List<CCObject> kh = cs.cqlQuery("Account","select name from Account where id='"+khmc+"' and is_deleted = '0'");
+
+		String khnm = kh.get(0).get("name")==null?"":kh.get(0).get("name")+"";
+//if(true) {trigger.addErrorMessage(khnm);}
+		String fh = item.get("fh")==null?"":item.get("fh")+"";//房号
+		String mj = item.get("mj")==null?"":item.get("mj")+"";//面积
+		String yzjzj = item.get("yzj")==null?"":item.get("yzj")+"";//月租金总价
+		String jsdmc = khnm + "_" + fh + "_" + mj + "_" + yzjzj;
+
+		item.put("jsdmc",jsdmc);
+		cs.updateLt(item);
+	}
+}

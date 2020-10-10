@@ -1,0 +1,164 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc>
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy");
+CCService cs = new CCService(userInfo);
+String roleid = userInfo.getRoleId();
+String year = request.getParameter("year")==null?sdf.format(new Date()):request.getParameter("year")+"";//获取项目条件
+List<CCObject> projectlist = cs.cqlQuery("Project","select name,id from Project where is_deleted = '0' and xmzt = '代理中'");
+List<CCObject> datelist = cs.cqlQuery("Opportunity","select DATE_FORMAT(createdate,'%Y') as year from Opportunity where is_deleted = '0' and spzt = '审批通过' group by DATE_FORMAT(createdate,'%Y') order by DATE_FORMAT(createdate,'%Y') desc");
+
+String date_sql = " and YEAR(createdate) = '"+year+"'";
+
+List<CCObject> list = cs.cqlQuery("Opportunity","select round(sum(cjmj),2) as cjmj,DATE_FORMAT(createdate,'%m') as yf from Opportunity where is_deleted = '0' and xmmc in (select id from Project where is_deleted = '0' and (ssbm='代理一部' or ssbm = '代理二部' or ssbm = '代理三部')) and ownerid in (select id from ccuser where isusing='1' and role in (select roleid from role where parentrole_id='"+roleid+"' and gap > 0)) and xmmc !='a0520185EBB3D10krexE' and spzt = '审批通过' "+date_sql+" group by DATE_FORMAT(createdate,'%Y-%m')");
+
+String topic = "";
+String data = "";
+
+for(CCObject item:list){
+    topic += item.get("yf")==null?"":"'"+item.get("yf")+"',";
+    data += item.get("cjmj")==null?"":"{value:'"+item.get("cjmj")+"',url:'controller.action?name=xmyjfbb&date="+item.get("yf")+"&year="+year+"'},";
+}
+
+if(topic.length()>0){
+    topic = topic.substring(0,topic.lastIndexOf(","));
+    data = data.substring(0,data.lastIndexOf(","));
+}
+
+</cc>
+<html>
+<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1526972355175tvSWZ3EL"></script>
+<head>业绩报表</head>
+<body>
+<form action="" method="post" name="theform" id="theform">
+<!--项目：
+<select id="project" name="project">
+<option value="全部">全部</option>
+<cc>
+for(CCObject projectitem:projectlist){
+</cc>
+<option value=<cc:outprint>projectitem.get("id")</cc:outprint>><cc:outprint>projectitem.get("name")</cc:outprint></option>
+<cc>
+}
+</cc>
+</select>
+-->
+&nbsp&nbsp
+时间：<select id="year" name="year"> 
+<cc>
+for(CCObject dateitem:datelist){
+</cc>
+<option value = "<cc:outprint>dateitem.get("year")</cc:outprint>"><cc:outprint>dateitem.get("year")</cc:outprint></option>
+<cc>
+}
+</cc>
+</select>
+&nbsp&nbsp
+<script>
+document.getElementById("year").value = "<cc:outprint>year</cc:outprint>";
+</script>
+<input type="submit" value=" 查 询 " class="input01"/>
+<table id="showtable" border="0px" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle" >
+    <td NOWRAP="NOWRAP" class="tdTitle">月份</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">业绩值</td>
+</tr>
+<cc>
+for(CCObject item:list){
+       String yf = item.get("yf")+"";
+</cc>
+<tr class="tabtitle" onMouseOver="over()" onMouseOut="out()" onclick="jump('<cc:outprint>yf</cc:outprint>','<cc:outprint>year</cc:outprint>')">
+<td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>yf</cc:outprint></td>
+<td NOWRAP="NOWRAP" class="tdTitle"><cc:outprint>item.get("cjmj")</cc:outprint></td>
+</tr>
+<cc>}</cc>
+</table>
+<div id="chart" style="width: 100%;height:600px;" valign="middle" align="center"></div>
+</form>
+</body>
+</html>
+<script>
+option = {
+    title : {
+        text: '业绩分析',
+        subtext: '柱状图分析'
+    },
+    tooltip : {
+        trigger: 'axis'
+    },
+    legend: {
+        data:['业绩值']
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : {show: true},
+            dataView : {show: true, readOnly: false},
+            magicType : {show: true, type: ['line', 'bar']},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    calculable : true,
+    xAxis : [
+        {
+            type : 'category',
+            data : [<cc:outprint>topic</cc:outprint>]
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value'
+        }
+    ],
+    series : [
+        {
+            
+            name:'业绩值',
+            type:'bar',
+            data:[<cc:outprint>data</cc:outprint>],
+            
+            markLine : {
+                data : [
+                    {type : 'average', name: '平均值'}
+                ]
+            },
+            itemStyle : { 
+                normal: {
+                        label : {
+                        show: true
+                        },color: '#27727B'
+                    }
+            }
+        }
+    ]
+};
+
+echartsPie = echarts.init(document.getElementById('chart'));
+    $(function(){
+        echartsPie.setOption(option);
+    });
+echartsPie.on('click', function(param) {
+    window.location.href = param.data.url;
+});
+
+
+//鼠标点击另外一行时关闭已选行变色  
+    function out() {
+        var oObj = event.srcElement;
+        if (oObj.tagName.toLowerCase() == "td") {
+            var oTr = oObj.parentNode;
+            if (!oTr.tag) oTr.style.backgroundColor = "";
+        }
+    }
+    //鼠标移动到选择行上时的行变色
+    function over() {
+        var oObj = event.srcElement;
+        if (oObj.tagName.toLowerCase() == "td") {
+            var oTr = oObj.parentNode;
+            if (!oTr.tag) oTr.style.backgroundColor = "#E1E9FD";
+        }
+    }
+function jump(yf,nf){
+        location.href = "controller.action?name=xmyjfbb&date="+yf+"&year="+nf;
+}
+</script>

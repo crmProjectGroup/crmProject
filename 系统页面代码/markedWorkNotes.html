@@ -1,0 +1,152 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+
+<cc>
+CCService cs = new CCService(userInfo);
+String bgid = request.getParameter("id")==null?"":String.valueOf(request.getParameter("id"));//工作报告id
+String pyr = request.getParameter("pyr")==null?"":String.valueOf(request.getParameter("pyr"));//批阅人
+String pyzt = new String(String.valueOf(
+            request.getParameter("pyzt")==null?"":request.getParameter("pyzt"))
+            .getBytes("ISO-8859-1"), "UTF-8");//批阅状态
+UserInfo user = (UserInfo)userInfo;
+String userid = user.getUserId();//当前登陆人
+
+String languageLocaleKey = userInfo.getLanguage();
+
+String pynr = request.getParameter("pynr")==null?"":String.valueOf(request.getParameter("pynr"));
+java.text.SimpleDateFormat sdf=new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+String date=sdf.format(new Date()); //当前时间
+
+try{
+	if(!"".equals(pynr)){
+		List<CCObject> gdList = cs.cquery("TheWorkReport","id = '"+bgid+"'");
+		if(gdList.size()>0){
+			CCObject gzbg = new CCObject("TheWorkReport");
+			gzbg.put("id",bgid);
+			gzbg.put("pyzt","已批阅");
+			gzbg.put("pynr",pynr);
+			gzbg.put("pysj",date);
+			cs.update(gzbg);
+		}
+		out.print("<script>$('title').html('');$('title').html('The work report examines');window.location.href='/query.action?id="+bgid+"&m=query';</script>");
+	}
+}catch(Exception e){
+	if("en".equals(languageLocaleKey)){
+				out.print("<script>$('title').html('');$('title').html('The work report examines');alert(\"Save failed\""+e+");window.history.back();</script>");
+		}else{
+				out.print("<script>alert(\"保存失败\""+e+");window.history.back();</script>");
+		}
+
+}
+</cc>
+<html>
+<div class="padL20">
+	<div class="new_title">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td>
+						<span class="crititleimg" style="background-position:0 -455px"></span>
+						<h3 class="fontSize16"><font>工作报告批阅</font></h3>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+<div class="border-body new_body newPage">
+<form action="" method="post" id="the_form">
+	<input value="<cc:outprint>pynr</cc:outprint>" name="pynr" type="hidden" id="pynr">
+	<!--<div class="box3title text-center">
+		<input value="批 阅" class="btn btn-primary" name="" type="button" onclick="updatePgd()">&nbsp;&nbsp;
+		<input value="取 消" type="button" class="btn btn-default" name="cancel" onclick="window.close()">
+	</div>-->
+	<div class="box3title text-center">
+		<span style="display: none;" class="actionMessage" name="errormessage" id="errormessage"></span>
+	</div>
+	<div class="new_title border-bottom">
+		<h3 class="fontSize14"><font>批阅信息</font></h3>
+		<span class="pull-right"><strong>*</strong>&nbsp;<font>必填信息</font></span>
+	</div>
+		 <table class="table" border="0" cellspacing="0" cellpadding="0" width="100%">
+			<tbody>
+			 <tr>
+				<td class="labright"><strong>*</strong><font>批阅内容</font></td>
+				<td class="lableft rematab form-inline" colspan="3" id="colspanThree">
+					<div class="requiredInput">
+					<div class="requiredinfo"></div>
+						<textarea name="py" id="py"  style="width: 700px;height: 120px;"></textarea></div></td>
+			</tr>
+			</tbody>
+		 </table>
+		 <div class="box3title">
+			<h2>&nbsp;&nbsp;&nbsp;</h2>
+			<input value="批 阅" class="btn btn-primary" name="" type="button" onclick="updatePgd()">&nbsp;&nbsp;
+			<input value="取 消" type="button" class="btn btn-default" name="cancel" onclick="window.history.back()">
+		 </div>
+	</div>
+</form>
+</html>
+<script>
+var langJsKey = "<cc:outprint>languageLocaleKey</cc:outprint>"
+function updatePgd(){
+	var pynr = document.getElementById("py").value;
+	if(pynr==""){
+		if("en"==langJsKey){
+			alert("Read the content cannot be empty!");
+		}else{
+			alert("批阅内容不能为空！");
+		}
+		
+		return;
+	}else{
+		document.getElementById("pynr").value = pynr;
+		document.getElementById("the_form").submit();
+	}
+}
+
+//页面中转英
+		function setEnglish(bodyString) {
+			var result = bodyString;
+			result = result.replaceAll('批阅内容', 'Read the contents');
+			result = result.replaceAll('必填信息', 'The required information');
+			result = result.replaceAll('批阅信息', 'Marking information');
+			result = result.replaceAll('工作报告批阅', 'The work report examines');
+			result = result.replaceAll('批 阅', 'Marking');
+			result = result.replaceAll('取 消', 'Cancel');
+			
+			return result;
+		}
+
+		//URL字符串操作
+		function request(name) {
+			var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+			var r = window.location.search.substr(1).match(reg);
+			if(r != null) return unescape(r[2]);
+			return null;
+		}
+
+		//replaceAll方法
+		String.prototype.replaceAll = function(oldStr, newStr) {
+			return this.replace(new RegExp(oldStr, "gm"), newStr);
+		}
+
+		$(document).ready(function() {
+			
+			if(langJsKey =="en"){
+			
+				$("title").html("");
+				$("title").html("The work report examines");
+				var p = $("font");
+				$.each(p, function() {
+					//alert($(this).text());
+					var result = setEnglish($(this).text());                
+	        		 $(this).text(result);
+				});
+				var ipt = $(":button");
+				$.each(ipt, function() {
+					var result = setEnglish($(this).val());
+					$(this).val(result);
+				});
+			}
+		});
+</script>

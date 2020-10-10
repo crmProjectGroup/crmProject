@@ -1,0 +1,22 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc>
+String htid = request.getParameter("htid");
+CCService cs = new CCService(userInfo);
+UserInfo user = (UserInfo)userInfo;
+String userid = user.getUserId();//当前登陆人
+java.text.SimpleDateFormat sdf=new java.text.SimpleDateFormat("yyyy-MM-dd"); 
+String date=sdf.format(new Date()); //当前时间
+List<CCObject> htList = cs.cquery("contract","id__c='"+htid+"'");
+if(htList.size()>0&&htList!=null){
+	CCObject htObj = htList.get(0);
+	htObj.put("zhuangtai","已启用");
+	htObj.put("qyr",userid);
+	htObj.put("qyrq",date);
+	cs.update(htObj);
+}
+List<CCObject> upList = cs.cqlQuery("contract","update contract set is_locked = 'true' where id__c='"+htid+"'");
+</cc>
+
+<script type="text/javascript">
+	window.location="/query.action?m=query&id=<cc:outprint>htid</cc:outprint>";
+</script>

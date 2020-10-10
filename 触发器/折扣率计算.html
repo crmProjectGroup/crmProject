@@ -1,0 +1,53 @@
+/*
+description:业务机会-折扣率计算 
+version: 1.1
+date:20190428
+author:tom
+log:
+1.20190719 销售类型用业务员的总价和策划录得总价去计算折扣率,单价改为用成交总价除面积
+2.20190731 为折扣率填写的问题,增加阶段的判断
+*/
+
+String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
+
+String id = record_new.get("id")==null?"":record_new.get("id")+"";//id
+
+String jieduan = record_new.get("jieduan")==null?"":record_new.get("jieduan")+"";//jieduan
+
+Double cjdj = record_new.get("cjdj")==""?0.0:record_new.get("cjdj")==null?0.0:Double.valueOf(record_new.get("cjdj")+"");//成交单价
+
+Double cjmj = record_new.get("cjmj")==""?0.0:record_new.get("cjmj")==null?0.0:Double.valueOf(record_new.get("cjmj")+"");//成交面积
+
+Double cjzj = record_new.get("cjzj")==""?0.0:record_new.get("cjzj")==null?0.0:Double.valueOf(record_new.get("cjzj")+"");//成交单价
+
+Double total = cjdj*cjmj;//总价格
+
+
+List<CCObject> list = this.cqlQuery("cjdw","select id,mj,dj,xszj from cjdw where is_deleted = '0' and ywjkmc='"+id+"'");
+
+Double sum = 0.0;
+if("成交".equals(jieduan)) {
+Double zks = record_new.get("zks")==null?100:Double.valueOf(record_new.get("zks")+"");//折扣率
+if ("2018BD60B25D1A2mLTd7".equals(recordtype)) { //租赁
+    for(CCObject item:list){
+        Double mj = item.get("mj")==null?0.0:Double.valueOf(item.get("mj")+"");//面积
+        Double dj = item.get("dj")==null?0.0:Double.valueOf(item.get("dj")+"");//单价
+        sum += mj*dj;
+	}
+	zks = (total/sum)*100;
+	this.cqlQuery("Opportunity","update Opportunity set zks='"+zks+"' where id = '"+id+"'");
+    
+} else{ //销售
+    for(CCObject item:list){
+         //Double mj = item.get("mj")==null?0.0:Double.valueOf(item.get("mj")+"");//面积
+         //Double dj = item.get("dj")==null?0.0:Double.valueOf(item.get("dj")+"");//单价
+         Double xszj = item.get("xszj")==null?0.0:Double.valueOf(item.get("xszj")+"");//销售总价
+         sum += xszj;
+	}
+	zks = (cjzj/sum)*100;
+	cjdj = cjzj/cjmj;
+	this.cqlQuery("Opportunity","update Opportunity set zks='"+zks+"',cjdj='"+cjdj+"' where id = '"+id+"'");
+}
+}
+//if(true)trigger.addErrorMessage("测试打印成交单价==>"+record_new.get("cjdj"));
+//this.cqlQuery("Opportunity","update Opportunity set zks='"+zks+"' where id = '"+id+"'");

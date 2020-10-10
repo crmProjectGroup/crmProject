@@ -1,0 +1,212 @@
+/*
+description:开票申请 触发器 afterupd 在审批后, 状态发生修改的时候触发
+1.开票申请审批后更新代理明细的状态,建收款计划;
+2.拆佣审批后更新对应的拆佣明细的状态;
+version: 1.0
+date:20190729
+author:tom
+log:
+20191104 拆佣审批
+20191112 回款更新后更新回款状态
+*/
+
+CCService cs = new CCService(userInfo);
+//获取审批状态
+//判断下结佣状态
+String spzt = record_new.get("spzt")==null?"":record_new.get("spzt")+"";
+String spzt_old = record_old.get("spzt")==null?"":record_old.get("spzt")+"";
+
+//获取拆佣审批状态
+String cyzt = record_new.get("cyzt")==null?"":record_new.get("cyzt")+"";
+String cyzt_old = record_old.get("cyzt")==null?"":record_old.get("cyzt")+"";
+
+//获取回款金额是否有变化
+Double hkje = record_new.get("hkje")==null?0.0:Double.parseDouble(record_new.get("hkje")+"");
+Double hkje_old = record_old.get("hkje")==null?0.0:Double.parseDouble(record_old.get("hkje")+"");
+
+//获取记录的id
+String jpsqid = record_new.get("id")==null?"":record_new.get("id")+"";
+
+
+//获取本次结算比例 	bcjsbl
+//double bcjsbl = record_new.get("bcjsbl")==null?0.0:Double.parseDouble(record_new.get("bcjsbl")+"");
+
+if("审批通过".equals(spzt) && "审批中".equals(spzt_old)){
+	//获取本次开票比例
+	double bcjsbl = record_new.get("bcjsbl")==""?0.0:Double.parseDouble(record_new.get("bcjsbl")+"");
+
+	if(bcjsbl<=0){
+		trigger.addErrorMessage("开票金额为空");
+	}
+
+	//获取对应的结算明细jsmx
+	String jsmx = record_new.get("jsmx")==null?"":record_new.get("jsmx")+"";
+	//结算明细sql处理
+	jsmx="'"+jsmx.replace(";","','")+"'";
+	
+	//查找对应的结算明细,累加开票金额
+	List<CCObject> dljsmxb = cs.cquery("dljsmxb","jyzt in ('已确认','部分开票') and id in ("+jsmx+")");
+	if(dljsmxb.size()==0){
+		trigger.addErrorMessage("对应结算明细未确认或已全额开票");
+	}
+	
+	for(CCObject item:dljsmxb){
+		//获取已开票比例 ykpbl
+		double ykpbl = item.get("ykpbl")==null?0.0:Double.parseDouble(item.get("ykpbl")+"");
+
+		//获取已开票额	ykpe
+		//double ykpe = item.get("ykpe")==null?0.0:Double.parseDouble(item.get("ykpe")+"");
+		
+		//获取代理费结算金额(开票额)dlfjsje
+		double dlfjsje = item.get("dlfjsje")==null?0.0:Double.parseDouble(item.get("dlfjsje")+"");
+		
+		//累加上此次的开票比例
+		ykpbl = ykpbl + bcjsbl;
+		//计算新的已开票额
+		double ykpe = dlfjsje * ykpbl /100;
+
+		//累加上此次的开票额
+		//double ljkpe = ykpe + fpje;
+		
+		//判断些错误金额
+		if(ykpbl>100){
+			trigger.addErrorMessage("累计开票金额超过此单所需");
+		}
+
+		//更新已开票比例
+		item.put("ykpbl",ykpbl);
+
+		//更新金额
+		item.put("ykpe",ykpe);
+		
+		//部分开票
+		if(ykpbl<100){
+			item.put("jyzt","部分开票");
+		}
+		//全额开票
+		if(ykpbl==100){
+			item.put("jyzt","全部开票");
+		}
+		
+		//更新记录
+		cs.updateLt(item);
+	}
+	
+	//新建收款计划
+	//new一个收款计划对象
+	CCObject obj = new CCObject("cloudccskjh");
+	
+	//获取需要用到的字段
+	//项目名称
+	String xmmc = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";
+	//日期
+	java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyyMMdd"); //日期 MM需大写
+	String date=sdf.format(new Date());
+	//开票申请id
+	//String id = record_new.get("id")==null?"":record_new.get("id")+"";
+	//开票金额	fpje
+	double fpje = record_new.get("fpje")==""?0.0:Double.parseDouble(record_new.get("fpje")+"");
+	//开票申请所有人
+	String ownerid = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";
+	
+	//收款计划名称 项目+日期
+	List<CCObject> Project = cs.cquery("Project","id= '"+xmmc+"'");
+	String name="";
+	if(Project.size()>=1){
+		name = Project.get(0).get("name")==null?"":Project.get(0).get("name")+"";//项目名称
+	} else{
+		trigger.addErrorMessage("项目不存在");
+	}
+	//if(true) {trigger.addErrorMessage(qysj+'!');};
+	//name=name+"_"+fh+"_"+qysj.substring(0,8);
+	obj.put("name",name+date);
+
+	obj.put("xmmc",xmmc); //项目名称
+	//obj.put("jsmx",id); //结算明细
+	obj.put("kpsq",jpsqid);  //开票申请
+	
+
+	//收款阶段 首期,二期,根据一个业务机会下对应几次结佣明细来判断
+	//List<CCObject> cloudccskjh = cs.cquery("cloudccskjh","jsmx= '"+jsmx+"'");
+
+	//String skjd = String.valueOf(cloudccskjh.size()+1)+"期"; // 其中 value 为任意一种数字类型。
+
+	//obj.put("skjd",skjd);
+	//收款方式 默认转账
+	obj.put("skfs","转账");
+	//到期应收金额 代理费结算金额(开票额) 
+	if(fpje>0){
+		obj.put("dqysje",fpje);
+	} else{
+		trigger.addErrorMessage("结佣金额为空");
+	}
+
+	//客户名称 & 收款阶段
+	String skjd="";
+
+	//负责销售
+	obj.put("fzxs",ownerid);
+
+	//所有人,最后修改人,创建人 :财务
+	obj.put("ownerid","0052018922DFE17FDT41");
+	obj.put("createbyid","0052018922DFE17FDT41");
+	obj.put("lastmodifybyid","0052018922DFE17FDT41");
+
+	//收款计划关联合同
+	obj.put("htbh","007201829F0B20FUC79v");
+	
+	//收款是否完成false
+	obj.put("sksfwc","false");
+
+	cs.insert(obj);
+
+}
+
+
+if("拆佣审批通过".equals(cyzt) && "拆佣审批中".equals(cyzt_old)){
+	//审批通过后,将对应的所有拆佣记录全部update为审批通过状态
+	//开票申请id
+	//String id = record_new.get("id")==null?"":record_new.get("id")+"";
+	List<CCObject> 	dlfcymxb  = cs.cquery("dlfcymxb ","kpsq= '"+jpsqid+"'");
+	for(CCObject item:dlfcymxb){
+
+		//更新审批状态
+		item.put("spzt","审批通过");
+
+		//更新记录
+		cs.updateLt(item);
+	}
+
+}
+
+if("拆佣审批拒绝".equals(cyzt) && "拆佣审批中".equals(cyzt_old)){
+	//审批后拒绝,将对应的所有拆佣记录全部update为审批拒绝状态
+	//开票申请id
+	//String id = record_new.get("id")==null?"":record_new.get("id")+"";
+	List<CCObject> 	dlfcymxb  = cs.cquery("dlfcymxb ","kpsq= '"+jpsqid+"'");
+	for(CCObject item:dlfcymxb){
+
+		//更新审批状态
+		item.put("spzt","审批拒绝");
+
+		//更新记录
+		cs.updateLt(item);
+	}
+
+}
+
+//回款更新后更新回款状态
+if("审批通过".equals(spzt) && hkje != hkje_old){
+	double fpje = record_new.get("fpje")==""?0.0:Double.parseDouble(record_new.get("fpje")+"");
+	if (hkje<fpje) {
+		CCObject kpsqobj = new CCObject("kpsq");
+		kpsqobj.put("id",jpsqid);
+		kpsqobj.put("hkzt","部分回款");
+		cs.updateLt(kpsqobj);
+	} else if(hkje>=fpje){
+		CCObject kpsqobj = new CCObject("kpsq");
+		kpsqobj.put("id",jpsqid);
+		kpsqobj.put("hkzt","回款完成");
+		cs.updateLt(kpsqobj);
+	}
+}

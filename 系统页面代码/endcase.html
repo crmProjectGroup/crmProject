@@ -1,0 +1,298 @@
+<cc:page type="normal" style="standard" showSidebar="true" showHeader="true" />
+<cc>
+	CCService cs = new CCService(userInfo);
+	
+	String Uid = userInfo.getUserId()+"";
+	String languageLocaleKey = userInfo.getLanguage();
+	String caseid = (String)request.getParameter("caseId");
+	String gayy = "";
+	String zhuti = "";
+	List<Map> list_zhuangtai = cs.getPicklistValue("cloudcccase","gayy","");//查询个案.状态字段的列表值
+	List<CCObject> case_list = cs.cquery("cloudcccase","id__c = '" + caseid + "'");//查询个案详细信息
+	if(null != case_list && !case_list.isEmpty()){
+		gayy = String.valueOf(case_list.get(0).get("gayy"));
+		zhuti = null == case_list.get(0).get("zhuti") ? "" : String.valueOf(case_list.get(0).get("zhuti"));
+	}
+</cc>
+<div class="padL20">
+	<div class="new_title">
+		<table width="100%" border="0" cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td>
+						<span class="crititleimg"></span>
+						<h3 class="fontSize16"><font>结束个案</font></h3>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div class="border-body new_body newPage">
+		<div class="box3title text-center">
+			<input value="保存" class="btn btn-primary" title="保存" name="inlineEditSave"  onclick="save()" type="button">
+			<input value="取消" class="btn btn-default" title="取消" name="inlineEditCancel"  onclick="cancel();" type="button">
+		</div>
+		<div class="box3title text-center">
+			<span style="display: none;" class="actionMessage" name="errormessage" id="errormessage"></span>
+		</div>
+		<div class="new_title border-bottom">
+			<h3 class="fontSize14"><font>个案信息</font></h3>
+			<span class="pull-right"><strong>*</strong>&nbsp;<font>必填信息</font></span>
+		</div>
+		<input type="hidden" name="caseId" id="caseId" value="<cc:outprint>caseid</cc:outprint>">
+		<table class="table" width="100%" border="0" cellpadding="0" cellspacing="0">
+			<tbody>
+				<tr>
+					<td class="labright"><strong>*</strong><font>状态</font></td>
+					<td class="lableft rematab form-inline" colspan="3" id="colspanThree">
+						<div class="requiredInput">
+							<div class="requiredinfo"></div>
+							<select style="width: 10%;" id="zhuangtai" name="zhuangtai">
+								<option value="已关闭" selected>已关闭</option>
+							</select>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td class="labright"><strong>*</strong><font>个案原因</font></td>
+					<td class="lableft rematab form-inline" colspan="3" id="colspanThree">
+						<div class="requiredInput">
+							<div class="requiredinfo"></div>
+							<select style="width: 10%;" id="gayy" name="gayy">
+								<option value="">--无--</option>
+								<cc>
+									String codevalue,codekey;
+									for(Map m : list_zhuangtai){
+										codevalue = String.valueOf(m.get("codevalue"));
+										codekey = String.valueOf(m.get("codekey"));
+								</cc>
+								<option value="<cc:outprint>codekey</cc:outprint>"><cc:outprint>codevalue</cc:outprint></option>
+								<cc>
+									}
+								</cc>
+							</select>
+						</div>
+					</td>
+				</tr>
+				<!--
+				<tr>
+					<td class="labright"><font>内部注释<font></td>
+					<td class="lableft rematab form-inline" colspan="3" id="colspanThree">
+						<textarea style="width: 50%;" id="nbzs" name="nbzs" maxlength="1000" rows="5" cols="75" wrap="soft"></textarea>
+					</td>
+				</tr>
+				-->
+			</tbody>
+		</table>
+		<div class="new_title border-bottom">
+			<h3 class="fontSize14"><font>解决方案信息</font></h3>
+		</div>
+		<table class="table" width="100%" border="0" cellpadding="0" cellspacing="0">
+			<tbody>
+				<tr>
+					<td class="labright"><font>提交给公共解决方案</font></td>
+					<td class="lableft rematab form-inline" colspan="3" id="colspanThree">
+						<input type="checkbox"  id="submitsolution"  name="submitsolution"  onclick="if (!this.checked) jgaoAlert();">
+					</td>
+				</tr>
+				<tr>
+					<td class="labright"><font>解决方案标题</font></td>
+					<td class="lableft rematab form-inline" colspan="3" id="colspanThree">
+						<input style="width: 50%;" class="errorEle" type="text" name="zhuti" id="zhuti" maxlength="255" value="<cc:outprint>zhuti</cc:outprint>" onkeypress="document.getElementById('submitsolution').checked=true;">
+					</td>
+				</tr>
+				<tr>
+					<td class="labright"><font>解决方案详细信息</font></td>
+					<td class="lableft rematab form-inline" colspan="3" id="colspanThree">
+						<textarea style="width: 50%;" id="clsm" name="clsm" maxlength="1000" rows="5" cols="75" wrap="soft" onkeypress="document.getElementById('submitsolution').checked=true;"></textarea>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<div class="box3title text-center">
+			<input value="保存" class="btn btn-primary" title="保存" name="inlineEditSave" onclick="save()" type="button">
+			<input value="取消" class="btn btn-default" title="取消" name="inlineEditCancel" onclick="cancel();" type="button">
+		</div>
+	</div>
+</div>
+<script>
+$(document).ready(function(){
+	var gayy = "<cc:outprint>"null" == gayy ? "" : gayy</cc:outprint>";
+	document.getElementById("gayy").value = gayy;
+});
+/*******************************js代码中的中文切换****************************************/
+		 var languageKey = "<cc:outprint>languageLocaleKey</cc:outprint>";
+		 
+		 //js中转英
+		 //未知错误,请刷新后重试！
+		var bcsb = { "en": "Save failed\n" ,"zh": "保存失败\n" };
+		var fwyc = { "en": "Service exception" ,"zh": "服务异常" };
+		var wxsj = { "en":"Error: Invalid Data. \n Review all error messages below to correct your data." ,"zh": "错误：无效数据。\n请查看下列所有错误消息以纠正数据。" };
+		var jgxx = { "en":"Warning:The solution will not be saved unless it has been submitted to the public solution." ,"zh": "警告 - 除非已选中 提交给公共解决方案，否则不会保存该 解决方案。" };
+			function getLang(jsonLanguage){
+				if("en"==languageKey){
+					return jsonLanguage.en;
+				}else{
+					return jsonLanguage.zh;
+				}
+				
+			}
+		/******************************************/	
+		
+		function jgaoAlert(){
+			alert(getLang(jgxx));
+		}
+function save(){
+	if (validate()){
+		clearValidate();
+		clearErrorMsg();
+		var data = {};
+		data.caseId = document.getElementById("caseId").value;
+		data.zhuangtai = document.getElementById("zhuangtai").value;
+		data.gayy = document.getElementById("gayy").value;
+		data.submitsolution = document.getElementById("submitsolution").checked;
+		data.zhuti = document.getElementById("zhuti").value;
+		data.clsm = document.getElementById("clsm").value;
+		$.ajax({
+			url:"saveendcase.jsp",
+			type:"POST",
+			data:data,
+			dataType:"json",
+			success:function(resp){
+				if(resp.success){
+					cancel();
+				}else{
+					alert(getLang(bcsb)+resp.msg);
+				}
+			},
+			error:function(XMLHttpRequest, textStatus, errorThrown){
+				console.error("XMLHttpRequest.status:" + XMLHttpRequest.status);
+				console.error("XMLHttpRequest.readyState:" + XMLHttpRequest.readyState);
+				console.error("textStatus:" + textStatus);
+				console.error("errorThrown:" + errorThrown);
+				alert(getLang(fwyc));
+			}
+
+		});
+	}
+}
+
+function cancel(){
+	window.location="/query.action?id=" + document.getElementById("caseId").value + "&m=query";
+}
+
+function validate(){
+	var validate = true;
+	var gayy = document.getElementById("gayy");
+	if("" == gayy.value){
+		showErrorMsg(gayy,getLang(wxsj));
+		validate = false;
+	}
+	var submitsolution = document.getElementById("submitsolution").checked;
+	if(submitsolution){
+		var zhuti = document.getElementById("zhuti");
+		if("" == zhuti.value){
+			showErrorMsg(zhuti,getLang(wxsj));
+			validate = false;
+		}
+		var clsm = document.getElementById("clsm");
+		if("" == clsm.value){
+			showErrorMsg(clsm,getLang(wxsj));
+			validate = false;
+		}
+	}
+	return validate;
+}
+
+function clearValidate(){
+	var all = document.querySelectorAll('[mark="validate"]');
+	for(var index = 0; index < all.length; index++){
+		all[index].removeAttribute("mark");
+		all[index].style.border = "";
+	}
+}
+
+function showErrorMsg(ele,msg){
+	ele.setAttribute("mark","validate");
+	ele.style.border = "2px solid #c00";
+	var errormessage = document.getElementById("errormessage");
+	errormessage.innerText = msg;
+	errormessage.style.textAlign="center";
+	errormessage.style.display = "block";
+}
+
+function clearErrorMsg(){
+	var errormessage = document.getElementById("errormessage");
+	errormessage.innerText = "";
+	errormessage.style.display = "none";
+}
+
+
+	//页面中转英
+		function setEnglish(bodyString) {
+			var result = bodyString;
+			result = result.replaceAll('结束个案', 'End case');
+			result = result.replaceAll('个案信息', 'Case information');
+			result = result.replaceAll('必填信息', 'The required information');
+			result = result.replaceAll('状态', 'Status');
+			result = result.replaceAll('已关闭', 'Closed');
+			result = result.replaceAll('--无--', '--none--');
+			result = result.replaceAll('内部注释', 'Inline comment');
+			result = result.replaceAll('解决方案信息', 'Solution information');
+			result = result.replaceAll('提交给公共解决方案', 'Submit to public solutions');
+			result = result.replaceAll('解决方案标题', 'Solution title');
+			result = result.replaceAll('解决方案详细信息', 'Solution details');
+			result = result.replaceAll('保存', 'Save');
+			result = result.replaceAll('取消', 'Cancel');
+			result = result.replaceAll('个案原因', 'Case reason');
+			return result;
+		}
+
+		//URL字符串操作
+		function request(name) {
+			var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+			var r = window.location.search.substr(1).match(reg);
+			if(r != null) return unescape(r[2]);
+			return null;
+		}
+
+		//replaceAll方法
+		String.prototype.replaceAll = function(oldStr, newStr) {
+			return this.replace(new RegExp(oldStr, "gm"), newStr);
+		}
+
+		$(document).ready(function() {
+			
+			if(languageKey=="en"){
+			
+				$("title").html("");
+				$("title").html("End Case");
+				var p = $("font");
+				$.each(p, function() {
+					//alert($(this).text());
+					var result = setEnglish($(this).text());                
+	        		 $(this).text(result);
+				});
+				var ipt = $(":button");
+				$.each(ipt, function() {
+					var result = setEnglish($(this).val());
+					$(this).val(result);
+					var result = setEnglish($(this).attr("title"));
+					$(this).attr("title",result);
+				});
+				
+				 
+				 $("select").each(function(){
+				   var myid=$(this).attr(id);
+				   $(this).find("option").each(function(){
+						 var result = setEnglish($(this).text());   //获取option值   
+					  $(this).text(result);
+				   });
+			});
+			}
+		});
+	
+</script>
+<style type="text/css">
+	.errorEle{border: 2px solid #c00;}
+</style>

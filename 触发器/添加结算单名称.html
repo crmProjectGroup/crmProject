@@ -1,0 +1,35 @@
+CCService cs = new CCService(userInfo);
+
+//List<CCObject> list = cs.cqlQuery("dljsmxb","select * from dljsmxb where is_deleted = '0'");
+
+String id = record_new.get("id")==null?"":record_new.get("id")+"";//id
+//要区分租赁和销售记录类型
+String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//recordtype
+
+//if(true) {trigger.addErrorMessage(khnm);}
+String fh = record_new.get("fh")==null?"":record_new.get("fh")+"";//房号
+String mj = record_new.get("mj")==null?"":record_new.get("mj")+"";//面积
+String khmc ="";
+
+String jsdmc="";//先把客户名称空定义在判断外
+//租赁和销售 的区别在于 客户名称和总金额
+if("201877BBCEB2536vZE9X".equals(recordtype)){
+	khmc = record_new.get("khmc")==null?"":record_new.get("khmc")+"";//客户名称
+	List<CCObject> kh = cs.cqlQuery("Account","select name from Account where id='"+khmc+"' and is_deleted = '0'");
+	String khnm = kh.get(0).get("name")==null?"":kh.get(0).get("name")+"";
+	String yzjzj = record_new.get("yzj")==null?"":record_new.get("yzj")+"";//月租金总价
+	jsdmc = khnm + "_" + fh + "_" + mj + "_" + yzjzj;
+} else{
+	String yzmc = record_new.get("yzmc")==null?"":record_new.get("yzmc")+""; //业主名称
+	khmc = yzmc;
+	List<CCObject> kh = cs.cqlQuery("Account","select name from Account where id='"+yzmc+"' and is_deleted = '0'");
+	String khnm = kh.get(0).get("name")==null?"":kh.get(0).get("name")+"";
+	String cjzj = record_new.get("cjzj")==null?"":record_new.get("cjzj")+"";//成交总价
+	jsdmc = khnm + "_" + fh + "_" + mj + "_" + cjzj;
+}
+
+CCObject obj = new CCObject("dljsmxb");
+obj.put("id",id);
+obj.put("khmc",khmc);
+obj.put("jsdmc",jsdmc);
+cs.updateLt(obj);

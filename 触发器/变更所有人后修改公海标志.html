@@ -1,0 +1,14 @@
+String owneridn = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";//新的所有人
+String ownerido = record_old.get("ownerid")==null?"":record_old.get("ownerid")+"";//旧的所有人
+String id = record_new.get("id")==null?"":record_new.get("id")+"";//唯一标识
+
+if(!owneridn.equals(ownerido)){
+		List<CCObject> list = this.cquery("ccuser","id='"+owneridn+"' and isusing='1' and profile = 'aaa201723453E5EBNtzU'	"); //新的所有者是业务员
+    if(list.size()>0){
+    		//List<CCObject> list1 = this.cquery("Account","id='"+id+"' ");
+        CCObject obj = new CCObject("Account");
+        obj.put("id",id);
+        obj.put("ghkh","否");
+        this.updateLt(obj);
+    }
+}

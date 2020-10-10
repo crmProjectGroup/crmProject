@@ -1,0 +1,65 @@
+String name= null == record_new.get("name")?"":String.valueOf(record_new.get("name"));//项目名称
+String xqfw= null == record_new.get("xqfw")?"":String.valueOf(record_new.get("xqfw"));//需求服务	
+String khjl= null == record_new.get("khjl")?"":String.valueOf(record_new.get("khjl"));//客户经理 	
+String zlmj= null == record_new.get("zlmj")?"":String.valueOf(record_new.get("zlmj"));//租赁面积	 	
+String kfs= null == record_new.get("kfs")?"":String.valueOf(record_new.get("kfs"));//开发商	
+String kpsj= null == record_new.get("kpsj")?"":String.valueOf(record_new.get("kpsj"));//开盘时间		
+String xmztl= null == record_new.get("xmztl")?"":String.valueOf(record_new.get("xmztl"));//项目总体量
+String xmxk=null==record_new.get("xmxk")?"":String.valueOf(record_new.get("xmxk"));//项目现况
+String xmwz=null==record_new.get("xmwz")?"":String.valueOf(record_new.get("xmwz"));//项目位置
+String rhsj=null==record_new.get("rhsj")?"":String.valueOf(record_new.get("rhsj"));//入伙时间
+String gytl=null==record_new.get("gytl")?"":String.valueOf(record_new.get("gytl"));//公寓体量
+String yqsy=null==record_new.get("yqsy")?"":String.valueOf(record_new.get("yqsy"));//预期收益
+String djrxm=null==record_new.get("djrxm")?"":String.valueOf(record_new.get("djrxm"));//对接人信息
+String djrlxdh=null==record_new.get("djrlxdh")?"":String.valueOf(record_new.get("djrlxdh"));//对接人联系电话
+String xsmj=null==record_new.get("xsmj")?"":String.valueOf(record_new.get("xsmj"));//销售面积
+String xzltl=null==record_new.get("xzltl")?"":String.valueOf(record_new.get("xzltl"));//写字楼体量
+String sytl=null==record_new.get("sytl")?"":String.valueOf(record_new.get("sytl"));//商业体量
+String lastmodifybyid=null==record_new.get("lastmodifybyid")?"":String.valueOf(record_new.get("lastmodifybyid"));//最后修改人
+String createbyid=null==record_new.get("createbyid")?"":String.valueOf(record_new.get("createbyid"));//创建人
+String spzt=null==record_new.get("spzt")?"":String.valueOf(record_new.get("spzt"));//审批状态
+String spzt_old=null==record_old.get("spzt")?"":String.valueOf(record_old.get("spzt"));//历史审批状态
+String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
+String ownerid = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";//所有人
+
+if(spzt.equals("审批通过") && spzt_old.equals("审批中")){
+
+if("2018D92314D8BCEzKcBP".equals(recordtype)){
+  //声明一个数据存储对象
+CCObject Project_tzobj=new CCObject("Project_tz");
+Project_tzobj.put("name",name);
+Project_tzobj.put("xqfw",xqfw);
+Project_tzobj.put("khjl",khjl);
+Project_tzobj.put("zlmj",zlmj);
+Project_tzobj.put("xmztl",xmztl);
+Project_tzobj.put("xmwz",xmwz);
+Project_tzobj.put("rhsj",rhsj);
+Project_tzobj.put("gytl",gytl);
+Project_tzobj.put("yqsy",yqsy);
+Project_tzobj.put("djrxx",djrxm);
+Project_tzobj.put("xsmj",xsmj);
+Project_tzobj.put("xzltl",xzltl);	
+Project_tzobj.put("xmgk",xmxk);
+Project_tzobj.put("sytl",sytl);
+Project_tzobj.put("kpsj",kpsj);
+Project_tzobj.put("lxfs",djrlxdh);
+Project_tzobj.put("bpr",createbyid);
+Project_tzobj.put("lytj","报盘");
+this.insert(Project_tzobj);
+
+}else{
+CCObject obj = new CCObject("zcgl");
+obj.put("xmdz",xmwz);
+obj.put("name",name);
+obj.put("spzt","草稿");
+obj.put("nhjd","跟进中");
+obj.put("bpr",ownerid);
+obj.put("ownerid",lastmodifybyid);
+obj.put("djr",djrxm);
+obj.put("lxdh",djrlxdh);
+this.insert(obj);
+
+}
+
+ 
+}

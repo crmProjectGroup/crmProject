@@ -1,0 +1,126 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc>
+CCService cs = new CCService(userInfo);
+List<CCObject> Projectlist = cs.cqlQuery("Project","select * from Project where is_deleted = '0'");
+</cc>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>一手房源公示</title>
+    <link href="images/07/szfdc.css" rel="stylesheet" type="text/css">
+    <style type="text/css">
+        .a1
+        {
+            font-size: 12px;
+            color: #000000;
+            line-height: 180%;
+        }
+        .a2
+        {
+            font-size: 12px;
+            color: #000000;
+            text-decoration: none;
+        }
+        A:link
+        {
+            font-size: 12px;
+            color: #333399;
+            line-height: 150%;
+            text-decoration: none;
+        }
+        A:hover
+        {
+            font-size: 12px;
+            color: #ff0000;
+            line-height: 150%;
+            text-decoration: none;
+        }
+        A:visited
+        {
+            font-size: 12px;
+            color: #003366;
+            line-height: 150%;
+            text-decoration: none;
+        }
+        A:active
+        {
+            font-size: 12px;
+            color: #ff0000;
+            line-height: 150%;
+            text-decoration: none;
+        }
+        .style1
+        {
+            font-size: 12px;
+            color: #666666;
+        }
+        /*******************分页控件样式设定*****************/
+         .JumpButton{ height:19px;}
+        .PageNumBox{width:30px; height:12px;}
+        .PageInfo{text-align:right; font-size:13px;line-height:20px;}
+        .mypaper
+        {
+          line-height:20px;
+          height:20px; 
+          text-align:left; 
+          font-size:13px;
+        }
+    </style>
+</head>
+<body>
+  <form name="Form1" method="post" id="Form1">
+   <center>
+        <table width="100%" border="0" align="center" cellpadding="0" cellspacing="1">
+           <tr>
+                <td bgcolor="#ffffff">
+                    <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" bgcolor="#ffffff">
+                        <tr>
+                            <td bgcolor="#f6f8f9">
+                                <table width="96%" border="0" align="center">
+                                                                     
+                                    <tr>
+                                        <td colspan="2" valign="top">
+                                            <table id="DataList1" cellspacing="1" cellpadding="2" rules="cols" align="center" class="a1" border="0" style="background-color:#99CCFF;border-width:0px;border-style:Solid;width:100%;">
+	<tr>
+		<td>
+                                                    <table width="100%" border="0">
+                                                    <tr bgcolor='#D9EEFF'>
+                                                        <th width='200px'>项目名称</th>
+                                                        
+                                                    </tr>
+                                                </td>
+	</tr><tr>
+		<td>
+                                                <cc>if(Projectlist.size()>0){
+                                                         for(CCObject item:Projectlist){
+                                                              </cc>
+                                                         <tr bgcolor="#F5F9FC">
+                                                         <td align="center"><a href='ldxx.jsp?name=ldxx&id=<cc:outprint>item.get("id")</cc:outprint>' target='_parent'><cc:outprint>item.get("name")</cc:outprint></a></td>
+                                                         </tr><cc> 
+                                                         }
+                                                    }</cc>
+                                                   
+                                                </td>
+	</tr><tr>
+		<td></table></td>
+	</tr>
+</table>
+                                        </td>
+                                    </tr>
+                                    <tr><td colspan="2" valign="top">
+
+
+</td></tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                       
+                </td>
+            </tr>
+        </table>
+       </center>
+   </form>
+</body>
+</html>

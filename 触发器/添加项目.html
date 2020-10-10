@@ -1,0 +1,20 @@
+String ownerid = record_new.get("ownerid")==null?"":record_new.get("ownerid")+"";//所有人
+String id = record_new.get("id")==null?"":record_new.get("id")+"";//id
+
+List<CCObject> list = this.cquery("ProjectSaleGroup","xmxsy= '"+ownerid+"'");
+
+CCObject obj = new CCObject("DailyReport");
+obj.put("id",id);
+
+for(CCObject item:list){
+	String xmmc = item.get("xmmc")==null?"":item.get("xmmc")+"";//项目名称
+	List<CCObject> Projectlist = this.cqlQuery("Project","select id from Project where is_deleted = '0' and id = '"+xmmc+"'");
+        String xmid = "";
+        if(Projectlist.size()>0){
+              xmid = Projectlist.get(0).get("id")==null?"":Projectlist.get(0).get("id")+"";
+        }
+	obj.put("xmmc",xmid);
+	this.updateLt(obj);
+
+}
+	

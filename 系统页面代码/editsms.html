@@ -1,0 +1,111 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc>
+    //String dataName = request.getParameter("dataName");
+    String mobile = request.getParameter("mobile");
+    String recid = request.getParameter("recid");
+   // dataName = new String(dataName.getBytes("iso-8859-1"),"utf-8");
+    CCService cs = new CCService(userInfo);
+    List<CCObject> templist =  cs.cquery("dxmb");
+</cc>
+<script>
+	String.prototype.trim=function(){
+		return this.replace(/(^\s*)|(\s*$)/g, "");
+	}
+	function seletemp(obj){
+			var tempId = obj.value;
+			Ext.Ajax.request( {
+				url :"getdxnr.jsp",
+				timeout :5000, //自定义超时时间(默认30s)
+				method : 'POST',
+				params : {
+				'tempId':tempId,
+				'recid':'<cc:outprint>recid</cc:outprint>'
+				},
+				success : function(obj){
+					var rtnInfo = obj.responseText;
+					rtnInfo = rtnInfo.trim();
+					document.getElementById("sms").value = rtnInfo;
+				},
+				failure : function(obj) {
+					var rtnInfo = obj.responseText;
+					mk.hide();
+				  Ext.MessageBox.alert(' 提示：',rtnInfo); 			
+				}
+			});
+	}
+</script>
+<div id="maindiv">
+			<span class="crititleimg"></span>
+				<h2> &nbsp;&nbsp;发送信息:</h2>				
+			</div>
+<div class="cloudbox3">
+	<div class="box3title">
+		<h2>编辑短信内容&nbsp;</h2>
+		<input type="button" class="input01" value=" 发  送 " name="sendsms" id="sendsms" onclick="sendsms()"/>
+		<input type="button" class="input01" value=" 关  闭 " name="sendsms" id="sendsms" onclick=onclick="cancel()"/>
+	</div>
+	<table width="100%" class="cloudtab bianjibg" cellpadding="0" cellspacing="0" border="0">
+		<tr>
+			<td class="labright">短信模板</td>
+			<td class="lableft" colspan="3">
+			<select name="xzmb" id="xzmb" onchange="seletemp(this)">
+			<option value="">-请选择模板-</option>
+			<cc>
+				for(CCObject co : templist){
+					out.println("<option value='"+co.get("id")+"'>"+co.get("name")+"</option>");
+				}
+			</cc>
+			</select>
+			</td>
+		</tr>
+		<tr>
+			<td class="labright">发送短信内容</td>
+			<td class="lableft"  colspan="5"><textarea id='sms' name='sms'  rows='5' cols='80' wrap='soft' class='richText'></textarea>
+</td>
+		</tr>
+	</table>
+	<div class="box3title">
+		<h2>&nbsp;</h2>
+		<input type="button" class="input01" value=" 发  送 " name="sendsms" id="sendsms" onclick="sendsms()"/>
+		<input type="button" class="input01" value=" 关  闭 " name="sendsms" id="sendsms" onclick="cancel()"/>
+	</div>
+<div>
+<script>
+    function sendsms(){
+
+			var sj = "<cc:outprint>mobile</cc:outprint>";
+			var memo = document.getElementById("sms").value;
+			var mk = new Ext.LoadMask(maindiv,{
+			    msg: '正在执行操作，请稍候...',
+			    removeMask: true //完成后移除
+			});
+             
+			mk.show(); //显示
+                     
+			Ext.Ajax.request( {
+				url :"sendsms.jsp",
+				timeout :5000, //自定义超时时间(默认30s)
+				method : 'POST',
+				params : {
+				  'mobile':sj,
+				  'memo':memo
+				},
+				success : function(obj){
+					var rtnInfo = obj.responseText;
+                                          mk.hide();
+					//Ext.MessageBox.alert('成功提示：',rtnInfo); 
+					window.close();
+				},
+				failure : function(obj) {
+					var rtnInfo = obj.responseText;
+					mk.hide();
+				  Ext.MessageBox.alert('错误提示：',rtnInfo); 			
+				}
+			});
+
+    }
+
+function cancel(){
+	window.location.href="/query.action?id=<cc:outprint>recid</cc:outprint>&m=query";
+}
+</script>

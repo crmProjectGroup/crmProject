@@ -1,0 +1,560 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+/*
+description:月度考核表
+version: 1.0
+date:20190901
+author:tom
+log:
+1.20200921 解决月份筛选的问题;
+*/
+
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+*
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+throws UnsupportedEncodingException {
+	if (parameterValue != null && parameterValue.length() > 0) {
+		byte[] iso = parameterValue.getBytes("ISO-8859-1");
+		if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+			parameterValue = new String(iso, "UTF-8");
+			return parameterValue;
+		}
+	}
+	return parameterValue;
+}
+</cc>
+
+<cc>
+	CCService cs = new CCService(userInfo); 
+	String uid = userInfo.getUserId();//当前登录用户id 
+	List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'"); //登录人的账号
+	String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; 
+	
+	//String uid = "0052018470A714CaerX7"; //李荣武id 测试用 
+	String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id 
+	//String userName = userInfo.getUserName();//getUserName 
+	
+	//获取binding
+	 
+	
+	//日期的处理
+	java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        String nowday = df.format(new Date());
+        //out.print(nowday);
+        String ksrq = request.getParameter("startTime")==null?nowday:request.getParameter("startTime")+"";//开始日期
+        //out.print(ksrq);
+        //out.print(ksrq);
+        String jsrq = request.getParameter("endTime")==null?nowday:request.getParameter("endTime")+"";//结束日期
+        //out.print(jsrq);
+        String datetime = " and a.createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+  
+  //进入页面的用户控制
+  List<CCObject> jlryjxlist = new ArrayList();
+  List<CCObject> jlryjxlist_fxm = new ArrayList();
+  List<CCObject> gwryjxlist = new ArrayList();
+  List<CCObject> gwryjxlist_fnm = new ArrayList();
+  List<CCObject> jlryjxlist_fyf = new ArrayList();
+
+  String jlryjxlist_fxm_1="";
+  String jlryjxlist_fyf_1="";
+  String gwryjxlist_fnm_1="";
+
+  boolean b=true; //是否显示经理部分
+  //out.print(profid);
+//   if("aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid) || "aaa20180681351FmekUG".equals(profid)){
+//   	projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部','代理二部') and xmzt='代理中' and is_deleted='0'"); //所有代理项目
+//   } 
+// //   else if("aaa20180681351FmekUG".equals(profid) ){
+// //   	if("aaa20180681351FmekUG".equals(uid))	{ //一部郑柏
+// //   		projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理一部') and xmzt='代理中' and is_deleted='0'"); //一部项目
+// //   	} else {
+// //   	 	projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE ssbm in ('代理二部') and xmzt='代理中' and is_deleted='0'"); //二部项目
+// //   	}
+// //   } 
+//   else if("aaa2018A38306ED9syVe".equals(profid)){
+//   	projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'"); 
+//   } else{
+//     projectlist = null;
+//   }
+
+    if("aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid) || "aaa20180681351FmekUG".equals(profid)){
+
+
+        jlryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdhkmb,ROUND(r.tdhkwcz,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5' order by yf desc"); //2020年5月后才改为计算创佣值 
+        jlryjxlist_fxm = cs.cqlQuery("ryjx","select distinct r.xmmc,p.name as text,p.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5'"); //筛选项目
+        jlryjxlist_fyf = cs.cqlQuery("ryjx","select distinct r.yf as text, CAST(r.yf AS int) as value from ryjx r where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5' order by yf"); //筛选月份
+
+        JSONArray jsonArray_fxm = JSONArray.fromObject(jlryjxlist_fxm); 
+        jlryjxlist_fxm_1=jsonArray_fxm.toString();
+
+        JSONArray jsonArray_fyf = JSONArray.fromObject(jlryjxlist_fyf); 
+        jlryjxlist_fyf_1=jsonArray_fyf.toString();
+
+        gwryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.khjslr,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5' order by yf desc"); //2020年5月后才改为计算创佣值 
+        gwryjxlist_fnm = cs.cqlQuery("ryjx","select distinct c.id,c.name as text,c.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5'"); //筛选姓名
+
+        JSONArray jsonArray_fnm = JSONArray.fromObject(gwryjxlist_fnm); 
+        gwryjxlist_fnm_1=jsonArray_fnm.toString();
+    } else if ("aaa2018A38306ED9syVe".equals(profid)){ //项目经理
+        jlryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdhkmb,ROUND(r.tdhkwcz,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id and p.xmjl = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5' order by yf desc"); //2020年5月后才改为计算创佣值 
+        jlryjxlist_fxm = cs.cqlQuery("ryjx","select distinct r.xmmc,p.name as text,p.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.bkhr = '"+uid+"' and r.nd>='2020' and r.yf>'5'"); //筛选项目
+        jlryjxlist_fyf = cs.cqlQuery("ryjx","select distinct r.yf as text, CAST(r.yf AS int) as value from ryjx r where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5' order by yf"); //筛选月份
+        JSONArray jsonArray_fxm = JSONArray.fromObject(jlryjxlist_fxm); 
+        jlryjxlist_fxm_1=jsonArray_fxm.toString();
+
+        JSONArray jsonArray_fyf = JSONArray.fromObject(jlryjxlist_fyf); 
+        jlryjxlist_fyf_1=jsonArray_fyf.toString();
+
+        gwryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.khjslr,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id and p.xmjl = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5' order by yf desc"); //2020年5月后才改为计算创佣值 
+        gwryjxlist_fnm = cs.cqlQuery("ryjx","select distinct c.id,c.name as text,c.name as value from ryjx r inner join project p on r.xmmc=p.id and p.xmjl= = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5'"); //筛选姓名
+        
+        JSONArray jsonArray_fnm = JSONArray.fromObject(gwryjxlist_fnm); 
+        gwryjxlist_fnm_1=jsonArray_fnm.toString();
+    } else{
+        jlryjxlist_fxm_1="[]";
+        jlryjxlist_fyf_1="[]";
+        gwryjxlist_fnm_1="[]";
+        gwryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.khjslr,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5' and bkhr= '"+uid+"' order by yf desc"); //2020年5月后才改为计算创佣值 
+        //gwryjxlist_fnm = cs.cqlQuery("ryjx","select distinct c.id,c.name as text,c.name as value from ryjx r inner join project p on r.xmmc=p.id and p.xmjl= = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5'"); //筛选姓名
+        
+        //JSONArray jsonArray_fnm = JSONArray.fromObject(gwryjxlist_fnm); 
+        //gwryjxlist_fnm_1=jsonArray_fnm.toString();
+        b=false;
+    }
+
+    //out.print(String.valueOf(projectlist.size()));
+	//List<CCObject> projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'"); //该经理管理的代理中的项目 
+	//[{"CCObjectAPI":"Project","name":"广州海珠同创汇","id":"a05201825B086F3UiZWa"},{"CCObjectAPI":"Project","name":"广州誉城同创汇","id":"a05201835C43A40C4KAS"}]
+	//List<CCObject> Accountlist = cs.cqlQuery("Account","SELECT a.id as id, a.name as name, a.xylx as industry, CASE a.recordtype when '20186166515AE4A8ZfOc' then '租赁客户' when '2018525F215221DtlTXV' then '进线客户' else '销售客户' end as type, a.khdj as level , a.khlyqy as area FROM Account a inner join ccuser b on a.ownerid = b.id WHERE a.createbyid <> a.ownerid and a.ghkh = '是' and a.ownerid <> '005201852146611JQCTr' and b.profile = 'aaa2018A38306ED9syVe' and a.lxrdh not like '%0000%' and a.is_deleted = '0' ");
+	String xmmc =""; //项目id
+	String pjnm =""; //项目名称 
+	String jxbh = ""; //绩效编号 
+    String name =""; //被考核人姓名
+    String nd =""; //年度
+    int yf =0; //月份
+    double khfz = 0.0; //考核分值
+    double tdcymb = 0.0;//团队创佣目标
+    double grcymb = 0.0;//个人创佣目标
+    double tdcywcz = 0.0;//团队创佣完成值
+    double tdhkmb = 0.0;//团队回款目标
+    double tdhkwcz = 0.0; //团队回款完成值
+
+    String xmda = "";//项目档案
+    String xcgzgl = "";//现场工作管理及公司文化建设
+    String khzblr = "";//客户指标录入
+    String rz = "";//日志
+    String scsj = "";//市场数据
+    String zwlh = "";//早晚例会
+    double khmyd = 0.0;//客户满意度
+
+    //企业顾问用的字段
+    double grcywcz = 0.0;//个人创佣完成值
+    String yryb =""; //yryb 仪容仪表
+    String phgl ="";//phgl 配合管理
+    String hs ="";//hs 话术
+    String khjslr ="";//khjslr 客户及时录入
+
+	//Map ywymap = new HashMap(); 
+	JSONObject ryjxjson = new JSONObject();
+	JSONArray ryjxjsonarr = new JSONArray(); 
+    String jsa =""; 
+    JSONObject gwryjxjson = new JSONObject();
+	JSONArray gwryjxjsonarr = new JSONArray(); 
+    String jsb =""; 
+    
+    //项目经理
+	for(CCObject item:jlryjxlist){ 
+		khfz = 0.0; 
+        tdcymb = 0.0;
+        grcymb = 0.0;
+        tdcywcz = 0.0;
+        tdhkmb = 0.0;
+        tdhkwcz = 0.0;
+        khmyd = 0.0;//客户满意度
+		
+        xmmc = item.get("xmmc")==null?"":item.get("xmmc") + ""; 
+        pjnm = item.get("pjnm")==null?"":item.get("pjnm") + ""; 
+        jxbh = item.get("jxbh")==null?"":item.get("jxbh") + ""; 
+        name = item.get("name")==null?"":item.get("name") + ""; 
+        nd = item.get("nd")==null?"":item.get("nd") + ""; 
+        yf = item.get("yf")==null?0:Integer.parseInt(item.get("yf")+""); 
+
+        khfz = item.get("khfz")==null?0.0:Double.valueOf(item.get("khfz")+""); 
+        tdcymb = item.get("tdcymb")==null?0.0:Double.valueOf(item.get("tdcymb")+""); 
+        grcymb = item.get("grcymb")==null?0.0:Double.valueOf(item.get("grcymb")+"");
+        tdcywcz = item.get("tdcywcz")==null?0.0:Double.valueOf(item.get("tdcywcz")+"");
+        tdhkmb = item.get("tdhkmb")==null?0.0:Double.valueOf(item.get("tdhkmb")+"");
+        tdhkwcz = item.get("tdhkwcz")==null?0.0:Double.valueOf(item.get("tdhkwcz")+"");
+
+        xmda = item.get("xmda")==null?"":item.get("xmda") + ""; 
+        xcgzgl = item.get("xcgzgl")==null?"":item.get("xcgzgl") + ""; 
+        khzblr = item.get("khzblr")==null?"":item.get("khzblr") + ""; 
+        rz  = item.get("rz")==null?"":item.get("rz") + ""; 
+        scsj = item.get("scsj")==null?"":item.get("scsj") + ""; 
+        zwlh = item.get("zwlh")==null?"":item.get("zwlh") + ""; 
+        khmyd = item.get("khmyd")==null?0.0:Double.valueOf(item.get("khmyd")+"");
+		
+        ryjxjson.put("xmmc",xmmc); 
+        ryjxjson.put("pjnm",pjnm); 
+        ryjxjson.put("jxbh",jxbh); 
+        ryjxjson.put("name",name); 
+        ryjxjson.put("nd",nd); 
+        ryjxjson.put("yf",yf); 
+        
+        ryjxjson.put("khfz",khfz); 
+        ryjxjson.put("tdcymb",tdcymb); 
+        ryjxjson.put("grcymb",grcymb); 
+        ryjxjson.put("tdcywcz",tdcywcz); 
+        ryjxjson.put("tdhkmb",tdhkmb); 
+        ryjxjson.put("tdhkwcz",tdhkwcz); 
+
+        ryjxjson.put("xmda",xmda); 
+        ryjxjson.put("xcgzgl",xcgzgl); 
+        ryjxjson.put("khzblr",khzblr); 
+        ryjxjson.put("rz",rz); 
+        ryjxjson.put("scsj",scsj); 
+        ryjxjson.put("zwlh",zwlh); 
+        ryjxjson.put("khmyd",khmyd); 
+		
+		ryjxjsonarr.add(ryjxjson); 
+	} 
+    jsa=ryjxjsonarr.toString(); 
+
+    //企业顾问
+    for(CCObject item:gwryjxlist){ 
+		khfz = 0.0; 
+        grcymb = 0.0;
+        grcywcz = 0.0;
+        khmyd = 0.0;//客户满意度
+		
+        xmmc = item.get("xmmc")==null?"":item.get("xmmc") + ""; 
+        pjnm = item.get("pjnm")==null?"":item.get("pjnm") + ""; 
+        jxbh = item.get("jxbh")==null?"":item.get("jxbh") + ""; 
+        name = item.get("name")==null?"":item.get("name") + ""; 
+        nd = item.get("nd")==null?"":item.get("nd") + ""; 
+        yf = item.get("yf")==null?0:Integer.parseInt(item.get("yf")+""); 
+
+        khfz = item.get("khfz")==null?0.0:Double.valueOf(item.get("khfz")+""); 
+        grcymb = item.get("grcymb")==null?0.0:Double.valueOf(item.get("grcymb")+"");
+        grcywcz = item.get("grcywcz")==null?0.0:Double.valueOf(item.get("grcywcz")+"");
+
+        yryb = item.get("yryb")==null?"":item.get("yryb") + ""; 
+        khzblr = item.get("khzblr")==null?"":item.get("khzblr") + ""; 
+        phgl = item.get("phgl")==null?"":item.get("phgl") + ""; 
+        hs = item.get("hs")==null?"":item.get("hs") + ""; 
+        rz  = item.get("rz")==null?"":item.get("rz") + ""; 
+        scsj = item.get("scsj")==null?"":item.get("scsj") + ""; 
+        khjslr = item.get("khjslr")==null?"":item.get("khjslr") + ""; 
+        khmyd = item.get("khmyd")==null?0.0:Double.valueOf(item.get("khmyd")+"");
+		
+        gwryjxjson.put("xmmc",xmmc); 
+        gwryjxjson.put("pjnm",pjnm); 
+        gwryjxjson.put("jxbh",jxbh); 
+        gwryjxjson.put("name",name); 
+        gwryjxjson.put("nd",nd); 
+        gwryjxjson.put("yf",yf); 
+        
+        gwryjxjson.put("khfz",khfz);  
+        gwryjxjson.put("grcymb",grcymb); 
+        gwryjxjson.put("grcywcz",grcywcz); 
+
+        gwryjxjson.put("yryb",yryb); 
+        gwryjxjson.put("khzblr",khzblr); 
+        gwryjxjson.put("phgl",phgl); 
+        gwryjxjson.put("hs",hs); 
+        gwryjxjson.put("rz",rz); 
+        gwryjxjson.put("scsj",scsj); 
+        gwryjxjson.put("khjslr",khjslr); 
+        gwryjxjson.put("khmyd",khmyd); 
+		
+		gwryjxjsonarr.add(gwryjxjson); 
+	} 
+    jsb=gwryjxjsonarr.toString(); 
+</cc>
+
+<html>
+  <script src="//unpkg.com/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/>
+  <style type="text/css">
+    .el-dropdown-link {
+      cursor: pointer;
+      color: #409eff;
+    }
+    .el-icon-arrow-down {
+    if  font-size: 12px;
+    }
+  </style>
+
+  <div id="app">
+    <br />
+    <el-container>
+        <el-header>
+        </el-header>
+        <el-main>
+            <template v-if="showJl">
+                <!-- <el-button @click="resetDateFilter">清除项目过滤器</el-button>
+                <el-button @click="resetDateFilter">清除月份过滤器</el-button> -->
+                <el-button @click="clearFilter" >清除所有过滤器</el-button>
+                <el-table
+                  ref="filterTable"
+                  :data="tableData1"
+                  style="width: 100%">
+                  <el-table-column
+                    prop="pjnm"
+                    label="项目"
+                    sortable
+                    width="100"
+                    column-key="date"
+                    :filters="fildata1"
+                    :filter-method="filterHandler"
+                  >
+                  </el-table-column>
+                  <el-table-column
+                    prop="name"
+                    label="姓名"
+                    width="100"
+                    fixed>
+                  </el-table-column>
+                  <el-table-column
+                    prop="nd"
+                    label="年度"
+                    width="60"></el-table-column>>
+                  </el-table-column>
+                  <el-table-column
+                    prop="yf"
+                    label="月份"
+                    width="60"
+                    :filters="fildata3"
+                    :filter-method="filterHandler">
+                    <!-- <template slot-scope="scope">
+                      <el-tag
+                        :type="scope.row.tag === '家' ? 'primary' : 'success'"
+                        disable-transitions>{{scope.row.tag}}</el-tag>
+                    </template> -->
+                  </el-table-column>
+                  <el-table-column
+                    prop="khfz"
+                    label="考核分值"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="tdcymb"
+                    label="团队创佣目标"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="grcymb"
+                    label="个人创佣目标"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="tdcywcz"
+                    label="团队创佣完成值"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="tdhkmb"
+                    label="团队回款目标"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="tdhkwcz"
+                    label="团队回款完成值"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="xmda"
+                    label="项目档案"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="xcgzgl"
+                    label="现场工作管理及公司文化建设"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="khzblr"
+                    label="客户指标录入"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="rz"
+                    label="日志"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="scsj"
+                    label="市场数据"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="zwlh"
+                    label="早晚例会"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="khmyd"
+                    label="客户满意度"
+                    width="100">
+                  </el-table-column>
+                </el-table>
+            </template>
+            <template>
+                <!-- <el-button @click="resetDateFilter">清除项目过滤器</el-button>
+                <el-button @click="resetDateFilter">清除月份过滤器</el-button> -->
+                <el-button @click="clearFiltergw">清除所有过滤器</el-button>
+                <el-table
+                  ref="filterTable_gw"
+                  :data="tableData2"
+                  style="width: 100%">
+                  <el-table-column
+                    prop="pjnm"
+                    label="项目"
+                    sortable
+                    width="100"
+                    column-key="date"
+                    :filters="fildata1"
+                    :filter-method="filterHandler"
+                  >
+                  </el-table-column>
+                  <el-table-column
+                    prop="name"
+                    label="姓名"
+                    width="100"
+                    fixed
+                    :filters="fildata2"
+                    :filter-method="filterHandler">
+                  </el-table-column>
+                  <el-table-column
+                    prop="nd"
+                    label="年度"
+                    width="60"></el-table-column>>
+                  </el-table-column>
+                  <el-table-column
+                    prop="yf"
+                    label="月份"
+                    width="60"
+                    :filters="fildata3"
+                    :filter-method="filterHandler">
+                    <!-- <template slot-scope="scope">
+                      <el-tag
+                        :type="scope.row.tag === '家' ? 'primary' : 'success'"
+                        disable-transitions>{{scope.row.tag}}</el-tag>
+                    </template> -->
+                  </el-table-column>
+                  <el-table-column
+                    prop="khfz"
+                    label="考核分值"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="grcymb"
+                    label="个人创佣目标"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="grcywcz"
+                    label="个人创佣完成值"
+                    width="100">
+                  </el-table-column>
+                  
+                  <el-table-column
+                    prop="yryb"
+                    label="仪容仪表"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="khzblr"
+                    label="客户指标录入"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="phgl"
+                    label="配合管理"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="hs"
+                    label="话术"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="rz"
+                    label="日志"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="scsj"
+                    label="市场数据"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="khjslr"
+                    label="客户及时录入"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="khmyd"
+                    label="客户满意度"
+                    width="100">
+                  </el-table-column>
+                </el-table>
+            </template>
+        </el-main>
+      </el-container>
+      <br />
+  </div>
+
+
+  <script>
+    var VM = new Vue({
+      el: "#app",
+      data: {
+        value: '',
+        tableData1: <cc:outprint>jsa</cc:outprint>,
+        fildata1: <cc:outprint>jlryjxlist_fxm_1</cc:outprint>,
+        tableData2:  <cc:outprint>jsb</cc:outprint>,
+        fildata2: <cc:outprint>gwryjxlist_fnm_1</cc:outprint>,
+        fildata3: <cc:outprint>jlryjxlist_fyf_1</cc:outprint>,
+        showJl:<cc:outprint>b</cc:outprint>,
+
+
+      },
+      watch: {
+      },
+      created: function () {
+      },
+      methods: {
+        resetDateFilter() {
+          this.$refs.filterTable.clearFilter('date');
+        },
+        clearFilter() {
+          this.$refs.filterTable.clearFilter();
+        },
+        clearFiltergw() {
+          this.$refs.filterTable_gw.clearFilter();
+        },
+        // formatter(row, column) {
+        //   return row.address;
+        // },
+        // filterYf(value, row, column) {
+        //     const property = column['property'];
+        //   console.log(property);
+        //   return row[property] === value;
+        // },
+        filterHandler(value, row, column) {
+          const property = column['property'];
+          //console.log(property);
+          return row[property] === value;
+        }
+      },
+    });
+  </script>
+</html>

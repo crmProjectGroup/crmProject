@@ -1,0 +1,11 @@
+String uid = userInfo.getUserId();
+
+
+
+List<CCObject> list = this.cqlQuery("ProjectSaleGroup","select xmmc from ProjectSaleGroup where is_deleted = '0' and xmxsy = '"+uid+"'");
+
+for(CCObject item:list){
+      record_new.put("xmmc",item.get("xmmc")+"");
+}
+
+
