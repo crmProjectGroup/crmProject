@@ -10,7 +10,7 @@
 private static String encodeParameters(String parameterValue)
     throws UnsupportedEncodingException {
 if (parameterValue != null && parameterValue.length() > 0) {
-    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    byte[] iso = parameterValue.getBytes("ISO-8859-1"); // 设置编码格式
     if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
         parameterValue = new String(iso, "UTF-8");
         return parameterValue;
