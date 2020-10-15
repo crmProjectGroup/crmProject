@@ -1,0 +1,232 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" isELIgnored="false" />
+<cc!>
+/*
+2020/10/14 大客户绩效表
+*/
+
+/** * 将ISO-8859-1编码格式的字符串转码为UTF-8 * 
+ * * @param parameterValue 
+ * * @return 
+ * * @throws UnsupportedEncodingException 
+ * */ 
+private static String encodeParameters(String parameterValue) throws UnsupportedEncodingException { 
+	if (parameterValue != null && parameterValue.length()> 0) { 
+		byte[] iso = parameterValue.getBytes("ISO-8859-1"); 
+		if (parameterValue.equals(new String(iso, "ISO-8859-1"))) { 
+			parameterValue= new String(iso, "UTF-8"); 
+			return parameterValue; 
+		} 
+	} 
+	return parameterValue; 
+}
+</cc>
+<cc>
+	CCService cs = new CCService(userInfo); 
+	String uid = userInfo.getUserId();//当前登录用户id 
+	List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'"); //登录人的账号
+    String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; //账号用于获取bindingcode 
+    String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id,后续对查询数据权限控制用
+	//日期的处理
+	java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd"); //定义日期格式
+	String nowday = df.format(new Date()); //获取当前日期
+	//因为是取的时间,作用于一开始给个初始值,默认当天的00:00 到24:00
+	String kstm = nowday +" 00:00:00";
+	String jstm = nowday +" 23:59:59";
+</cc>
+		<html>
+
+		<head>
+		<!--<meta http-equiv="refresh" content="5">-->
+		<!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
+		<script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
+		<!-- <script src="https://unpkg.com/muse-ui/dist/muse-ui.js"></script> -->
+		<script src="https://cdn.jsdelivr.net/npm/muse-ui@3.0.2/dist/muse-ui.js"></script>
+		<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+		<script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
+		<!-- <script src="//unpkg.com/vue-easytable/umd/js/index.js"></script> -->
+		<!-- <link rel="stylesheet" href="https://unpkg.com/muse-ui/dist/muse-ui.css -->
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/muse-ui@3.0.2/dist/muse-ui.css">
+		<link rel="stylesheet" href="https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/vue-easytable/umd/css/index.css"> -->
+        <link rel="stylesheet" href="https://unpkg.com/element-ui@2.3.7/lib/theme-chalk/index.css">
+
+		<STYLE TYPE="text/css"> 
+			.demo-text {
+			  padding: 16px;
+			  background: #fff;
+			  p {
+			    margin: 8px 0;
+			  }
+			}
+			.demo-list-wrap {
+			  width: 100%;
+			  /*max-width: 360px;*/
+			  overflow: hidden;
+			}
+            table{
+                margin-top: 15px;
+                width: 100%;
+                border:1px solid #1a1a1b;
+                border-collapse:collapse
+            }
+            th{
+                background-color: #f8f8f9;
+            }
+            th,td{
+                padding: 5px;
+                border: 1px solid #0f0f0f;
+                text-align: center;
+                vertical-align: middle;
+
+            }
+            .text{
+                font-weight:400;
+            }
+		</STYLE> 
+		</head>
+
+		<body>
+
+            <div id="app">
+                <mu-container>
+                    <mu-tabs :value.sync="active3" center color="teal"  >
+                      <mu-tab>
+                        <mu-icon value="event_note"></mu-icon>
+                        大客户绩效考核查看
+                      </mu-tab>
+                    </mu-tabs>
+                    <div class="demo-text" v-if="active3 === 0">
+                        <mu-row gutter>
+                            <mu-col span="6" lg="6" sm="6">
+                                <mu-date-input  icon="today" v-model="timebegin" label="选择起始时间" type="dateTime" clock-type="24hr" value-format="YYYY-MM-DD HH:mm:ss" label-float full-width landscape></mu-date-input>
+                            </mu-col>
+                            <mu-col span="6" lg="6" sm="6">
+                                <mu-date-input  icon="today" v-model="timeend" label="选择结束时间" type="dateTime" clock-type="24hr" value-format="YYYY-MM-DD HH:mm:ss" label-float full-width landscape></mu-date-input>
+                            </mu-col>
+                        </mu-row>
+                        <mu-row gutter>
+                            <mu-col span="6" lg="6" sm="2">
+                                <mu-flex justify-content="center" align-items="center" align-content="center">
+                                    <mu-button round small color="success" @click="showjsdetal()">查询</mu-button>
+                                </mu-flex>
+                            </mu-col>
+                        </mu-row>	
+                        <mu-paper :z-depth="1" class="demo-list-wrap" style="margin-top: 8px;">
+                            <template>
+                                <table
+                                    cellspacing="0"
+                                    border="1">
+                                    <!-- 顶部title -->
+                                    <tr>
+                                        <th>姓名</th>
+                                        <th>客户开拓(30分)</th>
+                                        <th>客户转介(30分)</th>
+                                        <th>客户满意度(15分)</th>
+                                        <th>日志(5分)</th>
+                                        <th>市场数据(10分)</th>
+                                        <th>客户信息(10分)</th>
+                                        <th>总分(100分)</th>
+                                        
+                                    </tr>
+                                    <!-- template不会被渲染 -->
+                                    <template v-for="(item,index) in  tableInfo">
+                                        <!-- 左侧跨行区域 -->
+                                        <tr>
+                                            <td>{{item.name}}</td>
+                                            <td>{{item.khkt}}</td>
+                                            <td>{{item.khzj}}</td>
+                                            <td>{{item.khmyd}}</td>
+                                            <td>{{item.rz}}</td>
+                                            <td>{{item.sczy}}</td>
+                                            <td>{{item.khxx}}</td>
+                                            <td>{{item.countScore}}</td>
+                                        </tr>
+                                    </template>
+                                </table>
+                            </template>
+                        </mu-paper>
+                    </div>
+                </mu-container>
+            </div>
+
+		<br>
+		<br>
+        <br>		
+
+    <script>
+       var Main = {
+		data() {
+			return {
+				userName:'<cc:outprint>userName</cc:outprint>',
+				bindingcode: '',
+				profid: '<cc:outprint>profid</cc:outprint>',
+				uid: '<cc:outprint>uid</cc:outprint>',
+    			active3: 0,
+				cjxqlist2:[],
+				//已录入数据查询需要用到的字段
+				//查询的起始时间(给个默认值,当天)
+				timebegin:'<cc:outprint>kstm</cc:outprint>',
+				timeend:'<cc:outprint>jstm</cc:outprint>',
+				//表格栏位
+				tableInfo: [],
+				  ////align: 'right',
+    		};
+		},
+		created: function() {
+			this.getBinding()
+			//this.getFollws()       //定义方法
+		},
+		methods: {
+			getBinding: function() {
+    			var that = this;
+    			axios.get('/distributor.action', {
+    				params: {
+    			    	serviceName: 'cssoLogin',
+    			    	userName: that.userName,
+    			    	authCode: '6b42a467259407218c0e6acdfc978c01'
+    			  }
+    			})
+    			  .then(function (response) {
+    			    that.bindingcode = response.data.binding;
+    			    //console.log(this.bindingcode);
+    			  })
+    			  .catch(function (error) {
+    			    console.log(error);
+    			  });
+    		},
+			py2choose: function(e,item){
+              item.xmid=e.id;
+              item.xmmc=e.name;
+            },
+			//查询绩效分数
+			showjsdetal: function() { 
+				var that = this;
+                var ksrq = that.timebegin;
+                var jsrq = that.timeend;
+                axios.get('/controller.action', {
+                    params: {
+						name: 'dkhjxapi',
+                        ksrq: encodeURI(ksrq),
+						jsrq: encodeURI(jsrq),
+						bindingcode: that.bindingcode
+					}
+				})
+				.then(function (response) {
+                    //that.dataFortot=response.data.data;
+                    Vue.set(that,'tableInfo', response.data.data);
+                    that.$forceUpdate();
+					//console.log("ok!");
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			
+			},
+		},
+    };
+	var Ctor = Vue.extend(Main)
+	new Ctor().$mount('#app')
+    </script>
+		</body>
+
+		</html>
