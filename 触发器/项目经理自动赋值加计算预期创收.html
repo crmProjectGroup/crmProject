@@ -104,8 +104,24 @@ if(projectlist.size()>0){
 // if(true){
 // 	trigger.addErrorMessage(""+cjjj);
 // }
-
-
+String gongYuType = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//获取客户类型(公寓类型)
+if ("2020F8FFFACC18DmPXQ1".equals(gongYuType)) { // 如果是 "公寓类型" 则覆盖  成交均价 cjjj  和 需求面积 xqmj_d  并且 获取公寓的需求面积
+	cjjj = 45000; // 公寓的成交均价 尚未定 目前按照 45000
+	String xqmj_gy = record_new.get("xqmj_gy")==null?"":record_new.get("xqmj_gy")+"";//获取 需求面积(公寓) xqmj_gy
+	if("33平".equals(xqmj_gy)){
+    	xqmj_d = 33;
+	} else if("39平".equals(xqmj_gy)){
+		xqmj_d = 39;
+	} else if("54平".equals(xqmj_gy)){
+		xqmj_d = 54;
+	} else if("67平".equals(xqmj_gy)){
+		xqmj_d = 67;
+	} else if("445平".equals(xqmj_gy)){
+		xqmj_d = 445;
+	} else {
+		xqmj_d = 0;
+	}
+}
 //获取费率
 double fl =0.0; //最终需要获取到费率和拆分渠道费率两个字段
 double cfqdfl =0.0;
@@ -212,9 +228,10 @@ if("甲方结算给渠道".equals(qdjsfs)){
 
 Double yjcs = 0.0;
 if(cfqdfl>0){
+	// 需求面积 * 成交均价 * 费率 / 100 - 需求面积 * 成交均价 * 拆分渠道费率 / 100
     yjcs = xqmj_d * cjjj * fl /100  - xqmj_d * cjjj * cfqdfl /100;
-} else{
-    yjcs = xqmj_d * cjjj * fl /100 ;
+} else{ // 包含 公寓 预计创佣
+	yjcs = xqmj_d * cjjj * fl /100 ;
 }
 
 // if(true){
