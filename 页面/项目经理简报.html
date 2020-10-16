@@ -167,8 +167,8 @@ private static String encodeParameters(String parameterValue) throws Unsupported
             ywytojson.put("ywyldzjnum",ywysmacnum_ldzj); 
             ywytojson.put("ywyzrnum",ywysmacnum-ywysmacnum_qd-ywysmacnum_ldzj); 
 			
-			//获取业务员的具体客户信息 
-			List<CCObject> Accountlist = cs.cqlQuery("Account","SELECT id,name,xylx as hy,lxrxm,lxrdh,xqmj,khdj,rztj2,recordtype,ROUND(yjcs,2) as yjcs FROM Account a WHERE ownerid ='"+ywyid+"' "+datetime+" and is_deleted='0'"); //客户数量 
+			//获取业务员的具体客户信息 begin 公寓没有取到需求面积的值  多查询 xqmjGy 字段
+			List<CCObject> Accountlist = cs.cqlQuery("Account","SELECT id,name,xylx as hy,lxrxm,lxrdh,xqmj,xqmj_gy,khdj,rztj2,recordtype,ROUND(yjcs,2) as yjcs FROM Account a WHERE ownerid ='"+ywyid+"' "+datetime+" and is_deleted='0'"); //客户数量 
 			JSONArray csjsonArray = JSONArray.fromObject(Accountlist); 
 			String csjsa=csjsonArray.toString();
 			ywytojson.put("cslist",csjsa);
@@ -191,8 +191,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 		projectjson.put("ywy",jsa); 
 		projectjsonarr.add(projectjson); 
 		} 
-		jsa=projectjsonarr.toString(); 
-		//out.print(jsa);
+		jsa=projectjsonarr.toString();
 		//最终数据模型: 
 		//1.项目, 合起来的客户数, 跟进数 (项目) 
 		//2.项目,业务员名字,业务员客户数, 跟金数 (业务员) 
@@ -248,8 +247,8 @@ private static String encodeParameters(String parameterValue) throws Unsupported
                 <td><a @click="getCusInfo(scope.row.id)">{{scope.row.name}}</a></td>
         		<td>{{scope.row.hy}}</td>
         		<td>{{scope.row.lxrxm}}</td>
-        		<!-- <td>{{scope.row.lxrdh}}</td> -->
-				<td>{{scope.row.xqmj}}</td>
+				<!-- <td>{{scope.row.lxrdh}}</td> -->
+				<td>{{scope.row.recordtype=='2020F8FFFACC18DmPXQ1' ? scope.row.xqmj_gy:scope.row.xqmj}}</td> <!-- 增加判断公寓 -->
 				<td>{{scope.row.yjcs}}</td>
 				<td>{{scope.row.khdj}}</td>
 				<td>{{scope.row.recordtype=='20186166515AE4A8ZfOc' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ?'渠道客户':'自然上门' ):'进线'}}</td>
