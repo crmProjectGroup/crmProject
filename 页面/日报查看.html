@@ -109,23 +109,35 @@ if("aaa20180D5809FBsQZab".equals(profile)){ //策划
 } else if("2017C22944AA867gtbJ8".equals(role) || "2017F9C39CFBFCCslc6i".equals(role) || "2018DA601CDE602QwC8y".equals(role)) { //亮哥 老大 运营总监 管理员
 	//所有代理项目  
 	//sql1 = "select id,name from Project where is_deleted='0' and ssbm like '代理%' and xmzt='代理中'";
-    sql1 = "select id,name from Project where is_deleted='0' and ((ssbm like '代理%' and xmzt='代理中') or id='a052018F7FCFA55YIdRp')";
+  sql1 = "select id,name,xmjl from Project where is_deleted='0' and ((ssbm like '代理%' and xmzt='代理中') or id='a052018F7FCFA55YIdRp')";
   list1 = cs.cqlQuery("Project",sql1);       //list1为代理部的项目
-  List<CCObject> salegrouplist = cs.cqlQuery("ProjectSaleGroup","select xmxsy from ProjectSaleGroup where xmmc = '"+xm+"' and is_deleted = '0'");
-	//组织sql语句
-  String saleall = "";
-  for(CCObject item:salegrouplist){
-  	saleall += item.get("xmxsy")==null?"":"'"+item.get("xmxsy")+"',";
+  CCObject xmjlrb = new CCObject(); // 新增一个--> 项目经理 --> 下拉选
+  xmjlrb.put("id","xmjlAll"); 
+  xmjlrb.put("name","项目经理");
+  list1.add(xmjlrb);
+  String saleall = ""; // 储存所有项目经理的id
+  if (xm.equals("xmjlAll")) { // 新增一个下拉选,查看所有项目经理的日报
+    for (CCObject obj:list1) { // 遍历数据,获取到所有的项目经理
+      //组织sql语句
+      saleall += obj.get("xmjl")==null?"":"'"+obj.get("xmjl")+"',";
+    }
+      saleall = saleall.substring(0,saleall.lastIndexOf(","));
+  } else {
+    List<CCObject> salegrouplist = cs.cqlQuery("ProjectSaleGroup","select xmxsy from ProjectSaleGroup where xmmc = '"+xm+"' and is_deleted = '0'");
+    //组织sql语句
+    for(CCObject item:salegrouplist){
+      saleall += item.get("xmxsy")==null?"":"'"+item.get("xmxsy")+"',";
+    }
+    List<CCObject> xmjll = cs.cqlQuery("Project","select xmjl from Project where id = '"+xm+"' and is_deleted = '0'"); 
+    String xmjl ="";
+    if (xmjll.size()>0) {
+      xmjl = xmjll.get(0).get("xmjl")==null?"":xmjll.get(0).get("xmjl")+"";
+    }
+    saleall += "'"+xmjl+"',";
+    saleall = saleall.substring(0,saleall.lastIndexOf(","));
   }
-  List<CCObject> xmjll = cs.cqlQuery("Project","select xmjl from Project where id = '"+xm+"' and is_deleted = '0'"); 
-  String xmjl ="";
-  if (xmjll.size()>0) {
-  	xmjl = xmjll.get(0).get("xmjl")==null?"":xmjll.get(0).get("xmjl")+"";
-  }
-  saleall += "'"+xmjl+"',";
-  saleall = saleall.substring(0,saleall.lastIndexOf(","));
-  //out.print(saleall+'!'); //test
-  sql = "select * from DailyReport where ownerid in ("+saleall+")  and is_deleted = '0' "+datetime+" order by createdate desc,name desc";
+    //out.print(saleall+'!'); //test
+    sql = "select * from DailyReport where ownerid in ("+saleall+")  and is_deleted = '0' "+datetime+" order by createdate desc,name desc";
 }
 List<CCObject> list = cs.cqlQuery("DailyReport",sql);
 
