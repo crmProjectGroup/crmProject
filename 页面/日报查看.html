@@ -122,7 +122,7 @@ if("aaa20180D5809FBsQZab".equals(profile)){ //策划
 } else if("2017C22944AA867gtbJ8".equals(role) || "2017F9C39CFBFCCslc6i".equals(role) || "2018DA601CDE602QwC8y".equals(role)) { //亮哥 老大 运营总监 管理员
 	//所有代理项目  
 	//sql1 = "select id,name from Project where is_deleted='0' and ssbm like '代理%' and xmzt='代理中'";
-  sql1 = "select id,name,xmjl from Project where is_deleted='0' and ((ssbm like '代理%' and xmzt='代理中') or id='a052018F7FCFA55YIdRp')";
+  sql1 = "select id,name,xmjl from Project where is_deleted='0' and ssbm like '代理%' and xmzt='代理中'";
   list1 = cs.cqlQuery("Project",sql1);       //list1为代理部的项目
   CCObject xmjlrb = new CCObject(); // 新增一个--> 项目经理 --> 下拉选
   xmjlrb.put("id","xmjlAll"); 
