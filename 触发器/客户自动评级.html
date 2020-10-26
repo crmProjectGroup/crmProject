@@ -15,22 +15,26 @@ String zlkxwt= record_new.get("zlkxwt")==null?"":record_new.get("zlkxwt")+"";//�
 String xqmj= record_new.get("xqmj")==null?"":record_new.get("xqmj")+"";//需求面积
 String gmyy= record_new.get("gmyy")==null?"":record_new.get("gmyy")+"";//购买原因
 String sfjxzsm = record_new.get("sfjxzsm")==null?"":record_new.get("sfjxzsm")+"";//是否进线转上门
-String spmqsdfh= record_new.get("spmqsdfh")==null?"":record_new.get("spmqsdfh")+"";//是否明确锁定房号
+String spmqsdfh= record_new.get("spmqsdfh")==null?"":record_new.get("spmqsdfh")+"";//是否明确锁定房号 公寓
 String spphzx= record_new.get("spphzx")==null?"":record_new.get("spphzx")+"";//是否配合征信
 String spqtyhtj= record_new.get("spqtyhtj")==null?"":record_new.get("spqtyhtj")+"";//是否洽谈优惠条件
 String spjcrsm= record_new.get("spjcrsm")==null?"":record_new.get("spjcrsm")+"";//是否决策人上门
-String sptlfkfs= record_new.get("sptlfkfs")==null?"":record_new.get("sptlfkfs")+"";//是否讨论付款方式
+String sptlfkfs= record_new.get("sptlfkfs")==null?"":record_new.get("sptlfkfs")+"";//是否讨论付款方式 / 公寓
 String zlyy= record_new.get("zlyy")==null?"":record_new.get("zlyy")+"";//租赁原因
 String spfhys= record_new.get("spfhys")==null?"":record_new.get("spfhys")+"";//是否符合预算
 String spmqsyrq= record_new.get("spmqsyrq")==null?"":record_new.get("spmqsyrq")+"";//是否明确使用日期
 String spjczqzygyn= record_new.get("spjczqzygyn")==null?"":record_new.get("spjczqzygyn")+"";//是否决策周期在1个月内
 String spqthtxj= record_new.get("spqthtxj")==null?"":record_new.get("spqthtxj")+"";//是否洽谈合同细节
+String khtzjl = record_new.get("khtzjl")==null?"":record_new.get("khtzjl")+"";//客户投资经历 (排除  住宅 和 暂未了解) / 公寓
+String sdfh = record_new.get("sdfh")==null?"":record_new.get("sdfh")+""; // 锁定房号 / 公寓
+String gmys_gy = record_new.get("gmys_gy")==null?"":record_new.get("gmys_gy")+""; // 购买因素(公寓)
+String zlrkd = record_new.get("zlrkd")==null?"":record_new.get("zlrkd")+""; // 认可点 公寓
 String jllx = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
 
-double pjzdlbcd=0.0;
-double bwksl=0.0;
+double pjzdlbcd=0.0; // 定级分数 (未使用)
+double bwksl=0.0; // 存储定级分数
  List<CCObject> khpjpzlist=new ArrayList<CCObject>();
-if("2018496272C934EtLhWs".equals(jllx)){
+if("2018496272C934EtLhWs".equals(jllx)){  // 销售客户
      
   if(qyqc.length()>0){
      bwksl +=1.0;
@@ -81,7 +85,7 @@ if(qyztmc.length()>0){
      }else{
          khdj = "C";    
      }  
-}else if("20186166515AE4A8ZfOc".equals(jllx)){
+}else if("20186166515AE4A8ZfOc".equals(jllx)){  // 租赁客户
 
   if(qyqc.length()>0){
      bwksl +=1.0;
@@ -136,5 +140,33 @@ if(qyztmc.length()>0){
      }else{
          khdj = "C";    
      }	 	 	 	 
+} else if ("2020F8FFFACC18DmPXQ1".equals(jllx)) { // 公寓类型的评级
+    if ("是".equals(sptlfkfs)) {  // 是否讨论付款方式
+        bwksl += 1.0;
+    }
+    
+    if ((!"住宅;".equals(khtzjl)) && (!"住宅".equals(khtzjl)) && (!"暂未了解;".equals(khtzjl)) && (!"暂未了解".equals(khtzjl)) && (!"".equals(khtzjl))) { // 客户投资经历
+        bwksl += 1.0;
+    }
+    
+    if (("是".equals(spmqsdfh)) && (!"".equals(sdfh))) { // 是否明确锁定房号 和 锁定房号
+        bwksl += 1.0;
+    }
+    
+    if ((!"".equals(gmys_gy)) && (!"暂未了解;".equals(gmys_gy)) && (!"暂未了解".equals(gmys_gy))) { // 购买因素
+        bwksl += 1.0;
+    }
+    
+    if ((!"".equals(zlrkd)) && (!"暂未了解;".equals(zlrkd)) && (!"暂未了解".equals(zlrkd))) { //认可点
+        bwksl += 1.0;
+    }
+
+    if (bwksl >= 3) {
+        khdj = "A";
+    } else if (0 < bwksl && bwksl < 3) {
+        khdj = "B";
+    } else {
+        khdj = "C";
+    } 
 }
  record_new.put("khdj",khdj);

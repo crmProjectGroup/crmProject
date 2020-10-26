@@ -43,10 +43,11 @@
 
 	String ksrq = request.getParameter("ksrq") == null ? "" :request.getParameter("ksrq");
 	String jsrq = request.getParameter("jsrq") == null ? "" :request.getParameter("jsrq");
+    String projectId = request.getParameter("projectId") == null ? "" :request.getParameter("projectId");
 	String datetime = "and TO_CHAR(a.createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(a.createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
 
 	//获取客户信息
-	String sql = "select a.id,a.name,a.lxrxm,a.khdj,a.smsj,a.lxrdh,a.khlb,a.szxy,a.xbgqy,a.xbgdx,a.rztj1,a.rztj2,a.zlyy,a.xqmj,a.zjyszl,a.khyxlx,a.zlkxwt from account a where a.is_deleted='0' "+datetime+" order by a.createbyid desc";
+	String sql = "select a.id,a.name,a.lxrxm,a.khdj,a.smsj,a.lxrdh,a.khlb,a.szxy,a.xbgqy,a.xbgdx,a.rztj1,a.rztj2,a.zlyy,a.xqmj,a.zjyszl,a.khyxlx,a.zlkxwt from account a where a.xmmc = '"+projectId+"' and a.is_deleted='0' "+datetime+" order by a.createbyid desc";
 	List<CCObject> list = cs.cqlQuery("scpy", sql); // 执行sql语句
 
 	 String file_name = new String("客户跟进数据.xls".getBytes(), "ISO-8859-1");

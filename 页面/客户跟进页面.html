@@ -38,6 +38,20 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 	//因为是取的时间,作用于一开始给个初始值,默认当天的00:00 到24:00
 	String kstm = nowday +" 00:00:00";
 	String jstm = nowday +" 23:59:59";
+	String sql1 = "select id,name from Project where is_deleted='0' and ssbm like '代理%' and xmzt='代理中'";
+	List<CCObject> options = cs.cqlQuery("Project",sql1); //下拉框数据源
+	JSONArray scpy2jsonarr = new JSONArray(); 
+	for(CCObject item:options){
+		JSONObject scpy2json= new JSONObject();
+		String scpyid = item.get("id")==null?"":item.get("id")+ "";  //id
+		String scpynm = item.get("name")==null?"":item.get("name")+ "";  //name
+		scpy2json.put("id",scpyid); 
+		scpy2json.put("name",scpynm); 
+		scpy2jsonarr.add(scpy2json);
+	}
+
+	String scpy2js=scpy2jsonarr.toString();
+
 </cc>
 		<html>
 
@@ -103,6 +117,14 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 		</mu-tabs>
 		<div class="demo-text" v-if="active3 === 0">
 			<mu-row gutter>
+				<mu-col span="6" lg="6" sm="6">
+					<mu-select label="项目名称" v-model="projectId">
+						<mu-option v-for="option,index in options" :key="option.id" :label="option.name" :value="option.id" label-float full-width landscape></mu-option>
+					</mu-select>
+				</mu-col>
+				<mu-col span="6" lg="6" sm="6">
+					
+				</mu-col>
 				<mu-col span="6" lg="6" sm="6">
 					<mu-date-input  icon="today" v-model="timebegin" label="选择起始时间" type="dateTime" clock-type="24hr" value-format="YYYY-MM-DD HH:mm:ss" label-float full-width landscape></mu-date-input>
 				</mu-col>
@@ -201,6 +223,8 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 				//查询的起始时间(给个默认值,当天)
 				timebegin:'<cc:outprint>kstm</cc:outprint>',
 				timeend:'<cc:outprint>jstm</cc:outprint>',
+				projectId:'',
+				options:<cc:outprint>scpy2js</cc:outprint>,
 				//表格栏位
 				tableInfo: [],
 				  ////align: 'right',
@@ -239,7 +263,8 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 				//组一下时间控制字段
 				//var datetime = " and a.createdate >= str_to_date('"+that.timebegin+"', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+that.timeend+"', '%Y-%m-%d %H:%i:%s') ";
                 var datetime = " and a.createdate between '"+that.timebegin+"' AND '"+that.timeend+"'";
-				var expresssql="select a.id,a.name,a.lxrxm,a.khdj,a.smsj,a.lxrdh,a.khlb,a.szxy,a.xbgqy,a.xbgdx,a.rztj1,a.rztj2,a.zlyy,a.xqmj,a.zjyszl,a.khyxlx,a.zlkxwt from account a where a.is_deleted='0'" + datetime + " order by a.createdate desc";
+				var xmId = that.projectId;
+				var expresssql="select a.id,a.name,a.lxrxm,a.khdj,a.smsj,a.lxrdh,a.khlb,a.szxy,a.xbgqy,a.xbgdx,a.rztj1,a.rztj2,a.zlyy,a.xqmj,a.zjyszl,a.khyxlx,a.zlkxwt from account a where a.xmmc = '"+xmId+"' and a.is_deleted='0'" + datetime + " order by a.createdate desc";
                 //alert(expresssql);
                 axios.get('/controller.action', {
                     params: {
@@ -266,7 +291,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 			},
             // 点击导出按钮，将 时间传过去 --- 根据"" 客户跟进记录导出.html" 页面获取数据
 			dc: function(){ 
-				window.location.href = "khgjdc.jsp?ksrq="+ this.timebegin+"&jsrq="+this.timeend;
+				window.location.href = "khgjdc.jsp?ksrq="+ this.timebegin+"&jsrq="+this.timeend+"&projectId="+this.projectId;
 			},
 		},
     };
