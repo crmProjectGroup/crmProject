@@ -251,7 +251,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 				<td>{{scope.row.recordtype=='2020F8FFFACC18DmPXQ1' ? scope.row.xqmj_gy:scope.row.xqmj}}</td> <!-- 增加判断公寓 -->
 				<td>{{scope.row.yjcs}}</td>
 				<td>{{scope.row.khdj}}</td>
-				<td>{{scope.row.recordtype=='20186166515AE4A8ZfOc' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ?'渠道客户':'自然上门' ):'进线'}}</td>
+				<td>{{scope.row.recordtype=='20186166515AE4A8ZfOc' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ? '渠道客户':'自然上门' ): scope.row.recordtype=='2018496272C934EtLhWs' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ? '渠道客户':'自然上门') : scope.row.recordtype=='2020F8FFFACC18DmPXQ1' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ? '渠道客户':'自然上门') : '进线'}}</td>
         		<td><mu-button color="primary" @click="getFollws(scope.row.id)">跟进详情</mu-button></td>
       		</template>
     	</mu-data-table>
