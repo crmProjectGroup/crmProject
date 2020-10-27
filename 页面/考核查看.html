@@ -331,6 +331,9 @@ throws UnsupportedEncodingException {
                     label="姓名"
                     width="100"
                     fixed>
+                    <template slot-scope="scope">
+                      <a  style="color:#1890ff;cursor:pointer" @click="getCheckDate(scope.$index,scope.row)" >{{scope.row.name}}</a>
+                    </template>
                   </el-table-column>
                   <el-table-column
                     prop="nd"
@@ -446,6 +449,9 @@ throws UnsupportedEncodingException {
                     fixed
                     :filters="fildata2"
                     :filter-method="filterHandler">
+                    <template slot-scope="scope">
+                      <a  style="color:#1890ff;cursor:pointer" @click="getCheckDate(scope.$index,scope.row)" >{{scope.row.name}}</a>
+                    </template>
                   </el-table-column>
                   <el-table-column
                     prop="nd"
@@ -565,6 +571,10 @@ throws UnsupportedEncodingException {
         },
         clearFiltergw() {
           this.$refs.filterTable_gw.clearFilter();
+        },
+        getCheckDate(index,row){
+          var tempwindow=window.open('_blank');  
+          tempwindow.location = "attendanceCheck.jsp?pjnm="+ row.pjnm+"&name=" + row.name+"&nd=" + row.nd + "&yf="+row.yf;
         },
         // formatter(row, column) {
         //   return row.address;

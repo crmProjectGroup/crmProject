@@ -1,0 +1,205 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+/*
+description:考勤自定义页面
+version: 1.1
+date:20201026
+*/
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+*
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+throws UnsupportedEncodingException {
+	if (parameterValue != null && parameterValue.length() > 0) {
+		byte[] iso = parameterValue.getBytes("ISO-8859-1");
+		if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+			parameterValue = new String(iso, "UTF-8");
+			return parameterValue;
+		}
+	}
+	return parameterValue;
+}
+</cc>
+<cc>
+CCService cs = new CCService(userInfo);
+String roleid = userInfo.getRoleId();
+// 时间的处理
+// int nd = 2018;
+// int startyf = 12;
+// String pjnm = "";
+String pjnm = request.getParameter("pjnm")==null?"":String.valueOf(request.getParameter("pjnm"));//项目名称
+String username = request.getParameter("name")==null?"":String.valueOf(request.getParameter("name"));//人员名称
+int nd = request.getParameter("nd")==null?0:Integer.valueOf(request.getParameter("nd"));//年度
+int startyf = request.getParameter("yf")==null?0:Integer.valueOf(request.getParameter("yf"));//起始月分
+int endnd = 0;
+int endyf = 0;
+if (startyf == 12) { // 如果月份 是12 则为 1月
+  endyf = 1; // 结束月份
+  endnd = nd + 1; // 结束年分
+} else {
+  endyf = startyf + 1; // 开始年分
+  endnd = nd; // 开始年分
+}
+String ksrq = nd+"-"+startyf;
+String jsrq = endnd+"-"+endyf;
+//String datetime = "and TO_CHAR(createdate,'YYYY-MM')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM'),'YYYY-MM') and TO_CHAR(createdate,'YYYY-MM')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM'),'YYYY-MM')";    
+String datetime = " and a.createdate >= str_to_date('"+ksrq+"', '%Y-%m')  AND a.createdate <= str_to_date('"+jsrq+"', '%Y-%m') ";
+
+//String userid = "0052018983C9E3DFdNbv"; // 测试陈力
+// String userid = "00520184C406732BK2ul"; // 测试王奇
+String userid = "";
+// 获取所有的项目
+// String sql1 = "select id,name from Project where is_deleted='0' and ssbm like '代理%' and xmzt='代理中'";
+// List<CCObject> projectlist = cs.cqlQuery("Project",sql1);       //projectlist为代理部的所有的项目
+  // 封装一个人员的考勤信息的集合
+String userSql = "select id from ccuser where name = '"+username+"' and is_deleted = '0' and isusing = '1'";
+List<CCObject> useridList = cs.cqlQuery("ccuser",userSql);
+for (CCObject user:useridList) {
+     userid = user.get("id")==null?"":user.get("id")+""; // 人员的id
+}
+// 跟进员工的  id  查询 所有的考勤 
+String kaoqingSql="select ownerid,rq,qdsj,qdwz,qtzb,qtsj,qtwz,qtzb,(hour(qtsj) - hour(qdsj)) gs,gh,qttype,bz from attendance a where is_deleted = '0' and a.ownerid = '"+userid+"' " + datetime + " order by createdate desc";
+// out.print("^"+kaoqingSql+"^");
+List<CCObject> attendanceList = cs.cqlQuery("attendance",kaoqingSql);
+  String owidList = "";
+  String name = "";
+  for(CCObject attendance:attendanceList) {
+    String ownerid = attendance.get("ownerid")==null?"":attendance.get("ownerid")+""; // 所有人id
+    owidList += ownerid +",";
+    if (!owidList.contains(ownerid)) { // 判断id是否包含到所有员工的集合中, 不包含就查询名称
+      
+    } else {
+      String userName="select name from ccuser where id = '"+ownerid+"' and is_deleted = '0' and isusing = '1'"; // 根据id查询名称
+      List<CCObject> userNameList = cs.cqlQuery("ccuser",userName);
+      name = userNameList.get(0).get("name")==null?"":userNameList.get(0).get("name")+"";  // 姓名
+    }
+    String qdsj = encodeParameters(attendance.get("qdsj")==null?"":String.valueOf(attendance.get("qdsj")+""));//签到时间
+    String qtsj = encodeParameters(attendance.get("qtsj")==null?"":String.valueOf(attendance.get("qtsj")+""));//签退时间
+    attendance.put("ownerid",name);
+    attendance.put("pjnm",pjnm);
+    attendance.put("qdsj",qdsj);
+    attendance.put("qtsj",qtsj);
+  }
+JSONArray jsa = JSONArray.fromObject(attendanceList);
+</cc>
+<html>
+  <script src="//unpkg.com/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/>
+  <style type="text/css">
+    .el-dropdown-link {
+      cursor: pointer;
+      color: #409eff;
+    }
+    .el-icon-arrow-down {
+    if  font-size: 12px;
+    }
+  </style>
+
+  <div id="app">
+    <br />
+    <el-container>
+        <el-header>
+        </el-header>
+        <el-main>
+            <template>
+                <el-table
+                  ref="filterTable"
+                  :data="tableData1"
+                  style="width: 100% border: 1px solid black" 
+                  >
+                  <el-table-column
+                    prop="ownerid"
+                    label="姓名"
+                    width="100"
+                    sortable
+                  >
+                  </el-table-column>
+                  <el-table-column
+                    prop="pjnm"
+                    label="项目"
+                    width="100"
+                    fixed>
+                  </el-table-column>
+                  <el-table-column
+                    prop="rq"
+                    label="日期"
+                    width="120">
+                  </el-table-column>
+                  <el-table-column
+                    prop="qdsj"
+                    label="签到时间"
+                    width="150">
+                  </el-table-column>
+                  <el-table-column
+                    prop="qdwz"
+                    label="签到位置"
+                    width="150">
+                  </el-table-column>
+                  <!-- <el-table-column
+                    prop="qtzb"
+                    label="签到坐标"
+                    width="100">
+                  </el-table-column> -->
+                  <el-table-column
+                    prop="qtsj"
+                    label="签退时间"
+                    width="150">
+                  </el-table-column>
+                  <el-table-column
+                    prop="qtwz"
+                    label="签退位置"
+                    width="150">
+                  </el-table-column>
+                  <!-- <el-table-column
+                    prop="qtzb"
+                    label="签退坐标"
+                    width="100">
+                  </el-table-column> -->
+                  <el-table-column
+                    prop="gs"
+                    label="工时"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="gh"
+                    label="工号"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="qttype"
+                    label="签退类型"
+                    width="100">
+                  </el-table-column>
+                  <el-table-column
+                    prop="bz"
+                    label="备注"
+                    width="300">
+                  </el-table-column>
+                </el-table>
+            </template>
+        </el-main>
+      </el-container>
+      <br />
+  </div>
+
+
+  <script>
+    var VM = new Vue({
+      el: "#app",
+      data: {
+        value: '',
+        tableData1: <cc:outprint>jsa</cc:outprint>
+      },
+      watch: {
+      },
+      created: function () {
+      }
+    });
+  </script>
+</html>
