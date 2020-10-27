@@ -7,6 +7,14 @@
 * @return
 * @throws UnsupportedEncodingException
 */
+/*
+description:日报查看
+version: 1.0
+date:20200915
+author:tom
+log:
+1.20201027 业务员查看不了
+*/
 private static String encodeParameters(String parameterValue)
     throws UnsupportedEncodingException {
 if (parameterValue != null && parameterValue.length() > 0) {
@@ -151,7 +159,11 @@ if("aaa20180D5809FBsQZab".equals(profile)){ //策划
   }
     //out.print(saleall+'!'); //test
     sql = "select * from DailyReport where ownerid in ("+saleall+")  and is_deleted = '0' "+datetime+" order by createdate desc,name desc";
-}
+} else { //业务员  1.20201027
+    //业务员看自己项目
+	//sql1 = "select id,name from Project where is_deleted='0' and ownerid = '"+uid+"' and xmzt='代理中'";
+  list1 = cs.cqlQuery("Project",sql1);
+} //1.20201027
 List<CCObject> list = cs.cqlQuery("DailyReport",sql);
 
 </cc>

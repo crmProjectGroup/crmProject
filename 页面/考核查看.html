@@ -573,8 +573,9 @@ throws UnsupportedEncodingException {
           this.$refs.filterTable_gw.clearFilter();
         },
         getCheckDate(index,row){
-          var tempwindow=window.open('_blank');  
-          tempwindow.location = "attendanceCheck.jsp?pjnm="+ row.pjnm+"&name=" + row.name+"&nd=" + row.nd + "&yf="+row.yf;
+          // var tempwindow=window.open('_blank');  
+          // tempwindow.location = "attendanceCheck.jsp?pjnm="+ row.pjnm+"&name=" + row.name+"&nd=" + row.nd + "&yf="+row.yf;
+          window.location.href = "attendanceCheck.jsp?pjnm="+ row.pjnm+"&name=" + row.name+"&nd=" + row.nd + "&yf="+row.yf;
         },
         // formatter(row, column) {
         //   return row.address;

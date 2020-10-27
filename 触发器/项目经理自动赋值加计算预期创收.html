@@ -5,7 +5,7 @@
 *创建时间：2020/05/20
 *最后修改时间：2020/05/20
 */
-
+CCService cs = new CCService((UserInfo)userInfo);
 String zjmb = record_new.get("zjmb")==null?"":record_new.get("zjmb")+"";//转介目标
 String id = record_new.get("id")==null?"":record_new.get("id")+"";//唯一标识
 
@@ -87,9 +87,16 @@ if("".equals(xmmc)){
     if(saleslist.size()>0){
         xmmc = saleslist.get(0).get("xmmc")==null?"":saleslist.get(0).get("xmmc")+"";//赋值项目名称
     }
+	if ("".equals(xmmc)) { // 如果项目id ,还是为0,重新获取一下
+		String xmSql = "select * from projectsalegroup where xmxsy ='"+createbyid+"'  and is_deleted ='0'";
+		List<CCObject> xmIdList = cs.cqlQuery("projectsalegroup",xmSql);
+		if (xmIdList.size()>0) {
+			xmmc = xmIdList.get(0).get("xmmc")==null?"":xmIdList.get(0).get("xmmc")+"";//赋值项目名称
+		}
+	}
 }
 // if(true){
-// 	trigger.addErrorMessage(""+xmmc);
+// 	trigger.addErrorMessage("^2"+xmmc+"!2");
 // }
 String qdjsfs="";  //渠道结算结算方式
 List<CCObject> projectlist = this.cqlQuery("project","select * from project where id ='"+xmmc+"' and is_deleted ='0' and xmzt = '代理中'");
@@ -105,6 +112,9 @@ if(projectlist.size()>0){
 // 	trigger.addErrorMessage(""+cjjj);
 // }
 String gongYuType = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//获取客户类型(公寓类型)
+// if(true){
+// 	trigger.addErrorMessage(""+cjjj);
+// }
 if ("a0520206562E5ECNVIbC".equals(xmmc)) { // 朗峻广场id
 	cjjj = 45000; // 公寓的成交均价 销售 尚未定 目前按照 45000
 }
