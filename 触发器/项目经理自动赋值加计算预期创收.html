@@ -105,8 +105,10 @@ if(projectlist.size()>0){
 // 	trigger.addErrorMessage(""+cjjj);
 // }
 String gongYuType = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//获取客户类型(公寓类型)
+if ("a0520206562E5ECNVIbC".equals(xmmc)) { // 朗峻广场id
+	cjjj = 45000; // 公寓的成交均价 销售 尚未定 目前按照 45000
+}
 if ("2020F8FFFACC18DmPXQ1".equals(gongYuType)) { // 如果是 "公寓类型" 则覆盖  成交均价 cjjj  和 需求面积 xqmj_d  并且 获取公寓的需求面积
-	cjjj = 45000; // 公寓的成交均价 尚未定 目前按照 45000
 	String xqmj_gy = record_new.get("xqmj_gy")==null?"":record_new.get("xqmj_gy")+"";//获取 需求面积(公寓) xqmj_gy
 	if("33平".equals(xqmj_gy)){
     	xqmj_d = 33;
