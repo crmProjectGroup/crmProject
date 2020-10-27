@@ -108,6 +108,7 @@ JSONArray jsa = JSONArray.fromObject(attendanceList);
         </el-header>
         <el-main>
             <template>
+                <el-button @click="goBack">返回</el-button>
                 <el-table
                   ref="filterTable"
                   :data="tableData1"
@@ -200,7 +201,12 @@ JSONArray jsa = JSONArray.fromObject(attendanceList);
       watch: {
       },
       created: function () {
-      }
+      },
+      methods: {
+        goBack() {
+          window.location.href = "ydkhck.jsp";
+        }
+      },
     });
   </script>
 </html>
