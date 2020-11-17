@@ -37,7 +37,9 @@
 </cc>
 <cc>
     // 涉及表： account 客户表 id   ywjhgjmx 客户跟进表 kh    关联 id = kh
-	CCService cs = new CCService(userInfo);
+    CCService cs = new CCService(userInfo);
+    String userid = userInfo.getUserId();
+    String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id 
 	//时间范围
 	SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -47,9 +49,12 @@
 	String datetime = "and TO_CHAR(a.createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(a.createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
 
 	//获取客户信息
-	String sql = "select a.id,a.name,a.lxrxm,a.khdj,a.smsj,a.lxrdh,a.khlb,a.szxy,a.xbgqy,a.xbgdx,a.rztj1,a.rztj2,a.zlyy,a.xqmj,a.zjyszl,a.khyxlx,a.zlkxwt from account a where a.xmmc = '"+projectId+"' and a.is_deleted='0' "+datetime+" order by a.createbyid desc";
-	List<CCObject> list = cs.cqlQuery("scpy", sql); // 执行sql语句
-
+	String sql = "select a.id,a.recordtype,a.xqmj_gy,a.name,a.lxrxm,a.khdj,a.smsj,a.lxrdh,a.khlb,a.szxy,a.xbgqy,a.xbgdx,a.rztj1,a.rztj2,a.zlyy,a.xqmj,a.zjyszl,a.khyxlx,a.kxwt,a.zlkxwt from account a where a.xmmc = '"+projectId+"' and a.is_deleted='0' "+datetime+" order by a.createbyid desc";
+    List<CCObject> list = new ArrayList<CCObject>();
+    if("aaa20180D5809FBsQZab".equals(profid) || "aaa20180681351FmekUG".equals(profid) || "aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid) || "aaa20188BF02AA11vijc".equals(profid) ){
+        list = cs.cqlQuery("scpy", sql); // 执行sql语句
+    }
+    // out.print(sql);
 	 String file_name = new String("客户跟进数据.xls".getBytes(), "ISO-8859-1");
 	 response.setHeader("Content-disposition","attachment;filename="+file_name);
 	 response.setContentType("application/vnd.ms-excel;charset=UTF-8");
@@ -102,7 +107,6 @@ td {
     <td  NOWRAP="NOWRAP" class="tdTitle">联系人姓名</td>
     <td  NOWRAP="NOWRAP" class="tdTitle">客户等级</td>
     <td  NOWRAP="NOWRAP" class="tdTitle">上门时间</td>
-    <td  NOWRAP="NOWRAP" class="tdTitle">联系人电话</td>
     <td  NOWRAP="NOWRAP" class="tdTitle">客户类别</td>
 	<td  NOWRAP="NOWRAP" class="tdTitle">所属行业</td>
     <td  NOWRAP="NOWRAP" class="tdTitle">原办公区域</td>
@@ -133,23 +137,41 @@ td {
                 <cc>
                     if (i == 0) {
                         i++;
+                        String retype = item.get("recordtype")== null?"":item.get("recordtype")+""; // 类别的id
+                        String khlb = "";  //客户类别
+                        if ("2018525F215221DtlTXV".equals(retype)) {
+                            khlb = "进线客户";
+                        } else if("2018496272C934EtLhWs".equals(retype)) {
+                            khlb = "销售客户";
+                        } else if("20186166515AE4A8ZfOc".equals(retype)) {
+                            khlb = "租赁客户";
+                        } else if("2020F8FFFACC18DmPXQ1".equals(retype)) {
+                            khlb = "公寓客户";
+                        } else {
+                            khlb = "类型错误";
+                        }
                 </cc>
                   <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("name")==null?"":item.get("name")+""</cc:outprint></td>
                   <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("lxrxm")==null?"":item.get("lxrxm")+""</cc:outprint></td>
                   <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("khdj")==null?"":item.get("khdj")+""</cc:outprint></td>
                   <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("smsj")==null?"":item.get("smsj")+""</cc:outprint></td>
-                  <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("lxrdh")==null?"":item.get("lxrdh")+""</cc:outprint></td>
-                  <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("khlb")==null?"":item.get("khlb")+""</cc:outprint></td>
+
+                 <!-- <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("khlb")==null?"":item.get("khlb")+""</cc:outprint></td> -->
+                 <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>khlb</cc:outprint></td>
 				  <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("szxy")==null?"":item.get("szxy")+""</cc:outprint></td>
                   <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("xbgqy")==null?"":item.get("xbgqy")+""</cc:outprint></td>
                   <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("xbgdx")==null?"":item.get("xbgdx")+""</cc:outprint></td>
                   <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("rztj1")==null?"":item.get("rztj1")+""</cc:outprint></td>
                   <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("rztj2")==null?"":item.get("rztj2")+""</cc:outprint></td>
                   <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("zlyy")==null?"":item.get("zlyy")+""</cc:outprint></td>
-				  <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("xqmj")==null?"":item.get("xqmj")+""</cc:outprint></td>
-                  <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("zjyszl")==null?"":item.get("khyxlx")+""</cc:outprint></td>
-                  <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("khyxlx")==null?"":item.get("zlkxwt")+""</cc:outprint></td>
-                  <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("zlkxwt")==null?"":item.get("recid")+""</cc:outprint></td>
+                <!--   <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("xqmj")==null?"":item.get("xqmj")+""</cc:outprint></td> -->
+                <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("recordtype").equals("2020F8FFFACC18DmPXQ1")?item.get("xqmj_gy"):item.get("xqmj")+""</cc:outprint></td>
+                  <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("zjyszl")==null?"":item.get("zjyszl")+""</cc:outprint></td>
+                  <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("khyxlx")==null?"":item.get("khyxlx")+""</cc:outprint></td>
+
+                  <!-- <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("kxwt")==null?"":item.get("kxwt")+""</cc:outprint></td> -->
+                  
+                  <td  class="dataCell_h" rowspan="<cc:outprint>colspanStr</cc:outprint>"><cc:outprint>item.get("recordtype").equals("2020F8FFFACC18DmPXQ1")?item.get("kxwt"):item.get("zlkxwt")+""</cc:outprint></td>
                           <cc>}</cc>
                   <td class="dataCell_h"><cc:outprint>nrList.get("nr")</cc:outprint></td>
                <cc>}

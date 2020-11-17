@@ -36,6 +36,7 @@ CCService cs = new CCService(userInfo);
 java.util.Calendar cal = java.util.Calendar.getInstance();
 java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 String userid = userInfo.getUserId();
+String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id 
 //Date now = new Date();
 String type = "";
 
@@ -55,12 +56,15 @@ try {
         //项目经理expresssql="select a.scpymc as scpymc,b.name as scpynm,c.name as usernm ,a.sms as sms,a.jxs as jxs,a.cjss as cjss, a.cjts as cjts,a.createbyid as createbyid,a.id as recid from cjqk a left join scpy b on a.scpymc=b.id left join ccuser c on a.createbyid=c.id where a.is_deleted='0' and a.recordtype ='201945938A54BAEfBWgh' " + datetime + "and a.createbyid in "+userid_cond + " order by a.createdate desc";
         //其他expresssql="select a.scpymc as scpymc,b.name as scpynm,c.name as usernm ,a.sms as sms,a.jxs as jxs,a.cjss as cjss, a.cjts as cjts,a.createbyid as createbyid,a.id as recid from cjqk a left join scpy b on a.scpymc=b.id left join ccuser c on a.createbyid=c.id where a.is_deleted='0' and a.recordtype ='201945938A54BAEfBWgh' " + datetime + " order by a.createdate desc";
         String expresssql = request.getParameter("expresssql")==null?"":encodeParameters(request.getParameter("expresssql")+"");
-        expresssql = expresssql.replaceAll("%20", " ").replaceAll("%25", "%").replaceAll("%3E", ">").replaceAll("%3C", "<");;
-        //out.print(expresssql);
+        expresssql = expresssql.replaceAll("%20", " ").replaceAll("%25", "%").replaceAll("%3E", ">").replaceAll("%3C", "<");
+        // out.print(expresssql);
         //记录id合集方便删除操作
         List<String> idlist = new ArrayList<String>();
-
-        List<CCObject> scpy_l = cs.cqlQuery("account",expresssql);
+        List<CCObject> scpy_l = new ArrayList<CCObject>();
+        if("aaa20180D5809FBsQZab".equals(profid) || "aaa20180681351FmekUG".equals(profid) ||  "aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid) || "aaa20188BF02AA11vijc".equals(profid) ){
+            out.print(profid);
+            scpy_l = cs.cqlQuery("account",expresssql);
+        }
         for(CCObject item:scpy_l){
             //out.print("cycle");
             //JSONObject ccuserjson= new JSONObject();
@@ -70,24 +74,38 @@ try {
             String khdj = item.get("khdj")==null?"":item.get("khdj")+ "";  //客户等级
             String smsj = item.get("smsj")==null?"":item.get("smsj")+ "";  //上门时间
             String lxrdh = item.get("lxrdh")==null?"":item.get("lxrdh")+ "";  //联系人电话
-            String khlb = item.get("khlb")==null?"":item.get("khlb")+ "";  //客户类别
+            String retype = item.get("recordtype")== null?"":item.get("recordtype")+""; // 类别的id
+            String khlb = "";  //客户类别
+            if ("2018525F215221DtlTXV".equals(retype)) {
+                khlb = "进线客户";
+            } else if("2018496272C934EtLhWs".equals(retype)) {
+                khlb = "销售客户";
+            } else if("20186166515AE4A8ZfOc".equals(retype)) {
+                khlb = "租赁客户";
+            } else if("2020F8FFFACC18DmPXQ1".equals(retype)) {
+                khlb = "公寓客户";
+            } else {
+                khlb = "类型错误";
+            }
+            // String khlb = item.get("recortype").equals("2018525F215221DtlTXV") ? ("进线客户":item.get("recortype").equals("2018496272C934EtLhWs")?"销售客户":item.get("recortype").equals("20186166515AE4A8ZfOc")?"租赁客户":item.get("recortype").equals("2020F8FFFACC18DmPXQ1")?"公寓客户":"类型错误";  //客户类别
             String szxy = item.get("szxy")==null?"":item.get("szxy")+ "";  //所属行业
             String xbgqy = item.get("xbgqy")==null?"":item.get("xbgqy")+ "";  //原办公区域
             String xbgdx = item.get("xbgdx")==null?"":item.get("xbgdx")+ "";  //原办公大厦
             String rztj1 = item.get("rztj1")==null?"":item.get("rztj1")+ "";  //认知途径1
             String rztj2 = item.get("rztj2")==null?"":item.get("rztj2")+ "";  //认知途径2
             String zlyy = item.get("zlyy")==null?"":item.get("zlyy")+ "";  //租赁原因
-            String xqmj = item.get("xqmj")==null?"":item.get("xqmj")+ "";  //需求面积
+            // String xqmj = item.get("xqmj")==null?"":item.get("xqmj")+ ""; //需求面积
+            String xqmj = item.get("recordtype").equals("2020F8FFFACC18DmPXQ1") ?  (item.get("xqmj_gy")==null?"":item.get("xqmj_gy")+ "") : (item.get("xqmj")==null?"":item.get("xqmj")+ ""); //需求面积
             String zjyszl = item.get("zjyszl")==null?"":item.get("zjyszl")+ "";  //租金预算
             String khyxlx = item.get("khyxlx")==null?"":item.get("khyxlx")+ "";  //客户意向类型
-            String zlkxwt = item.get("zlkxwt")==null?"":item.get("zlkxwt")+ "";  //抗性问题
+            // String kxwt = item.get("kxwt")==null?"":item.get("kxwt")+ "";  //抗性问题
+            String kxwt = item.get("recordtype").equals("2020F8FFFACC18DmPXQ1") ?  (item.get("kxwt")==null?"":item.get("kxwt")+ "") : (item.get("zlkxwt")==null?"":item.get("zlkxwt")+ ""); 
             // 取 跟进内容
             //String expresssql1="select a.nr from ywjhgjmx a where a.is_deleted = '0' and a.kh = '" +recid +"'"  + datetime + " order by a.createdate desc";
             String expresssql1="select a.nr from ywjhgjmx a where a.is_deleted = '0' and a.kh = '" +recid +"' order by a.createdate desc";
             JSONArray cjsjjsary = new JSONArray();
             List<CCObject> scsj_l = cs.cqlQuery("ywjhgjmx",expresssql1);
             if (scsj_l.isEmpty()) {
-                out.print("进来了");
                 continue;
             }
             rtnjbdata.put("name",name);
@@ -105,7 +123,7 @@ try {
             rtnjbdata.put("xqmj",xqmj);
             rtnjbdata.put("zjyszl",zjyszl);
             rtnjbdata.put("khyxlx",khyxlx);
-            rtnjbdata.put("zlkxwt",zlkxwt);
+            rtnjbdata.put("kxwt",kxwt);
             rtnjbdata.put("recid",recid);
             idlist.add(recid);
             // 循环遍历跟进内容
@@ -121,7 +139,7 @@ try {
         }
 
         jsonmsg.put("success", true);
-        jsonmsg.put("message", idlist);
+        jsonmsg.put("message", expresssql);
         jsonmsg.put("data", rtnMsg);
 
     } 
@@ -132,11 +150,9 @@ try {
 	jsonmsg.put("message", e.getMessage());
 } 
 
-
-
 request.setAttribute("jsonmsg", jsonmsg.toString());
 </cc>
- <html>
+ <!--<html>
 	hello
-</html>
-<!-- <cc:forward page="/platform/activity/task/getNodes.jsp"/> -->
+</html> -->
+<cc:forward page="/platform/activity/task/getNodes.jsp"/>

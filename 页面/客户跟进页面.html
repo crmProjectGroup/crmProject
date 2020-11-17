@@ -31,7 +31,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 	String uid = userInfo.getUserId();//当前登录用户id 
 	List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'"); //登录人的账号
     String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; //账号用于获取bindingcode 
-    String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id,后续对查询数据权限控制用
+	String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id,后续对查询数据权限控制用
 	//日期的处理
 	java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd"); //定义日期格式
 	String nowday = df.format(new Date()); //获取当前日期
@@ -155,7 +155,6 @@ private static String encodeParameters(String parameterValue) throws Unsupported
                             <th>联系人姓名</th>
                             <th>客户等级</th>
                             <th>上门时间</th>
-                            <th>联系人电话</th>
                             <th>客户类别</th>
                             <th>所属行业</th>
                             <th>原办公区域</th>
@@ -178,7 +177,6 @@ private static String encodeParameters(String parameterValue) throws Unsupported
                                 <td :rowspan="item.gklr.length" v-if="index1===0">{{item.lxrxm}}</td>
                                 <td :rowspan="item.gklr.length" v-if="index1===0">{{item.khdj}}</td>
                                 <td :rowspan="item.gklr.length" v-if="index1===0">{{item.smsj}}</td>
-                                <td :rowspan="item.gklr.length" v-if="index1===0">{{item.lxrdh}}</td>
                                 <td :rowspan="item.gklr.length" v-if="index1===0">{{item.khlb}}</td>
                                 <td :rowspan="item.gklr.length" v-if="index1===0">{{item.szxy}}</td>
                                 <td :rowspan="item.gklr.length" v-if="index1===0">{{item.xbgqy}}</td>
@@ -189,7 +187,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
                                 <td :rowspan="item.gklr.length" v-if="index1===0">{{item.xqmj}}</td>
                                 <td :rowspan="item.gklr.length" v-if="index1===0">{{item.zjyszl}}</td>
                                 <td :rowspan="item.gklr.length" v-if="index1===0">{{item.khyxlx}}</td>
-                                <td :rowspan="item.gklr.length" v-if="index1===0">{{item.zlkxwt}}</td>
+                                <td :rowspan="item.gklr.length" v-if="index1===0">{{item.kxwt}}</td>
                                  <!-- 右侧数据 --> 
                                 <td > {{child.nr}}</td>
                                  <!-- 右侧跨行数据 --> 
@@ -264,11 +262,12 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 				//var datetime = " and a.createdate >= str_to_date('"+that.timebegin+"', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+that.timeend+"', '%Y-%m-%d %H:%i:%s') ";
                 var datetime = " and a.createdate between '"+that.timebegin+"' AND '"+that.timeend+"'";
 				var xmId = that.projectId;
-				var expresssql="select a.id,a.name,a.lxrxm,a.khdj,a.smsj,a.lxrdh,a.khlb,a.szxy,a.xbgqy,a.xbgdx,a.rztj1,a.rztj2,a.zlyy,a.xqmj,a.zjyszl,a.khyxlx,a.zlkxwt from account a where a.xmmc = '"+xmId+"' and a.is_deleted='0'" + datetime + " order by a.createdate desc";
-                //alert(expresssql);
+				var expresssql="select a.id,a.recordtype,a.xqmj_gy,a.name,a.lxrxm,a.khdj,a.smsj,a.khlb,a.szxy,a.xbgqy,a.xbgdx,a.rztj1,a.rztj2,a.zlyy,a.xqmj,a.zjyszl,a.khyxlx,a.zlkxwt,a.kxwt from account a where a.xmmc = '"+xmId+"' and a.is_deleted='0'" + datetime + " order by a.createdate desc";
+                // alert(expresssql);
                 axios.get('/controller.action', {
                     params: {
-						name: 'khgjapi',
+						// name: 'khgjapi',
+						name:'khgjapi',
 						type: 'sel',
                         datetime: encodeURI(datetime),
                         //datetime: datetime,
@@ -279,7 +278,6 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 				})
 				.then(function (response) {
                     //that.dataFortot=response.data.data;
-                    debugger
                     Vue.set(that,'tableInfo', response.data.data);
                     that.$forceUpdate();
 					//console.log("ok!");
