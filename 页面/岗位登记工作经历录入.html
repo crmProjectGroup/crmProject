@@ -1,0 +1,263 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+    /*
+    description:岗位登记表
+    version: 1.0
+    date:2020/11/04
+    author:tom
+    log:
+    */
+
+    /**
+    * 将ISO-8859-1编码格式的字符串转码为UTF-8
+    *
+    * @param parameterValue
+    * @return
+    * @throws UnsupportedEncodingException
+    */
+    private static String encodeParameters(String parameterValue)
+    throws UnsupportedEncodingException {
+    if (parameterValue != null && parameterValue.length() > 0) {
+    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+    parameterValue = new String(iso, "UTF-8");
+    return parameterValue;
+    }
+    }
+    return parameterValue;
+    }
+    </cc>
+    <cc>
+        String sfzh = request.getParameter("sfzh")==null?"":request.getParameter("sfzh")+"";//身份证号
+        //sfzh = "1234656";
+    </cc>
+    <html>
+    <script src="//unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+    <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css" />
+    <style type="text/css">
+        .el-dropdown-link {
+            cursor: pointer;
+            color: #409eff;
+        }
+
+        .el-icon-arrow-down {
+            font-size: 12px;
+        }
+        th {
+            text-align: center;
+            font-size: 17px;
+        }
+        td {
+            width: auto;
+            height: 40px;
+            text-align: center;
+        }
+        caption {
+            text-align: center;
+            font-size: 20px;
+            color: black;
+        }
+    </style>
+
+    <head>
+        <meta charset="utf-8">
+        <title>工作经历</title>
+    </head>
+
+    <body>
+    <div id="app">
+        <div class="dialog" v-for="(item,index) in allNum" :key="index" style="text-align: center;">
+            <span style="font-size: 30px;">工作经历</span>
+            <!-- <el-input v-model="sfzh" style="width: auto;" style="display:none;" placeholder="请输入身份证号码" ></el-input> -->
+            <el-table
+            :data="tableNum['num'+index]"
+            size="mini"
+            row-key="id"
+            border
+            highlight-current-row
+            style="width: 100%"
+            :header-cell-style="{background:'#f1f1f1'}"
+            id="table1"
+            >
+            <el-table-column label="序号" width="50px" prop="id" fixed="left"></el-table-column>
+            <el-table-column label="工作起止时间" width="200">
+                <template slot-scope="scope">
+                <el-input
+                    style="width:170px"
+                    v-model="queryData[index].tbReviewDetails[scope.row.id-1].gzqzsj"
+                ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="工作单位" width="200">
+                <template slot-scope="scope">
+                <el-input
+                    style="width:170px"
+                    v-model="queryData[index].tbReviewDetails[scope.row.id-1].gzdw"
+                ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="职位" width="200">
+                <template slot-scope="scope">
+                <el-input
+                    style="width:170px"
+                    v-model="queryData[index].tbReviewDetails[scope.row.id-1].zw"
+                ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="月薪" width="200">
+                <template slot-scope="scope">
+                <el-input
+                    style="width:170px"
+                    v-model="queryData[index].tbReviewDetails[scope.row.id-1].yx"
+                ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="离职原因" width="200">
+                <template slot-scope="scope">
+                <el-input
+                    style="width:170px"
+                    v-model="queryData[index].tbReviewDetails[scope.row.id-1].lzyy"
+                ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="证明人" width="200">
+                <template slot-scope="scope">
+                <el-input
+                    style="width:170px"
+                    v-model="queryData[index].tbReviewDetails[scope.row.id-1].zmr"
+                ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="核查电话(公司电话)" width="200">
+                <template slot-scope="scope">
+                <el-input
+                    style="width:170px"
+                    v-model="queryData[index].tbReviewDetails[scope.row.id-1].hcdh"
+                ></el-input>
+                </template>
+            </el-table-column>
+            <!--操作-->
+            <el-table-column label="操作" align="center" fixed="right">
+                <template slot-scope="{row}">
+                <el-button class="spanBtn" type="el-button" @click="editDelete(row.id,index)">删除</el-button>
+                </template>
+            </el-table-column>
+            </el-table>
+            <el-button class="add-table"  style="width: 80px;height: 40px;" size="mini" type="el-button" @click="addInput(index)">添加</el-button>
+            <el-button size="mini" style="width: 80px;height: 40px;" type="primary" @click="getValue(index)">下一页</el-button>
+        </div>
+        </el-form>
+    </el-dialog>
+    </div>
+
+<script type="text/javascript" language='javascript'>
+    var VM = new Vue({
+        el: "#app",
+        data: {
+            allNum:[1],
+            tableNum:{
+                num0:[{ id: 1 }]
+            },
+            sfzh:'<cc:outprint>sfzh</cc:outprint>',
+            queryData:[
+                {
+                score: "",
+                tbReviewDetails: [
+                    {
+                        gzqzsj: "",
+                        gzdw: "",
+                        zw:"",
+                        yx:"",
+                        lzyy:"",
+                        zmr:"",
+                        hcdh:"",
+                    }
+                ]
+                }
+            ]
+         },
+        
+        methods: {
+            // 添加表格
+            addInput(index) {
+                var len = this.queryData[index].tbReviewDetails.length;
+                this.queryData[index].tbReviewDetails.push({
+                    gzqzsj: "",
+                    gzdw: "",
+                    zw:"",
+                    yx:"",
+                    lzyy:"",
+                    zmr:"",
+                    hcdh:"",
+                });
+                this.tableNum["num" + index].push({
+                    id: this.tableNum["num" + index].length + 1
+                });
+            },
+            // 删除表格
+            editDelete(ids, index) {
+                var data = this.tableNum["num" + index];
+                var count = data.length;
+                let j = "";
+                if (count == ids) {
+                    for (var i = 0,len=data.length;i < len; i++) {
+                        if (data[i].id == ids) {
+                        data.splice(i, 1);
+                        j = i;
+                        }
+                    }
+                    for (var i = j,leng=this.tableNum["num" + index].length; i < leng; i++) {
+                        this.tableNum["num" + index][i].id--;
+                    }
+                    this.queryData[index].tbReviewDetails.splice(ids - 1, 1);
+                } else {
+                    alert("必须从最下行开始删除!")
+                }    
+            },
+             // 保存提交
+             getValue(index) {
+                var r = confirm("提交后不能修改请确认!");
+                if (r == true) {
+                    var a = JSON.parse("{\"title\":\"\",\"data\":[]}");
+                    //封装底部表格中的数据
+                    var that = this;
+                    var rows = this.queryData[index].tbReviewDetails.length;
+                    var sfzhnum = '<cc:outprint>sfzh</cc:outprint>';// 获取身份证号码
+                    a.sfzhnum=sfzhnum;
+                    // a.jytable = 'none'; // 教育背景表隐藏
+                    // a.gztable = 'block'; // 工作表展现
+                    for (var i = 0; i < rows; i++) { //每行 从第二行开始因为第一行是表格的标题
+                        var tabledata = that.queryData[0].tbReviewDetails[i];
+                        a.data.push(tabledata);//向JSON数组添加JSON对象的方法；
+                    }
+                    ///格式化数据
+                    var obj=JSON.stringify(a);//将json数据转化为对象发送给后台
+                    //异步提交数据
+                    $.ajax({
+                        url: "/customize/page/9291p1140/gwdjapi.jsp?name=gwdjapi&type=gzjltype", // 调岗位登记api, 类型 gzjltype (工作经历类型)
+                        type: "post",
+                        data: {'param':obj},//参数
+                        datatype: "json",
+                        success: function (data) {
+                            debugger
+                            var obj = eval("(" + data + ")");
+                            if (obj.success) {
+                                // this.$router.push('./gwdjjtbj.jsp')//则跳转至家庭背景的路由
+                                window.location.href = "https://k8mm1amta1700adb471ba12b.cloudcc.com/customize/page/9291p1140/gwdjjtbj.jsp?sfzh="+obj.sfzh;
+                                // window.location.href = "gwdjjtbj.jsp?sfzh="+sfzhnum;
+                            }else {
+                                alert(obj.message);
+                            }
+                        }
+                    });
+                }
+             },
+        }
+    });
+    </script>
+    </body>
+
+    </html>

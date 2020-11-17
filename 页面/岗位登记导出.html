@@ -1,0 +1,468 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<cc!>
+    private static boolean isNull(String obj){
+        if(obj == null || obj.length() <= 0) {
+            return true;
+        }
+    return false;
+    }
+
+    private static String queryBjdNumber(String jsdbh,CCService cs){
+        String bjdName = "";
+        if(!isNull(jsdbh)){
+            List<CCObject> jsd = cs.cquery("jlwgjsd","name = '"+jsdbh+"'");
+            if(jsd != null && jsd.size() > 0){
+                String bjdjh = jsd.get(0).get("bjdjh") == null ? "" : String.valueOf(jsd.get(0).get("bjdjh"));
+                if(!isNull(bjdjh)){
+                    return splitQueryBJd(bjdjh,cs);
+                }
+            }
+        }
+        return "";
+    }
+
+    private static String splitQueryBJd(String bjdId,CCService cs){
+        String bjd[] = bjdId.split(";");
+        String bjdName = "";
+        for(String s:bjd){
+            List<CCObject> bjdList = cs.cquery("t_bjd_info","id = '"+s+"'");
+            if(bjdList != null && bjdList.size() > 0){
+                bjdName += bjdList.get(0).get("name") == null ? "" : String.valueOf(bjdList.get(0).get("name")) + "，";
+            }
+        }
+        return bjdName.substring(0,bjdName.length()-1);
+    }
+
+
+</cc>
+    <cc>
+        CCService cs = new CCService(userInfo);
+        String profile = userInfo.getProfileId(); //简档
+        String uid = userInfo.getUserId(); //用户id
+        String role = userInfo.getRoleId();//角色
+        String selname = request.getParameter("selname")==null?"":request.getParameter("selname")+"";//姓名
+        String selsfzh = request.getParameter("selsfzh")==null?"":request.getParameter("selsfzh")+"";//身份证号
+        //out.print(selname);
+        //out.print(selsfzh);
+        String namesql = ""; // 存储 名称 条件 sql片段
+        String sfzhsql = ""; // 存储 身份证号 条件 sql 片段
+        if (selname != null && !"".equals(selname)) { // 判断是否输入了名字
+            namesql = " and name = '" + selname.trim() + "'";
+        }
+        if (selsfzh != null && !"".equals(selsfzh)) { // 判断是否输入了身份证号
+            sfzhsql = " and sfzh = '" + selsfzh.trim() + "'";
+        }
+        if ("".equals(selsfzh) && "".equals(selname)) { // 如果 名称  和 身份证号都没填写, 只展示默认值
+            namesql = " and name = '' ";
+            sfzhsql = " and sfzh = '' ";
+        }
+        // 根据条件查询, 只差最近更新的数据
+        String jbxxsql = "select * from gwdjb where 1=1 " + namesql + sfzhsql + " and is_deleted='0' order by createdate desc limit 1";
+        //out.print(jbxxsql);
+        List<CCObject> jbxxlist = cs.cqlQuery("gwdjb",jbxxsql);
+        
+        if (jbxxlist.size() == 0) { // 防止没查到数据, 不展现表格,, 设置默认值
+            CCObject Event1 = new CCObject();
+            Event1.put("name","");
+            Event1.put("xb","");
+            Event1.put("csrq","");
+             Event1.put("xp","");
+            Event1.put("hyzk","");
+            Event1.put("mz","");
+            Event1.put("sg","");
+            Event1.put("jg","");
+
+            Event1.put("hkszd","");
+            Event1.put("hjlx","");
+            Event1.put("chmxjb","");
+            Event1.put("mqjkzk","");
+            Event1.put("cnjynwsyjh","");
+            Event1.put("zgxl","");
+            Event1.put("zy","");
+            Event1.put("gznx","");
+
+            Event1.put("lxdh","");
+            Event1.put("dzyx","");
+            Event1.put("sfzh","");
+            Event1.put("mqzz","");
+            Event1.put("wxh","");
+            Event1.put("yptj","");
+            Event1.put("jsjsp","");
+            Event1.put("jszz","");
+
+            Event1.put("yysp","");
+            Event1.put("yueysp","");
+            Event1.put("yyah","");
+            Event1.put("tc","");
+            Event1.put("jjlxr","");
+            Event1.put("jjrgx","");
+            Event1.put("jjrdh","");
+            Event1.put("jjrdz","");
+
+            Event1.put("rxhhyxm","");
+            Event1.put("rxhhygx","");
+            Event1.put("rxhhydh","");
+            Event1.put("xqah","");
+            jbxxlist.add(Event1);
+        }
+        // 获取 教育背景的 sql
+        String jybjsql = "select xxqzsj,xx,zy,xl from gwdjjybj where 1=1 and gwdjlx = 'jybjtype'" + namesql + sfzhsql + " and is_deleted='0' order by createdate desc limit 0,3";
+        List<CCObject> jybjlist = cs.cqlQuery("gwdjjybj",jybjsql);
+        // 获取工作经历的sql
+        String gzjlsql = "select gzqzsj,hcdh,gzdw,zmr,lzyy,gzqzsj,yx,zw from gwdjjybj where 1=1 and gwdjlx = 'gzjltype'" + namesql + sfzhsql + " and is_deleted='0' order by createdate desc limit 0,3";
+        List<CCObject> gzjllist = cs.cqlQuery("gwdjjybj",gzjlsql);
+        // 社会关系sql
+        String jtbjsql = "select * from gwdjjybj where 1=1 and gwdjlx = 'jtbjtype'" + namesql + sfzhsql + " and is_deleted='0' order by createdate desc limit 0,3";
+        List<CCObject> jtbjlist = cs.cqlQuery("gwdjjybj",jtbjsql);
+
+         String file_name = new String("岗位登记表.doc".getBytes(), "ISO-8859-1");
+         response.setHeader("Content-disposition","attachment;filename="+file_name);
+         response.setContentType("application/msword;charset=UTF-8");
+    </cc>
+    <html>
+    <script src="//unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+    <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css" />
+    <style type="text/css">
+        .el-dropdown-link {
+            cursor: pointer;
+            color: #409eff;
+        }
+
+        .el-icon-arrow-down {
+            font-size: 12px;
+        }
+        #selname,#selsfzh {
+            width: auto;
+        }
+        input[type="text"]
+        {
+            height: 100%;
+            width: 100%;
+            /* line-height: 100%; */
+        }
+        td{
+            font-size: 14px;
+        }
+        #app {
+            text-align: center;
+        }
+        .tdTitle {
+            padding-left: 0px;
+            border-bottom: 1px solid #171718;
+            word-wrap:break-word; 
+            word-break: break-all; 
+            width: 100px
+        }
+        span{
+            font-size: 15px; 
+            color: #171718;
+            font-weight:bold;
+        }
+     
+    </style>
+
+    <head>
+        <meta charset="utf-8">
+        <title>岗位登记表</title>
+    </head>
+
+    <body>
+    <div class="title" style="text-align: center;">
+        <h1><font size="4px">个人信息</font></h1>
+        <form method="post" name="theform" id="theform">
+    </div> 
+    <div id="app" style="padding-left: 400px;">
+        </br>
+        </br>  
+        <table border="2" style="width: 700px;">
+            <tr>
+                <td colspan="7">
+                    <span>[个人基本情况]</span>
+                </td>
+            </tr>
+                <cc>for(CCObject item:jbxxlist){</cc>
+                <tr style="text-align: center;">
+                    <td>姓名</td>
+                    <td><cc:outprint>item.get("name")==null?"":item.get("name")+""</cc:outprint></td>
+                    <!-- <input type="text" value='<cc:outprint>item.get("name")==null?"":item.get("name")+""</cc:outprint>' id="name" readonly="readonly"/> -->
+                    <td>性别</td>
+                    <td><cc:outprint>item.get("xb")==null?"":item.get("xb")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("xb")==null?"":item.get("xb")+""</cc:outprint>' id="xb" readonly="readonly" /></td> -->
+                    <td>出生日期</td>
+                    <td><cc:outprint>item.get("csrq")==null?"":item.get("csrq")+""</cc:outprint></td>
+                    <!-- <input type="text" value='' id="csrq" readonly="readonly" /> -->
+                    <td rowspan="5" style="width: 130px;height: 130px;"></td> <!--相片-->
+                    <!-- <input type="text" value="" id="xp" readonly="readonly"/> -->
+                </tr>
+                <tr style="text-align: center;">
+                    <td>婚姻状况</td>
+                    <td>
+                        <!-- <input type="radio" name="hyzk" id="hyzk1" value="未婚" checked="checked" >未婚
+                        <input type="radio" name="hyzk" id="hyzk2" value="已婚" checked="checked" >已婚
+                        <input type="radio" name="hyzk" id="hyzk3" value="已育" checked="checked" >已育 -->
+                        <!-- <input type="text" value='<cc:outprint>item.get("hyzk")==null?"":item.get("hyzk")+""</cc:outprint>'' id="hyzk" readonly="readonly" /> -->
+                        <cc:outprint>item.get("hyzk")==null?"":item.get("hyzk")+""</cc:outprint>
+                    </td>
+                    <td >名族</td>
+                    <td><cc:outprint>item.get("mz")==null?"":item.get("mz")+""</cc:outprint></td>
+                    <!-- <input type="text" value='<cc:outprint>item.get("mz")==null?"":item.get("mz")+""</cc:outprint>' id="mz" readonly="readonly" /> -->
+                    <td >身高</td>
+                    <td><cc:outprint>item.get("sg")==null?"":item.get("sg")+""</cc:outprint></td>
+                    <!-- <input type="text" value='<cc:outprint>item.get("sg")==null?"":item.get("sg")+""</cc:outprint>' id="sg" readonly="readonly" /> -->
+                </tr>
+                <tr style="text-align: center;">
+                    <td >籍贯</td>
+                    <td><cc:outprint>item.get("jg")==null?"":item.get("jg")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("jg")==null?"":item.get("jg")+""</cc:outprint>' id="jg" readonly="readonly" /></td> -->
+                    <td>户口所在地</td>
+                    <td><cc:outprint>item.get("hkszd")==null?"":item.get("hkszd")+""</cc:outprint></td>
+                    <!-- <input type="text" value='<cc:outprint>item.get("hkszd")==null?"":item.get("hkszd")+""</cc:outprint>' id="hkszd" readonly="readonly" /> -->
+                    <td >户口类型</td>
+                    <td>
+                        <!-- <input type="radio" name="hukoutype" id="hukoutype" value="城镇" checked="checked" >城镇
+                        <input type="radio" name="hukoutype" id="hukoutype" value="农村" checked="checked" >农村 -->
+                        <cc:outprint>item.get("hjlx")==null?"":item.get("hjlx")+""</cc:outprint>
+                        <!-- <input type="text" value='<cc:outprint>item.get("hjlx")==null?"":item.get("hjlx")+""</cc:outprint>' id="hjlx" readonly="readonly" /> -->
+                    </td>
+                </tr>
+                <tr style="text-align: center;">
+                    <td>曾患慢性疾病/重大疾病</td>
+                    <td>
+                        <!-- <input type="radio" name="yes" id="zdjb" checked="checked" >是
+                        <input type="radio" name="yes" id="zdjb" checked="checked" >否 -->
+                        <cc:outprint>item.get("chmxjb")==null?"":item.get("chmxjb")+""</cc:outprint>
+                        <!-- <input type="text" value='<cc:outprint>item.get("chmxjb")==null?"":item.get("chmxjb")+""</cc:outprint>' id="chmxjb" readonly="readonly" /> -->
+                    </td>
+                    <td>目前健康状态</td>
+                    <td><cc:outprint>item.get("mqjkzk")==null?"":item.get("mqjkzk")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("mqjkzk")==null?"":item.get("mqjkzk")+""</cc:outprint>' id="mqjkzk" readonly="readonly" /></td> -->
+                    <td>承诺近一年无生育计划</td>
+                    <td>
+                        <!-- <input type="radio" name="no" id="syjh" checked="checked" >是
+                        <input type="radio" name="no" id="syjh" checked="checked" >否 -->
+                        <cc:outprint>item.get("cnjynwsyjh")==null?"":item.get("cnjynwsyjh")+""</cc:outprint>
+                        <!-- <input type="text" value='<cc:outprint>item.get("cnjynwsyjh")==null?"":item.get("cnjynwsyjh")+""</cc:outprint>' id="cnjynwsyjh" readonly="readonly" /> -->
+                    </td>
+                </tr>
+                <tr style="text-align: center;">
+                    <td>最高学历</td>
+                    <td><cc:outprint>item.get("zgxl")==null?"":item.get("zgxl")+""</cc:outprint></td>
+                    <!-- <input type="text" value='<cc:outprint>item.get("zgxl")==null?"":item.get("zgxl")+""</cc:outprint>' id="zgxl" readonly="readonly" /> -->
+                    <td>专业</td>
+                    <td><cc:outprint>item.get("zy")==null?"":item.get("zy")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("zy")==null?"":item.get("zy")+""</cc:outprint>' id="zy" readonly="readonly" /></td> -->
+                    <td>工作年限</td>
+                    <td><cc:outprint>item.get("gznx")==null?"":item.get("gznx")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("gznx")==null?"":item.get("gznx")+""</cc:outprint>' id="gznx" readonly="readonly"/></td> -->
+                </tr>
+                <tr style="text-align: center;">
+                    <td>联系电话</td>
+                    <td><cc:outprint>item.get("lxdh")==null?"":item.get("lxdh")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("lxdh")==null?"":item.get("lxdh")+""</cc:outprint>' id="lxdh" readonly="readonly"/></td> -->
+                    <td>电子邮箱</td>
+                    <td><cc:outprint>item.get("dzyx")==null?"":item.get("dzyx")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("dzyx")==null?"":item.get("dzyx")+""</cc:outprint>' id="dzyx" readonly="readonly"/></td> -->
+                    <td>身份证号</td>
+                    <td colspan="2"><cc:outprint>item.get("sfzh")==null?"":item.get("sfzh")+""</cc:outprint></td>
+                    <!-- <input type="text" value='<cc:outprint>item.get("sfzh")==null?"":item.get("sfzh")+""</cc:outprint>' id="sfzh" readonly="readonly"/> -->
+                </tr>
+                <tr style="text-align: center;">
+                    <td>目前住址</td>
+                    <td colspan="3"><cc:outprint>item.get("mqzz")==null?"":item.get("mqzz")+""</cc:outprint></td>
+                    <!-- <td colspan="3"><input type="text" value='<cc:outprint>item.get("mqzz")==null?"":item.get("mqzz")+""</cc:outprint>' id="mqzz" readonly="readonly"/></td> -->
+                    <td>微信号</td>
+                    <td colspan="2"><cc:outprint>item.get("wxh")==null?"":item.get("wxh")+""</cc:outprint></td>
+                    <!-- <td colspan="2"><input type="text" value='<cc:outprint>item.get("wxh")==null?"":item.get("wxh")+""</cc:outprint>' id="wxh" readonly="readonly"/></td> -->
+                </tr>
+                <tr style="text-align: center;">
+                    <td>应聘途径</td>
+                    <td colspan="6"><cc:outprint>item.get("yptj")==null?"":item.get("yptj")+""</cc:outprint></td>
+                    <!-- <td colspan="6"><input type="text" value='<cc:outprint>item.get("yptj")==null?"":item.get("yptj")+""</cc:outprint>' id="yptj" readonly="readonly"/></td> -->
+                </tr>
+                <tr>
+                    <!--教育背景-->
+                    <td colspan="7">
+                        <span>[教育背景]</span>
+                    </td>
+                </tr>
+            <tr>
+                <td colspan="7">
+                <table  border="1" style="text-align: center;width: 100%;">
+                    <tr>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 200px;">学习起止时间</td>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 150px;">学校</td>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 150px;">学历</td>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 200px;">专业</td>
+                    </tr>
+                <cc>for(CCObject jybjobj:jybjlist){</cc>
+                    <tr>
+                        <td><cc:outprint>jybjobj.get("xxqzsj")==null?"":jybjobj.get("xxqzsj")+""</cc:outprint></td>
+                        <td><cc:outprint>jybjobj.get("xx")==null?"":jybjobj.get("xx")+""</cc:outprint></td>
+                        <td><cc:outprint>jybjobj.get("zy")==null?"":jybjobj.get("zy")+""</cc:outprint></td>
+                        <td><cc:outprint>jybjobj.get("xl")==null?"":jybjobj.get("xl")+""</cc:outprint></td>
+                    </tr>
+                <cc>}</cc>     
+                </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7">
+                    <!--工作经历-->
+                    <span>[工作经历](请从任职开始时间详细列出)</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7">
+                <table  border="1" style="text-align: center; width: 100%;">
+                    <tr>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 150px;">工作起止时间</td>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 100px;">工作单位</td>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 50px;">职位</td>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 50px;">月薪</td>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 150px;">离职原因</td>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 100px;">证明人</td>
+                        <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 100px;">核查电话</td>
+                    </tr>
+                <cc>for(CCObject gzjlobj:gzjllist){</cc>
+                    <tr>
+                        <td><cc:outprint>gzjlobj.get("gzqzsj")==null?"":gzjlobj.get("gzqzsj")+""</cc:outprint></td>
+                        <td><cc:outprint>gzjlobj.get("gzdw")==null?"":gzjlobj.get("gzdw")+""</cc:outprint></td>
+                        <td><cc:outprint>gzjlobj.get("zw")==null?"":gzjlobj.get("zw")+""</cc:outprint></td>
+                        <td><cc:outprint>gzjlobj.get("yx")==null?"":gzjlobj.get("yx")+""</cc:outprint></td>
+                        <td><cc:outprint>gzjlobj.get("lzyy")==null?"":gzjlobj.get("lzyy")+""</cc:outprint></td>
+                        <td><cc:outprint>gzjlobj.get("zmr")==null?"":gzjlobj.get("zmr")+""</cc:outprint></td>
+                        <td><cc:outprint>gzjlobj.get("hcdh")==null?"":gzjlobj.get("hcdh")+""</cc:outprint></td>
+                    </tr>
+                <cc>}</cc> 
+                </table>
+            </td>
+            </tr>
+            <tr>
+                <td colspan="7">
+                    <!--技能/特长-->
+                    <span>[技能/特长]</span>
+                </td>
+
+            </tr>
+            <tr>
+                <td colspan="7">
+                <table border="1" style="text-align: center; width: 100%;">
+                    <tr>
+                        <td style="width: 100px;">计算机水平</td>
+                        <td style="width: 100px;"><cc:outprint>item.get("jsjsp")==null?"":item.get("jsjsp")+""</cc:outprint></td>
+                        <!-- <td style="width: 200px;"><input type="text" value='<cc:outprint>item.get("jsjsp")==null?"":item.get("jsjsp")+""</cc:outprint>' id="jsjsp" readonly="readonly"/></td> -->
+                        <td style="width: 100px;">驾驶驾照</td>
+                        <td style="width: 100px;"><cc:outprint>item.get("jszz")==null?"":item.get("jszz")+""</cc:outprint></td>
+                        <!-- <td style="width: 200px;"><input type="text" value='<cc:outprint>item.get("jszz")==null?"":item.get("jszz")+""</cc:outprint>' id="jszz" readonly="readonly"/></td> -->
+                        <td style="width: 100px;">英语水平</td>
+                        <td style="width: 200px;"><cc:outprint>item.get("yysp")==null?"":item.get("yysp")+""</cc:outprint></td>
+                        <!-- <td style="width: 200px;"><input type="text" value='<cc:outprint>item.get("yysp")==null?"":item.get("yysp")+""</cc:outprint>' id="yysp" readonly="readonly"/></td> -->
+                    </tr>
+                    <tr>
+                        <td>粤语水平</td>
+                        <td><cc:outprint>item.get("yueysp")==null?"":item.get("yueysp")+""</cc:outprint></td>
+                        <!-- <td><input type="text" value='<cc:outprint>item.get("yueysp")==null?"":item.get("yueysp")+""</cc:outprint>' id="yueysp" readonly="readonly"/></td> -->
+                        <td>业余爱好</td>
+                        <td><cc:outprint>item.get("yyah")==null?"":item.get("yyah")+""</cc:outprint></td>
+                        <!-- <td><input type="text" value='<cc:outprint>item.get("yyah")==null?"":item.get("yyah")+""</cc:outprint>' id="yyah" readonly="readonly"/></td> -->
+                        <td>特长</td>
+                        <td><cc:outprint>item.get("tc")==null?"":item.get("tc")+""</cc:outprint></td>
+                        <!-- <td><input type="text" value='<cc:outprint>item.get("tc")==null?"":item.get("tc")+""</cc:outprint>' id="tc" readonly="readonly"/></td> -->
+                    </tr>
+                </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7">
+                    <!--社会关系-->
+                    <span>[社会关系]</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="7">
+            <table border="1" style="text-align: center; width: 100%;">
+                <tr>
+                    <td colspan="7" style="text-align: left;">家庭背景: (父母 , 配偶 , 子女 , 兄弟姐妹 等 )</td>
+                </tr>
+                <tr>
+                    <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 100px;">关系</td>
+                    <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 50px;">姓名</td>
+                    <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 50px;">年龄</td>
+                    <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 200px;">工作单位/地址</td>
+                    <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 100px;">职务/职业</td>
+                    <td  NOWRAP="NOWRAP" class="tdTitle" style="width: 200px;" colspan="2">联系电话</td>
+                </tr>
+            <cc>for(CCObject jtbjobj:jtbjlist){</cc>
+                <tr>
+                    <td><cc:outprint>jtbjobj.get("gx")==null?"":jtbjobj.get("gx")+""</cc:outprint></td>
+                    <td><cc:outprint>jtbjobj.get("xmname")==null?"":jtbjobj.get("xmname")+""</cc:outprint></td>
+                    <td><cc:outprint>jtbjobj.get("nl")==null?"":jtbjobj.get("nl")+""</cc:outprint></td>
+                    <td><cc:outprint>jtbjobj.get("jrgzdw")==null?"":jtbjobj.get("jrgzdw")+""</cc:outprint></td>
+                    <td><cc:outprint>jtbjobj.get("zwzy")==null?"":jtbjobj.get("zwzy")+""</cc:outprint></td>
+                    <td colspan="2"><cc:outprint>jtbjobj.get("lxdh")==null?"":jtbjobj.get("lxdh")+""</cc:outprint></td>
+                </tr>
+            <cc>}</cc> 
+                <tr>
+                    <td colspan="7" style="text-align: left;">紧急情况联络人(深圳市)</td>
+                </tr>
+                <tr>
+                    <td>姓名</td>
+                    <td><cc:outprint>item.get("jjlxr")==null?"":item.get("jjlxr")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("jjlxr")==null?"":item.get("jjlxr")+""</cc:outprint>' id="jjlxr" readonly="readonly"/></td> -->
+                    <td>关系</td>
+                    <td><cc:outprint>item.get("jjrgx")==null?"":item.get("jjrgx")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("jjrgx")==null?"":item.get("jjrgx")+""</cc:outprint>' id="jjrgx" readonly="readonly"/></td> -->
+                    <td>联系电话</td>
+                    <td colspan="2"><cc:outprint>item.get("jjrdh")==null?"":item.get("jjrdh")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("jjrdh")==null?"":item.get("jjrdh")+""</cc:outprint>' id="jjrdh" readonly="readonly"/></td> -->
+                </tr>
+                <tr>
+                    <td>联系地址</td>
+                    <td colspan="6"><cc:outprint>item.get("jjrdz")==null?"":item.get("jjrdz")+""</cc:outprint></td>
+                    <!-- <td colspan="6"><input type="text" value='<cc:outprint>item.get("jjrdz")==null?"":item.get("jjrdz")+""</cc:outprint>' id="jjrdz" readonly="readonly"/></td> -->
+                </tr>
+                <tr>
+                    <td colspan="7" style="text-align: left;">是否有在 "瑞信行" 工作的请朋好友(是/否)</td>
+                </tr>
+                <tr>
+                    <td>姓名:</td>
+                    <td><cc:outprint>item.get("rxhhyxm")==null?"":item.get("rxhhyxm")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("rxhhyxm")==null?"":item.get("rxhhyxm")+""</cc:outprint>' id="rxhhyxm" readonly="readonly"/></td> -->
+                    <td>职位职务:</td>
+                    <td><cc:outprint>item.get("rxhhygx")==null?"":item.get("rxhhygx")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("rxhhygx")==null?"":item.get("rxhhygx")+""</cc:outprint>' id="rxhhygx" readonly="readonly"/></td> -->
+                    <td>何种关系:</td>
+                    <td colspan="2"><cc:outprint>item.get("rxhhydh")==null?"":item.get("rxhhydh")+""</cc:outprint></td>
+                    <!-- <td><input type="text" value='<cc:outprint>item.get("rxhhydh")==null?"":item.get("rxhhydh")+""</cc:outprint>' id="rxhhydh" readonly="readonly"/></td> -->
+                </tr>
+                <tr>
+                    <td>兴趣爱好:</td>
+                    <td colspan="6"><cc:outprint>item.get("xqah")==null?"":item.get("xqah")+""</cc:outprint></td>
+                    <!-- <td colspan="6"><input type="text" value='<cc:outprint>item.get("xqah")==null?"":item.get("xqah")+""</cc:outprint>' id="xqah" readonly="readonly"/></td> -->
+                </tr>
+                <tr>
+                    <td colspan="7" style="text-align: left;font-size: 15px;color: #171718;">
+                        <p>&nbsp;&nbsp;声明:</p>
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;1: 本人授权公司向本人曾任职的单位或介绍人或咨询人查询所有记录.</p>
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;2: 本人谨申明以上提交的一切资料确属事实,如有不实,公司有权解除本人受聘之职,而无须任何赔偿.</p>
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;3: 本人自愿加盟瑞信行公司,并愿意遵守公司的规章制度与工作规则.</p>
+                        <p style="text-align: right;">申请人签名(手写) _____________</p>
+                    </td>
+                </tr>
+            </table>
+         <cc>}</cc>     
+        </td>
+    </tr>
+        </table>
+    </div> 
+</br>
+</br>
+</br>
+</br>
+</br>
+    </body>
+
+    </html>
