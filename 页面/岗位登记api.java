@@ -35,15 +35,15 @@ throws UnsupportedEncodingException {
 	// String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id 
 try {
 	String gwtype = request.getParameter("type")==null?"":encodeParameters(request.getParameter("type")+"");//获取类型,取哪一块的值
-	out.print("1^"+gwtype);
+	// out.print("1^"+gwtype);
 	// 错误填写多次时,可以删除无用的数据
         // 根据条件删除
 	if("deledate".equals(gwtype)) {
-		out.print("删除区域");
+		// out.print("删除区域");
 		String selname = request.getParameter("selname")==null?"":encodeParameters(request.getParameter("selname")+"");//姓名
-		out.print("selname:"+selname);
+		// out.print("selname:"+selname);
         String selsfzh = request.getParameter("selsfzh")==null?"":encodeParameters(request.getParameter("selsfzh")+"");//身份证号
-		out.print("selsfzh:"+selsfzh);
+		// out.print("selsfzh:"+selsfzh);
         String namesql = ""; // 存储 名称 条件 sql片段
         String sfzhsql = ""; // 存储 身份证号 条件 sql 片段
         if (selname != null && !"".equals(selname)) { // 判断是否输入了名字
@@ -72,19 +72,24 @@ try {
 	}else if ("gwdj".equals(gwtype)) {
 		// String formDataList = request.getParameter("formDataList")==null?"":encodeParameters(request.getParameter("formDataList")+"");//获取类型,取哪一块的值
 		// JSONObject jsonary=JSONObject.fromObject(formDataList);
-		// out.print("开始取数!");
+		out.print("基本信息开始取数!");
+		// String param = request.getParameter("param")==null?"":encodeParameters(request.getParameter("param")+"");//数据集合
+		// out.print("1^"+param);
 		String name = request.getParameter("name")==null?"":encodeParameters(request.getParameter("name")+"");//姓名
+		out.print("2^"+name);
 		String xb = request.getParameter("xb")==null?"":encodeParameters(request.getParameter("xb")+"");//性别
 		String csrqStr = request.getParameter("csrq")==null?"":encodeParameters(request.getParameter("csrq")+"");//出生日期
 		Date csrqdate = new SimpleDateFormat("yyyy-MM-dd").parse(csrqStr); 
 		String csrq = new SimpleDateFormat("yyyy-MM-dd").format(csrqdate);
+		// out.print("2^");
 		// out.print("01^"+csrq.toString());
 		// String xp = request.getParameter("xp")==null?"":encodeParameters(request.getParameter("xp")+"");//相片
 		String hyzk = request.getParameter("hyzk")==null?"":encodeParameters(request.getParameter("hyzk")+"");//婚姻状况
+		String baby = request.getParameter("baby")==null?"":encodeParameters(request.getParameter("baby")+"");
 		String mz = request.getParameter("mz")==null?"":encodeParameters(request.getParameter("mz")+"");//名族
 		String sg = request.getParameter("sg")==null?"":encodeParameters(request.getParameter("sg")+"");//身高
 		String jg = request.getParameter("jg")==null?"":encodeParameters(request.getParameter("jg")+"");//籍贯
-
+		// out.print("3^");
 		String hkszd = request.getParameter("hkszd")==null?"":encodeParameters(request.getParameter("hkszd")+"");//户口所在地
 		String hjlx = request.getParameter("hjlx")==null?"":encodeParameters(request.getParameter("hjlx")+"");//户籍类型
 		String chmxjb = request.getParameter("chmxjb")==null?"":encodeParameters(request.getParameter("chmxjb")+"");//曾患慢性疾病/重大疾病
@@ -93,7 +98,7 @@ try {
 		String zgxl = request.getParameter("zgxl")==null?"":encodeParameters(request.getParameter("zgxl")+"");//最高学历
 		String zy = request.getParameter("zy")==null?"":encodeParameters(request.getParameter("zy")+"");//专业
 		String gznx = request.getParameter("gznx")==null?"":encodeParameters(request.getParameter("gznx")+"");//工作年限
-
+		// out.print("4^");
 		String lxdh = request.getParameter("lxdh")==null?"":encodeParameters(request.getParameter("lxdh")+"");//联系电话
 		String dzyx = request.getParameter("dzyx")==null?"":encodeParameters(request.getParameter("dzyx")+"");//电子邮箱
 		String sfzh = request.getParameter("sfzh")==null?"":encodeParameters(request.getParameter("sfzh")+"");//身份证号
@@ -113,7 +118,7 @@ try {
 		String jjrgx = request.getParameter("jjrgx")==null?"":encodeParameters(request.getParameter("jjrgx")+"");//紧急人关系
 		String jjrdh = request.getParameter("jjrdh")==null?"":encodeParameters(request.getParameter("jjrdh")+"");//紧急人电话
 		String jjrdz = request.getParameter("jjrdz")==null?"":encodeParameters(request.getParameter("jjrdz")+"");//紧急人地址
-
+		// out.print("5^");
 		String rxhhyxm = request.getParameter("rxhhyxm")==null?"":encodeParameters(request.getParameter("rxhhyxm")+"");//瑞信行好友姓名
 		String rxhhygx = request.getParameter("rxhhygx")==null?"":encodeParameters(request.getParameter("rxhhygx")+"");//瑞信行好友关系
 		String rxhhydh = request.getParameter("rxhhydh")==null?"":encodeParameters(request.getParameter("rxhhydh")+"");//瑞信行好友电话
@@ -165,9 +170,9 @@ try {
 		Event1.put("xb",xb);
 		Event1.put("csrq",csrq);
 		// Event1.put("xp",xp);
-		Event1.put("hyzk",hyzk);
+		Event1.put("hyzk",hyzk+";"+baby);
 		Event1.put("mz",mz);
-		Event1.put("sg",sg);
+		Event1.put("sg",sg+" CM");
 		Event1.put("jg",jg);
 
 		Event1.put("hkszd",hkszd);
@@ -202,18 +207,19 @@ try {
 		Event1.put("rxhhydh",rxhhydh);
 		Event1.put("xqah",xqah);
 		cs.insert(Event1);
+		// out.print(sfzh);
 		jsonmsg.put("sfzh", sfzh);
 	}else if ("gwdjjytype".equals(gwtype) || "gzjltype".equals(gwtype) || "jtbjtype".equals(gwtype)) {
-		out.print("2^教育背景");
 		String gwdata = request.getParameter("param")==null?"":encodeParameters(request.getParameter("param")+"");//提交的数据
 		JSONObject jsonobj = JSONObject.fromObject(gwdata);//把String转换为json对象
-		String jsonsfzh = (String)jsonobj.getString("sfzhnum"); // 获取身份证号
+		String jsonsfzh = (String)jsonobj.getString("sfzh"); // 获取身份证号
+		out.print("2^"+gwdata);
 		String jsondatastr = (String)jsonobj.getString("data"); // 获取表格数据
 		JSONArray jsonary=JSONArray.fromObject(jsondatastr); // 将json字符串转换为json集合对象
-		// out.print(jsonsfzh+"身份证号");
+		out.print(jsonsfzh+"身份证号");
 		// out.print(jsonary+"^^");
 		if("gwdjjytype".equals(gwtype)){ //教育背景处理代码块
-			out.print("教育背景");
+			// out.print("教育背景");
 			for(int i=0;i<jsonary.size();i++){
 				JSONObject cymx_0 = jsonary.getJSONObject(i); // 获取单个json对象
 				// CCObject Event1 = new CCObject("gwdjjybj"); // 教育背景表

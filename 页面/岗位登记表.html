@@ -14,7 +14,12 @@
     <link rel="stylesheet" href="https://unpkg.com/element-ui@2.14.1/lib/theme-chalk/index.css" />
     <!-- <script type='text/javascript' src='/js/lib/jquery/jquery.validate.js'></script> -->
     <style type="text/css">
-    
+        #tableheadle{
+            font-size: 25px; 
+            color: #171718;
+            font-weight:bold;
+            text-align: center;
+        }
     </style>
     <%@ page contentType="text/html; charset=UTF-8"%>
     <head>
@@ -25,9 +30,14 @@
 
     <body>
         <div id="app">
+            <img src="/staticResource.action?m=getResource&resourceId=1528269981968dEZx6YNR" style="display: inline;padding-left: 30%; height: 40px; width: 158.491px;">
+            <!-- <img id="cclogo" src="https://k8mm1amta1700adb471ba12b.cloudcc.com/getApplogo.action?appId=ace201702B7AA713fdY9&amp;topType=light" style="display: inline;padding-left: 30%; height: 40px; width: 158.491px;"> -->
+            <p id="tableheadle">
+                人员档案登记表</p>
             <template>
                 <el-row type="flex" justify="center">
-                      <el-form ref="formData" :model="formData" label-width="90px" @keyup.enter.native="login()">
+                    <el-form ref="formData" :model="formData" label-width="90px" @keyup.enter.native="login()">
+
                             <el-form-item prop="name" label="姓名">
                                 <el-input v-model="formData.name"  clearable></el-input>
                             </el-form-item>
@@ -35,11 +45,11 @@
                                 <el-input v-model="formData.xb"   clearable></el-input>
                             </el-form-item>
                             <el-form-item prop="csrq" label="出生日期">
-                                <el-date-picker type="date" placeholder="选择出生日期" v-model="formData.csrq" ></el-date-picker>
+                                <el-date-picker type="date" placeholder="选择出生日期" v-model="formData.csrq" :editable="false"></el-date-picker>
                                 <!-- <el-input v-model="formData.csrq"  clearable></el-input> -->
                             </el-form-item>
                             <el-form-item prop="sfzh" label="身份证号">
-                                <el-input v-model="formData.sfzh"  clearable></el-input>
+                                <el-input v-model="formData.sfzh" id="sfzh" placeholder="身份证号为必填项"  clearable></el-input>
                             </el-form-item>
                             <!-- <el-form-item prop="xp" label="相片">
                                 <el-upload
@@ -59,16 +69,17 @@
                                 <el-radio-group v-model="formData.hyzk">
                                     <el-radio label="未婚"></el-radio>
                                     <el-radio label="已婚"></el-radio>
-                                    <el-radio label="已育"></el-radio>
-                                    <!-- <el-input class ="hzid" v-model="formData.baby" placeholder="请输入宝宝年龄" :disabled="formData.hyzk=='已育'?false:true" ></el-input> -->
-                                  </el-radio-group>
+                                    <el-radio label="已育"> 已育
+                                        <el-input class ="hzid" v-model="formData.baby" placeholder="请输入宝宝年龄" :disabled="formData.hyzk=='已育'?false:true" ></el-input>
+                                    </el-radio>
+                                </el-radio-group>
                                 <!-- <el-input v-model="formData.hyzk"  clearable></el-input> -->
                             </el-form-item>
                             <el-form-item prop="mz" label="民族">
                                 <el-input v-model="formData.mz"   clearable></el-input>
                             </el-form-item>
                             <el-form-item prop="sg" label="身高">
-                                <el-input v-model="formData.sg"  clearable></el-input>
+                                <el-input v-model="formData.sg"  clearable ><span slot="suffix" style="color: #171718;">CM</span></el-input>
                             </el-form-item>
                             <el-form-item prop="jg" label="籍贯">
                                 <el-input v-model="formData.jg"   clearable></el-input>
@@ -261,6 +272,15 @@
             
              // 保存提交
              login(formData) {
+                 debugger
+                 if(formData.csrq == "") {
+                    alert("请填写出生日期!");
+                    return;
+                 }
+                 if (formData.sfzh == "") {
+                    alert("请填写身份证号码!");
+                    return;
+                 }
                 // var str0 =JSON.stringify(formData);
                 // console.log(formData);
                 // var params = new URLSearchParams();
@@ -294,18 +314,20 @@
                 //     }
                 // })
                 axios({
-                    url:'https://k8mm1amta1700adb471ba12b.cloudcc.com/customize/page/9291p1140/gwdjapi.jsp?type=gwdj',
+                    // url:'https://k8mm1amta1700adb471ba12b.cloudcc.com/customize/page/9291p1140/gwdjapi.jsp?type=gwdj',
+                    url:'/customize/page/9291p1140/gwdjapi.jsp?type=gwdj',
                     method: 'post',
-                    // data: params,
+                    // data:{'param':formData},
                     params:formData,
                     // type:'gwdj',
                     headers: {
-                      'Content-type': 'application/x-www-form-urlencoded'
-                     }
+                      'Content-type': 'application/x-www-form-urlencoded',
+                     },
+                    //  withCredentials:true,
                 })
                 .then(function (response) {
                     debugger
-                    window.location.href = "https://k8mm1amta1700adb471ba12b.cloudcc.com/customize/page/9291p1140/gwdjjybj.jsp?sfzh="+response.data.sfzh;
+                    window.location.href = "https://k8mm1amta1700adb471ba12b.cloudcc.com/customize/page/9291p1140/gwdjjybj.jsp?sfzh="+formData.sfzh;
                     that.gridData1 = response.data;
                     console.log(that.gridData1);
                     

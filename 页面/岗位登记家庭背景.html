@@ -217,8 +217,8 @@
                     //封装底部表格中的数据
                     var that = this;
                     var rows = this.queryData[index].tbReviewDetails.length;
-                    var sfzhnum = '<cc:outprint>sfzh</cc:outprint>';// 获取身份证号码
-                    a.sfzhnum=sfzhnum;
+                    var sfzh = '<cc:outprint>sfzh</cc:outprint>';// 获取身份证号码
+                    a.sfzh=sfzh;
                     // a.jytable = 'none'; // 教育背景表隐藏
                     // a.gztable = 'block'; // 工作表展现
                     for (var i = 0; i < rows; i++) { //每行 从第二行开始因为第一行是表格的标题
@@ -238,6 +238,7 @@
                             if (obj.success) {
                                 alert("填写完毕!");
                                 window.location.href = "https://k8mm1amta1700adb471ba12b.cloudcc.com/webToCloudCCSetup.action?m=preview&id=2020FC4FC159908m9sQM";
+                                // https://k8mm1amta1700adb471ba12b.cloudcc.com/webToCloudcc.action
                             }
                             else {
                                 alert(obj.message);
