@@ -1,13 +1,14 @@
 /*
 description:实时计算考核分值
-version: 1.0
+version: 2.0
 date:20200915
 author:tom
 log:
 1.20201014 加入收录内部转接情况
 2.20201027 a.现在的创佣完成值取法会造成重复;b.客户数没显示
 
-3. 20201124 加入大客户考核分数的计算
+3.20201124 加入大客户考核分数的计算
+4.20201125 更新绩效方案:不再每月考核不再计算业绩分数,改为在季度中去核算季度得分;
 */
 
 CCService cs = new CCService((UserInfo)userInfo);
@@ -22,6 +23,8 @@ if(month==0){
 java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
 String nowday = df.format(new Date());
 String begin_day=year+"-"+month+"-01";
+cal.set(Calendar.DATE, cal.get(Calendar.DATE) - 7);
+String last7dt = df.format(cal);
 //out.print(nowday);
 //String ksrq = request.getParameter("startTime")==null?begin_day:request.getParameter("startTime")+"";//开始日期
 //out.print(ksrq);
@@ -78,7 +81,7 @@ for(CCObject ryjitem:ryjxlist){
     // }
     ryjitem.put("dyycqts",dyycqts);
 
-    String recordtype = ryjitem.get("recordtype")==null?"":ryjitem.get("recordtype")+""; //被考核人
+    String recordtype = ryjitem.get("recordtype")==null?"":ryjitem.get("recordtype")+""; //考核记录类型
     //有效日志数
     List<CCObject> DailyReportlist = this.cqlQuery("DailyReport","select count(*) as dryxnum from DailyReport where ownerid='"+ownerid+"' and is_deleted='0' and (jrclsy is not null or jrclsy !='') and createdate >= str_to_date('"+begin_day+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate<= str_to_date('"+nowday+" 23:59:59', '%Y-%m-%d %H:%i:%s')");
     int yyxrzs = DailyReportlist.get(0).get("dryxnum")==null?0:Integer.valueOf(DailyReportlist.get(0).get("dryxnum")+"");
@@ -86,7 +89,7 @@ for(CCObject ryjitem:ryjxlist){
     //this.update(ryjitem);
 
     //市场数据,企业和项目经理都是+20
-    ryjitem.put("scsj",20);
+    //ryjitem.put("scsj",20);
 
     //客户信息是否在3小时内录入, 查询时差在3小时以上的客户
     List<CCObject> Accountlist = this.cqlQuery("Account","select count(*) as accountnum from Account where createbyid='"+ownerid+"' and is_deleted='0' and TIMESTAMPDIFF(hour,STR_TO_DATE(smsj,'%Y-%m-%d %H:%i:%s'),STR_TO_DATE(createdate,'%Y-%m-%d %H:%i:%s'))>3 and createdate >= str_to_date('"+begin_day+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate<= str_to_date('"+nowday+" 23:59:59', '%Y-%m-%d %H:%i:%s')");
@@ -117,7 +120,7 @@ for(CCObject ryjitem:ryjxlist){
         if(Accountnum1==0){
             ryjitem.put("khmyd",0);
         } else{
-            ryjitem.put("khmyd",30.00*((float)Accountnum2/Accountnum1));
+            ryjitem.put("khmyd",40.00*((float)Accountnum2/Accountnum1)); //客户满意度由30变成40
         }
 
         //内部联动转介 zjnr
@@ -159,7 +162,7 @@ for(CCObject ryjitem:ryjxlist){
         if(Accountnum1==0){
             ryjitem.put("khmyd",0);
         } else{
-            ryjitem.put("khmyd",30.00*((float)Accountnum2/Accountnum1));
+            ryjitem.put("khmyd",30.00*((float)Accountnum2/Accountnum1));  //项目经理客户满意度还是30分
         }
 
         //内部联动转介 zjnr
@@ -168,7 +171,19 @@ for(CCObject ryjitem:ryjxlist){
         nblds = zjnrlist.get(0).get("num")==null?0:Integer.valueOf(zjnrlist.get(0).get("num")+"");//
 
         ryjitem.put("nblds",nblds);
-    }
+
+        //市场数据改为只考核项目经理,一周内一定要本人或项目上的人有录入项目经理可以继续保持20分, 当0分后再不做判断,因为只针对项目经理,整块放到项目经理代码块中
+        Double scsj = ryjitem.get("scsj")==null?0:Double.valueOf(ryjitem.get("scsj")+"");
+        if((ryjitem.get("scsj")==null) || (scsj-20)<0.000001){
+            List<CCObject> cjqklist = this.cqlQuery("cjqk","select count(*) as num from cjqk where is_deleted='0' and (createbyid = '"+ownerid+"' or createbyid in (select id from ccuser where manager = '"+ownerid+"' and isusing='1')) and createdate >= str_to_date('"+last7dt+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate<= str_to_date('"+nowday+" 23:59:59', '%Y-%m-%d %H:%i:%s')"); 
+            int cjqknum = cjqklist.get(0).get("num")==null?0:Integer.valueOf(cjqklist.get(0).get("num")+"");
+            if(cjqknum>0){
+                ryjitem.put("scsj",20);
+            } else{
+                ryjitem.put("scsj",0);
+            }
+        }
+    }   
 
     ryjitem.put("tdcywcz",0); //20201027 a 先将创佣完成值都改为0,避免重复计算
 
@@ -336,25 +351,27 @@ for(CCObject item1:list1){
         cy_d = 0 ;
     } else{
         if(grcymb==0){
-            cy_d = 1 ;
+            cy_d = 0 ;
         } else{
-            cy_d = grcywcz/grcymb ;
+            cy_d = grcywcz/grcymb*100 ;
         }
     }
+    item1.put("yjdf",cy_d);
 
     // if(grcymb==0){
     //     cy_d = 0 ;
     // } else{
     //     cy_d = grcywcz/grcymb ;
     // }
-	//double cy_d = grcywcz/grcymb ;
-	if(cy_d<=1){
-		cy_d = cy_d * 100 *0.4;
-	} else if(cy_d>1&&cy_d<1.2){
-		cy_d = cy_d * 120 *0.4;
-	} else {
-		cy_d = 120 *0.4;
-	}
+    //double cy_d = grcywcz/grcymb ;
+    //不用计算业绩得分占比
+	// if(cy_d<=1){
+	// 	cy_d = cy_d * 100 *0.4;
+	// } else if(cy_d>1&&cy_d<1.2){
+	// 	cy_d = cy_d * 120 *0.4;
+	// } else {
+	// 	cy_d = 120 *0.4;
+	// }
 
 	//联动转介(只计算一般代理转介) xmdyldsmps
 	Integer xmdyldsmps = 0;
@@ -374,50 +391,64 @@ for(CCObject item1:list1){
 		ldzj_d = 100 *0.1;
 	}
 
-	//案场规范
+	//案场规范 1.易容仪表得分由10提高到20分;2.取消掉28项技术指标录入 khzblr 和话术hs;3.加入客户接待/维护质量khjdwh
 	String yryb = item1.get("yryb")==null?"":item1.get("yryb")+"";//yryb仪容仪表 
-	String khzblr = item1.get("khzblr")==null?"":item1.get("khzblr")+"";//28项技术指标录入 khzblr
-	String hs = item1.get("hs")==null?"":item1.get("hs")+"";//话术hs
+	//String khzblr = item1.get("khzblr")==null?"":item1.get("khzblr")+"";//28项技术指标录入 khzblr
+    //String hs = item1.get("hs")==null?"":item1.get("hs")+"";//话术hs
+    String khjdwh = item1.get("khjdwh")==null?"":item1.get("khjdwh")+""; //加入客户接待/维护质量khjdwh
 	String phgl = item1.get("phgl")==null?"":item1.get("phgl")+"";//配合管理phgl
 	double acgf_d = 0.00;
 	if("符合".equals(yryb)){
-		acgf_d = acgf_d +10;
+        //acgf_d = acgf_d +10; //仪容仪表由10分提高到20分
+        acgf_d = acgf_d +20;
 	} else{
 		acgf_d = acgf_d +0;
 	}
 
-	if("优秀".equals(khzblr)){
-		acgf_d = acgf_d +30;
-	} else if("合格".equals(khzblr)){
-		acgf_d = acgf_d +15;
-	} else{
-		acgf_d = acgf_d +0;
-	}
-
-	if("优秀".equals(hs)){
-		acgf_d = acgf_d +30;
-	} else if("合格".equals(hs)){
-		acgf_d = acgf_d +15;
-	} else{
-		acgf_d = acgf_d +0;
-	}
-
-	if("优秀".equals(phgl)){
-		acgf_d = acgf_d +30;
+	// if("优秀".equals(khzblr)){
+	// 	acgf_d = acgf_d +30;
+	// } else if("合格".equals(khzblr)){
+	// 	acgf_d = acgf_d +15;
+	// } else{
+	// 	acgf_d = acgf_d +0;
+    // }
+    
+    if("优秀".equals(phgl)){  //配合管理由30,15,0变为40,20,0
+        //acgf_d = acgf_d +30;
+        acgf_d = acgf_d +40;
 	} else if("合格".equals(phgl)){
-		acgf_d = acgf_d +15;
+        //acgf_d = acgf_d +15;
+        acgf_d = acgf_d +20;
 	} else{
 		acgf_d = acgf_d +0;
-	}
+    }
+    
+    if("优秀".equals(khjdwh)){  //客户接待/维护质量为40,20,0
+        //acgf_d = acgf_d +30;
+        acgf_d = acgf_d +40;
+	} else if("合格".equals(khjdwh)){
+        //acgf_d = acgf_d +15;
+        acgf_d = acgf_d +20;
+	} else{
+		acgf_d = acgf_d +0;
+    }
+    
+	// if("优秀".equals(hs)){ //取消话术
+	// 	acgf_d = acgf_d +30;
+	// } else if("合格".equals(hs)){
+	// 	acgf_d = acgf_d +15;
+	// } else{
+	// 	acgf_d = acgf_d +0;
+	// }
 
-	acgf_d = acgf_d* 0.1;
+	acgf_d = acgf_d* 0.3;
 
 	//CRM录入
 	double dyycqts = item1.get("dyycqts")==null?0:Double.valueOf(item1.get("dyycqts")+"");//dyycqts 当月应出勤天数
 	int yyxrzs = item1.get("yyxrzs")==null?0:Integer.valueOf(item1.get("yyxrzs")+"");//该企业顾问当月有效日志数
 	double rz = 0.0;
 	if(yyxrzs>=dyycqts){
-		rz = 20;
+		rz = 30;  //日志变为30分
 	}else{
 		rz = 0;
 	}
@@ -426,9 +457,11 @@ for(CCObject item1:list1){
 	double khjslr = item1.get("khjslr")==null?0.0:Double.valueOf(item1.get("khjslr")+""); //客户信息及时录入khjslr
 	double khmyd = item1.get("khmyd")==null?0.0:Double.valueOf(item1.get("khmyd")+""); //客户满意度 khmyd
 
-	double crm_d = (rz+scsj+khjslr+khmyd)*0.4;
+    //double crm_d = (rz+scsj+khjslr+khmyd)*0.4;
+    double crm_d = (rz+khjslr+khmyd)*0.7; //CRM得分由日志,客户信息及时性,客户满意度三部分组成,去掉市场数据,总占比变为7成
 
-	double khfz = cy_d + ldzj_d + acgf_d + crm_d;
+    //double khfz = cy_d + ldzj_d + acgf_d + crm_d;
+    double khfz = acgf_d + crm_d; //考核分值由案场管理和crm两部分组成,去掉业绩和联动两个部分
 
 	//CCObject obj = new CCObject("ryjx");
 	//obj.put("id",id);
@@ -444,35 +477,37 @@ for(CCObject item3:list3){
     //double tdcymb = item3.get("tdcymb")==null?0.0:Double.valueOf(item3.get("tdcymb")+"");//创佣目标
     double grcymb = item3.get("grcymb")==null?0.0:Double.valueOf(item3.get("grcymb")+"");//grcymb 个人当月创佣目标
     double tdcywcz = item3.get("tdcywcz")==null?0.0:Double.valueOf(item3.get("tdcywcz")+"");//当月创佣完成值
-    double cy_d = tdcywcz/grcymb ;
+    double cy_d = 0.0 ;
     if(item3.get("grcymb")==null){
         cy_d = 0 ;
     } else{
         if(grcymb==0){
-            cy_d = 1 ;
+            cy_d = 0 ;
         } else{
-            cy_d = tdcywcz/grcymb ;
+            cy_d = tdcywcz/grcymb *100 ;
         }
     }
-	if(cy_d<=1){
-		cy_d = cy_d * 100 *0.4;
-	} else if(cy_d>1&&cy_d<1.2){
-		cy_d = cy_d * 100 *0.4;
-	} else {
-		cy_d = 120 *0.4;
-	}
+    //不再需要计算业绩分在月度考核中
+	// if(cy_d<=1){
+	// 	cy_d = cy_d * 100 *0.4;
+	// } else if(cy_d>1&&cy_d<1.2){
+	// 	cy_d = cy_d * 100 *0.4;
+	// } else {
+	// 	cy_d = 120 *0.4;
+    // }
+    item3.put("yjdf",cy_d); //加入业绩得分
 
 	//团队回款
-	double tdhkmb = item3.get("tdhkmb")==null?0.0:Double.valueOf(item3.get("tdhkmb")+"");//团队回款目标
-    double tdhkwcz = item3.get("tdhkwcz")==null?0.0:Double.valueOf(item3.get("tdhkwcz")+"");//团队回款完成值
-	double hk_d = tdhkwcz/tdhkmb ;
-	if(hk_d<1){
-		hk_d = hk_d * 100 *0.1;
-	} else if(hk_d>1&&hk_d<1.2){
-		hk_d = hk_d * 120 *0.1;
-	} else {
-		hk_d = 120 *0.1;
-	}
+	// double tdhkmb = item3.get("tdhkmb")==null?0.0:Double.valueOf(item3.get("tdhkmb")+"");//团队回款目标
+    // double tdhkwcz = item3.get("tdhkwcz")==null?0.0:Double.valueOf(item3.get("tdhkwcz")+"");//团队回款完成值
+	// double hk_d = tdhkwcz/tdhkmb ;
+	// if(hk_d<1){
+	// 	hk_d = hk_d * 100 *0.1;
+	// } else if(hk_d>1&&hk_d<1.2){
+	// 	hk_d = hk_d * 120 *0.1;
+	// } else {
+	// 	hk_d = 120 *0.1;
+	// }
 
 	//案场规范
 	String xmda = item3.get("xmda")==null?"":item3.get("xmda")+"";//项目档案
@@ -501,7 +536,7 @@ for(CCObject item3:list3){
 		acgf_d = acgf_d +0;
 	}
 
-	acgf_d = acgf_d* 0.25;
+	acgf_d = acgf_d* 0.30; //占比由2.5成改成3成
 
 	//CRM录入
 	//日志
@@ -529,9 +564,10 @@ for(CCObject item3:list3){
 	//客户满意度
 	double khmyd = item3.get("khmyd")==null?0.0:Double.valueOf(item3.get("khmyd")+""); //客户满意度 khmyd
 
-	double crm_d = (rz+scsj+zwlh+khmyd)*0.25;
+	double crm_d = (rz+scsj+zwlh+khmyd)*0.7; //由0.25改为0.7
 
-	double khfz = cy_d + hk_d + acgf_d + crm_d;
+    //double khfz = cy_d + hk_d + acgf_d + crm_d;
+    double khfz =acgf_d + crm_d; //不再计算创佣和回款
 
 	//CCObject obj = new CCObject("ryjx");
 	//obj.put("id",id);
