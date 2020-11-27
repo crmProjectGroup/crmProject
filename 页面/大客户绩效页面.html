@@ -32,201 +32,292 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 	//因为是取的时间,作用于一开始给个初始值,默认当天的00:00 到24:00
 	String kstm = nowday +" 00:00:00";
 	String jstm = nowday +" 23:59:59";
+	String dkhProfileXmjl = "aaa2018A4671C21Hu0yi"; // 产品运营中心项目经理简档
+	String dkhProfile = "aaa201858C360ADNceRX"; // 产品运营中心人员简档
+	// 查看所有执行sql数据
+	List<CCObject> selecrysql = new ArrayList();
+	// 查看所有的 姓名 年度 月份
+	List<CCObject> selecnamesql = new ArrayList();
+	List<CCObject> selecndsql = new ArrayList();
+	List<CCObject> selecyfsql = new ArrayList();
+	// 返回给前台json字符串 表格数据 姓名 年度 月份
+	String tabledate = "";
+	String namejsonstr = "";
+	String ndjsonstr = "";
+	String yfjsonstr = "";
+
+	if ("aaa2018A4671C21Hu0yi".equals(profid)) { // 如果是 大客户经理 人员 , 则展示下面所有的人
+		// 获取所有大客户人员的绩效数据 降序排序
+		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid from ryjx r join ccuser c on r.ownerid = c.id where c.manager = '"+uid+"' and c.is_deleted = '0' and c.isusing = '1' and r.is_deleted = '0' and r.recordtype = '2020A3CA317261AEpAQJ' order by r.createdate desc";
+		selecrysql = cs.cqlQuery("ryjx",rysql);
+		// 获取所有大客户 名字的列 去重(下拉选) begin
+		String namesql = "select distinct c.id,c.name as text,c.name as value from ryjx r join ccuser c on r.ownerid = c.id where c.manager = '"+uid+"' and r.is_deleted = '0' and c.is_deleted = '0' and c.isusing = '1' and r.recordtype = '2020A3CA317261AEpAQJ'";
+		selecnamesql = cs.cqlQuery("ryjx",namesql);
+		JSONArray namejsonlist = JSONArray.fromObject(selecnamesql); 
+		namejsonstr=namejsonlist.toString();
+		// 名字下拉选 end
+		// 获取所有大客户 年度 下拉选 begin
+		String ndsql = "select distinct nd as text, CAST(nd AS int) as value from ryjx where is_deleted = '0' and recordtype = '2020A3CA317261AEpAQJ'";
+		selecndsql = cs.cqlQuery("ryjx",ndsql);
+		JSONArray ndjsonlist = JSONArray.fromObject(selecndsql); 
+		ndjsonstr=ndjsonlist.toString();
+		// 年度 end
+		// 获取 所有大客户 月份 下拉选 begin
+		String yfsql = "select distinct yf as text, CAST(yf AS int) as value from ryjx where is_deleted = '0' and recordtype = '2020A3CA317261AEpAQJ'";
+		selecyfsql = cs.cqlQuery("ryjx",yfsql);
+		JSONArray yfjsonlist = JSONArray.fromObject(selecyfsql); 
+		yfjsonstr=yfjsonlist.toString();
+		// 月份 end
+	}else if ("aaa20180D5809FBsQZab".equals(profid) || "aaa20180681351FmekUG".equals(profid) ||  "aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid) || "aaa20188BF02AA11vijc".equals(profid)){
+		// 管理员展示所有人 大客户 绩效的数据
+		// 获取所有大客户人员的绩效数据 降序排序
+		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid from ryjx r join ccuser c on r.ownerid = c.id where r.is_deleted = '0'  and c.is_deleted = '0' and c.isusing = '1' and r.recordtype = '2020A3CA317261AEpAQJ'  order by r.createdate desc";
+		
+		selecrysql = cs.cqlQuery("ryjx",rysql);
+		// 获取所有大客户 名字的列 去重(下拉选) begin
+		String namesql = "select distinct c.id,c.name as text,c.name as value from ryjx r join ccuser c on r.ownerid = c.id where r.is_deleted = '0' and c.is_deleted = '0' and c.isusing = '1' and r.recordtype = '2020A3CA317261AEpAQJ'";
+		selecnamesql = cs.cqlQuery("ryjx",namesql);
+		JSONArray namejsonlist = JSONArray.fromObject(selecnamesql); 
+		namejsonstr=namejsonlist.toString();
+		// 名字下拉选 end
+		// 获取所有大客户 年度 下拉选 begin
+		String ndsql = "select distinct nd as text, CAST(nd AS int) as value from ryjx where is_deleted = '0' and recordtype = '2020A3CA317261AEpAQJ'";
+		selecndsql = cs.cqlQuery("ryjx",ndsql);
+		JSONArray ndjsonlist = JSONArray.fromObject(selecndsql); 
+		ndjsonstr=ndjsonlist.toString();
+		// 年度 end
+		// 获取 所有大客户 月份 下拉选 begin
+		String yfsql = "select distinct yf as text, CAST(yf AS int) as value from ryjx where is_deleted = '0' and recordtype = '2020A3CA317261AEpAQJ'";
+		selecyfsql = cs.cqlQuery("ryjx",yfsql);
+		JSONArray yfjsonlist = JSONArray.fromObject(selecyfsql); 
+		yfjsonstr=yfjsonlist.toString();
+		// 月份 end
+	} else { // 人员查询模块
+		namejsonstr = "[]";
+		ndjsonstr = "[]";
+		yfjsonstr = "[]";
+		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid from ryjx r join ccuser c on r.ownerid = c.id where r.ownerid = '"+uid+"' r.is_deleted = '0' and r.recordtype = '2020A3CA317261AEpAQJ' order by r.createdate desc";
+		selecrysql = cs.cqlQuery("ryjx",rysql);
+	}
+	String name = ""; // 姓名
+	String ryjxid = ""; // 人员绩效表的数据的id
+	double khkt = 0.0; // 客户开拓分数
+	String rz = ""; // 日志分数
+	String khmyd = ""; // 客户满意度分数
+	String khxx  = ""; // 客户信息分数
+	double khfz = 0.0; // 考核分数
+	String khs = ""; // 客户总批数(包含 重复拜访)
+	String dyycqts = ""; // 当月考勤总数
+	String yyxrzs = ""; // 当月日志总数
+	// String yjhmb = ""; // 月计划目标
+	String nd = ""; // 年度
+	int yf = 0; // 月份
+	JSONArray ryjxjsonarr = new JSONArray();
+	for(CCObject ryobj:selecrysql) {
+		name = ryobj.get("ryname")==null?"":ryobj.get("ryname") + ""; // 人员绩效id
+		ryjxid = ryobj.get("id")==null?"":ryobj.get("id") + ""; // 人员绩效id
+		khkt = ryobj.get("grdywcyjs")==null?0.0:Double.valueOf(ryobj.get("grdywcyjs")+""); // 客户开拓分数
+		rz = ryobj.get("rz")==null?"":ryobj.get("rz") + ""; // 日志分数
+		khmyd = ryobj.get("khmyd")==null?"":ryobj.get("khmyd") + ""; // 客户满意度分数
+		khxx = ryobj.get("khjslr")==null?"":ryobj.get("khjslr") + ""; // 客户信息分数
+		nd = ryobj.get("nd")==null?"":ryobj.get("nd") + ""; // 年度
+		yf = ryobj.get("yf")==null?0:Integer.parseInt(ryobj.get("yf")+""); // 月份
+		khfz = ryobj.get("khfz")==null?0.0:Double.valueOf(ryobj.get("khfz")+""); // 考核分值
+		// yjhmb = ryobj.get("yjhmb")==null?"":ryobj.get("yjhmb")+""; // 月计划目标
+		// int yjhmbint = Integer.valueOf(yjhmb).intValue();
+		// out.print(yjhmbint);
+
+		khs = ryobj.get("khs")==null?"":ryobj.get("khs") + ""; // 客户开拓总匹数 (含重复拜访)
+		dyycqts = ryobj.get("dyycqts")==null?"":ryobj.get("dyycqts") + ""; // 当月考勤总数
+		yyxrzs = ryobj.get("yyxrzs")==null?"":ryobj.get("yyxrzs") + ""; // 当月日志总数
+		
+		JSONObject ryjxjson = new JSONObject();
+		ryjxjson.put("name",name); // 姓名
+		ryjxjson.put("ryjxid",ryjxid); // 绩效id
+        ryjxjson.put("yjhmb","3"); // 当月计划目标
+        ryjxjson.put("khs",khs);  // 实际开拓总数(含重复拜访)
+        ryjxjson.put("khkt",khkt); // 客户开拓分数
+        ryjxjson.put("rz",rz);  // 日志分数
+        ryjxjson.put("khmyd",khmyd); // 客户满意度分数
+        ryjxjson.put("khxx",khxx); // 客户信息分数
+        ryjxjson.put("nd",nd); // 年度
+        ryjxjson.put("yf",yf); // 月份
+		ryjxjson.put("khfz",khfz); // 考核总分数
+        ryjxjson.put("dyycqts",dyycqts); // 当月考勤总数
+		ryjxjson.put("yyxrzs",yyxrzs);  // 当月日志总数
+		ryjxjsonarr.add(ryjxjson); 
+	}
+	tabledate=ryjxjsonarr.toString(); 
 </cc>
-		<html>
 
-		<head>
-		<!--<meta http-equiv="refresh" content="5">-->
-		<!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
-		<script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
-		<!-- <script src="https://unpkg.com/muse-ui/dist/muse-ui.js"></script> -->
-		<script src="https://cdn.jsdelivr.net/npm/muse-ui@3.0.2/dist/muse-ui.js"></script>
-		<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
-		<script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
-		<!-- <script src="//unpkg.com/vue-easytable/umd/js/index.js"></script> -->
-		<!-- <link rel="stylesheet" href="https://unpkg.com/muse-ui/dist/muse-ui.css -->
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/muse-ui@3.0.2/dist/muse-ui.css">
-		<link rel="stylesheet" href="https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css">
-		<!-- <link rel="stylesheet" href="https://unpkg.com/vue-easytable/umd/css/index.css"> -->
-        <link rel="stylesheet" href="https://unpkg.com/element-ui@2.3.7/lib/theme-chalk/index.css">
-
-		<STYLE TYPE="text/css"> 
-			.demo-text {
-			  padding: 16px;
-			  background: #fff;
-			  p {
-			    margin: 8px 0;
-			  }
-			}
-			.demo-list-wrap {
-			  width: 100%;
-			  /*max-width: 360px;*/
-			  overflow: hidden;
-			}
-            table{
-                margin-top: 15px;
-                width: 100%;
-                border:1px solid #1a1a1b;
-                border-collapse:collapse
-            }
-            th{
-                background-color: #f8f8f9;
-            }
-            th,td{
-                padding: 5px;
-                border: 1px solid #0f0f0f;
-                text-align: center;
-                vertical-align: middle;
-
-            }
-            .text{
-                font-weight:400;
-            }
-		</STYLE> 
-		</head>
-
-		<body>
-
-            <div id="app">
-                <mu-container>
-                    <mu-tabs :value.sync="active3" center color="teal"  >
-                      <mu-tab>
-                        <mu-icon value="event_note"></mu-icon>
-                        大客户绩效考核查看
-                      </mu-tab>
-                    </mu-tabs>
-                    <div class="demo-text" v-if="active3 === 0">
-                        <mu-row gutter>
-                            <mu-col span="6" lg="6" sm="6">
-                                <mu-date-input  icon="today" v-model="timebegin" label="选择起始时间" type="dateTime" clock-type="24hr" value-format="YYYY-MM-DD HH:mm:ss" label-float full-width landscape></mu-date-input>
-                            </mu-col>
-                            <mu-col span="6" lg="6" sm="6">
-                                <mu-date-input  icon="today" v-model="timeend" label="选择结束时间" type="dateTime" clock-type="24hr" value-format="YYYY-MM-DD HH:mm:ss" label-float full-width landscape></mu-date-input>
-                            </mu-col>
-                        </mu-row>
-                        <mu-row gutter>
-                            <mu-col span="6" lg="6" sm="2">
-                                <mu-flex justify-content="center" align-items="center" align-content="center">
-                                    <mu-button round small color="success" @click="showjsdetal()">查询</mu-button>
-                                </mu-flex>
-                            </mu-col>
-                        </mu-row>	
-                        <mu-paper :z-depth="1" class="demo-list-wrap" style="margin-top: 8px;">
-                            <template>
-                                <table
-                                    cellspacing="0"
-                                    border="1">
-                                    <!-- 顶部title -->
-                                    <tr>
-                                        <th>姓名</th>
-                                        <th>客户开拓(30分)</th>
-                                        <th>客户转介(30分)</th>
-                                        <th>客户满意度(15分)</th>
-                                        <th>日志(5分)</th>
-                                        <th>市场数据(10分)</th>
-                                        <th>客户信息(10分)</th>
-                                        <th>总分(100分)</th>
-                                        
-                                    </tr>
-                                    <!-- template不会被渲染 -->
-                                    <template v-for="(item,index) in  tableInfo">
-                                        <!-- 左侧跨行区域 -->
-                                        <tr>
-                                            <td>{{item.name}}</td>
-                                            <td>{{item.khkt}}</td>
-                                            <td>{{item.khzj}}</td>
-                                            <td>{{item.khmyd}}</td>
-                                            <td>{{item.rz}}</td>
-                                            <td>{{item.sczy}}</td>
-                                            <td>{{item.khxx}}</td>
-                                            <td>{{item.countScore}}</td>
-                                        </tr>
-                                    </template>
-                                </table>
-                            </template>
-                        </mu-paper>
-                    </div>
-                </mu-container>
-            </div>
+<html>
+  <script src="//unpkg.com/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/>
+  <style type="text/css">
+    .el-dropdown-link {
+      cursor: pointer;
+      color: #409eff;
+    }
+    .el-icon-arrow-down {
+    if  font-size: 12px;
+    }
+  </style>
+  <body>
+  <div id="app">
+    <br />
+    <el-container>
+        <el-header>
+			<el-page-header @back="goBack" content="大客户绩效" style="color: black;font-weight:bold">
+			</el-page-header>
+        </el-header>
+        <el-main>
+                <el-button @click="clearFilter" >清除所有过滤器</el-button>
+                <el-table
+                  ref="filterTable"
+                  :data="tableData1"
+                  style="width: 100%;height: 100%;">
+                  <el-table-column
+                    prop="name"
+                    label="姓名"
+                    width="100"
+					fixed
+					:filters="fildata1"
+					:filter-method="filterHandler"
+					>
+					<template slot-scope="scope">
+						<a  style="color:#1890ff;cursor:pointer" @click="getCheckJx(scope.row.ryjxid)" >{{scope.row.name}}</a>
+					  </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="nd"
+                    label="年度"
+					width="60"
+					:filters="fildata2"
+                    :filter-method="filterHandler"></el-table-column>>
+                  </el-table-column>
+                  <el-table-column
+                    prop="yf"
+                    label="月份"
+                    width="60"
+                    :filters="fildata3"
+                    :filter-method="filterHandler">
+                    <!-- <template slot-scope="scope">
+                      <el-tag
+                        :type="scope.row.tag === '家' ? 'primary' : 'success'"
+                        disable-transitions>{{scope.row.tag}}</el-tag>
+                    </template> -->
+                  </el-table-column>
+                  <el-table-column
+                    prop="dyycqts"
+                    label="实出勤数(天)"
+                    width="150">
+                    <template slot-scope="scope">
+                      <a  style="color:#1890ff;cursor:pointer" @click="getCheckDate(scope.$index,scope.row)" >{{scope.row.dyycqts}}</a>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="yyxrzs"
+                    label="有效日志数(天)"
+                    width="150">
+				  </el-table-column>
+				  <el-table-column
+                    prop="yjhmb"
+                    label="当月开拓目标(批)"
+                    width="150">
+                  </el-table-column>
+				  <el-table-column
+                    prop="khs"
+                    label="当月开拓总数(批)"
+                    width="150">
+                  </el-table-column>
+				  <el-table-column
+                    prop="khkt"
+                    label="客户开拓分数(40分)"
+                    width="150">
+                  </el-table-column>
+                  <el-table-column
+                    prop="rz"
+                    label="日志分数(20分)"
+                    width="150">
+                  </el-table-column>
+                  <el-table-column
+                    prop="khmyd"
+                    label="客户满意度分数(20分)"
+                    width="150">
+				  </el-table-column>
+				  <el-table-column
+                    prop="khxx"
+                    label="客户信息分数(20分)"
+                    width="150">
+				  </el-table-column>
+				  <el-table-column
+                    prop="khfz"
+					label="总分"
+					sortable
+                    width="100">
+                  </el-table-column>
+                </el-table>
+        </el-main>
+      </el-container>
+      <br />
+  </div>
 
 		<br>
 		<br>
         <br>		
 
-    <script>
-       var Main = {
-		data() {
-			return {
-				userName:'<cc:outprint>userName</cc:outprint>',
-				bindingcode: '',
-				profid: '<cc:outprint>profid</cc:outprint>',
-				uid: '<cc:outprint>uid</cc:outprint>',
-    			active3: 0,
-				cjxqlist2:[],
-				//已录入数据查询需要用到的字段
-				//查询的起始时间(给个默认值,当天)
-				timebegin:'<cc:outprint>kstm</cc:outprint>',
-				timeend:'<cc:outprint>jstm</cc:outprint>',
-				//表格栏位
-				tableInfo: [],
-				  ////align: 'right',
-    		};
-		},
-		created: function() {
-			this.getBinding()
-			//this.getFollws()       //定义方法
-		},
-		methods: {
-			getBinding: function() {
-    			var that = this;
-    			axios.get('/distributor.action', {
-    				params: {
-    			    	serviceName: 'cssoLogin',
-    			    	userName: that.userName,
-    			    	authCode: '6b42a467259407218c0e6acdfc978c01'
-    			  }
-    			})
-    			  .then(function (response) {
-    			    that.bindingcode = response.data.binding;
-    			    //console.log(this.bindingcode);
-    			  })
-    			  .catch(function (error) {
-    			    console.log(error);
-    			  });
-    		},
-			py2choose: function(e,item){
-              item.xmid=e.id;
-              item.xmmc=e.name;
-            },
-			//查询绩效分数
-			showjsdetal: function() { 
-				var that = this;
-                var ksrq = that.timebegin;
-                var jsrq = that.timeend;
-                axios.get('/controller.action', {
-                    params: {
-						name: 'dkhjxapi',
-                        ksrq: encodeURI(ksrq),
-						jsrq: encodeURI(jsrq),
-						bindingcode: that.bindingcode
-					}
-				})
-				.then(function (response) {
-                    //that.dataFortot=response.data.data;
-                    Vue.set(that,'tableInfo', response.data.data);
-                    that.$forceUpdate();
-					//console.log("ok!");
-				})
-				.catch(function (error) {
-					console.log(error);
-				});
-			
-			},
-		},
-    };
-	var Ctor = Vue.extend(Main)
-	new Ctor().$mount('#app')
-    </script>
-		</body>
-
-		</html>
+		<script>
+    var VM = new Vue({
+      el: "#app",
+      data: {
+        value:'',
+		tableData1: <cc:outprint>tabledate</cc:outprint>,
+		fildata1: <cc:outprint>namejsonstr</cc:outprint>,
+		fildata2: <cc:outprint>ndjsonstr</cc:outprint>,
+		fildata3: <cc:outprint>yfjsonstr</cc:outprint>,
+      },
+      watch: {
+      },
+      created: function () {
+      },
+      methods: {
+        resetDateFilter() {
+          this.$refs.filterTable.clearFilter('date');
+        },
+        clearFilter() {
+          this.$refs.filterTable.clearFilter();
+        },
+        clearFiltergw() {
+          this.$refs.filterTable_gw.clearFilter();
+        },
+        getCheckDate(index,row){
+          // var tempwindow=window.open('_blank');  
+          // tempwindow.location = "attendanceCheck.jsp?pjnm="+ row.pjnm+"&name=" + row.name+"&nd=" + row.nd + "&yf="+row.yf;
+          window.location.href = "attendanceCheck.jsp?pjnm="+ row.pjnm+"&name=" + row.name+"&nd=" + row.nd + "&yf="+row.yf;
+        },
+        getCheckJx(val){
+            window.location.href = "'/query.action?m=query&id="+val;
+        },
+		goBack() { // 大客户考核页面 返回到考核页面
+			window.history.go(-1);
+      	},
+        // formatter(row, column) {
+        //   return row.address;
+        // },
+        // filterYf(value, row, column) {
+        //     const property = column['property'];
+        //   console.log(property);
+        //   return row[property] === value;
+        // },
+        filterHandler(value, row, column) {
+          const property = column['property'];
+          //console.log(property);
+          return row[property] === value;
+        }
+      },
+    });
+  </script>
+  </body>
+</html>

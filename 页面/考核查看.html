@@ -2,12 +2,16 @@
 <cc!>
 /*
 description:月度考核表
-version: 1.0
-date:20190901
+version: 2.0
+date:20200901
 author:tom
 log:
 1.20200921 解决月份筛选的问题;
 2.20200929 业务员加入一个联动上门人数
+3.20201106 业务员查看绩效有缺失的问题
+4.20201123 随绩效方案修改进行大改,分为月度和季度两个部分
+    @1.加入tab,分为月度和季度两部分;
+    @2.去掉月度考核中的回款部分,加入特殊绩效说明和业绩得分;
 */
 
 /**
@@ -87,7 +91,7 @@ throws UnsupportedEncodingException {
 
 
         //jlryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdhkmb,ROUND(r.tdhkwcz,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5' order by yf desc"); //2020年5月后才改为计算创佣值 
-        jlryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdhkmb,ROUND(r.tdhkwcz,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
+        jlryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdmbms,ROUND(r.yjdf,2) as yjdf,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
         jlryjxlist_fxm = cs.cqlQuery("ryjx","select distinct r.xmmc,p.name as text,p.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5"); //筛选项目
         jlryjxlist_fyf = cs.cqlQuery("ryjx","select distinct r.yf as text, CAST(r.yf AS int) as value from ryjx r where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf"); //筛选月份
 
@@ -97,13 +101,13 @@ throws UnsupportedEncodingException {
         JSONArray jsonArray_fyf = JSONArray.fromObject(jlryjxlist_fyf); 
         jlryjxlist_fyf_1=jsonArray_fyf.toString();
 
-        gwryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khs,r.khjslr,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
+        gwryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khs,r.khjslr,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
         gwryjxlist_fnm = cs.cqlQuery("ryjx","select distinct c.id,c.name as text,c.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5'"); //筛选姓名
 
         JSONArray jsonArray_fnm = JSONArray.fromObject(gwryjxlist_fnm); 
         gwryjxlist_fnm_1=jsonArray_fnm.toString();
     } else if ("aaa2018A38306ED9syVe".equals(profid)){ //项目经理
-        jlryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdhkmb,ROUND(r.tdhkwcz,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id and p.xmjl = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
+        jlryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdmbms,ROUND(r.yjdf,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id and p.xmjl = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
         jlryjxlist_fxm = cs.cqlQuery("ryjx","select distinct r.xmmc,p.name as text,p.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.bkhr = '"+uid+"' and r.nd>=2020 and r.yf>5"); //筛选项目
         jlryjxlist_fyf = cs.cqlQuery("ryjx","select distinct r.yf as text, CAST(r.yf AS int) as value from ryjx r where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf"); //筛选月份
         JSONArray jsonArray_fxm = JSONArray.fromObject(jlryjxlist_fxm); 
@@ -112,7 +116,7 @@ throws UnsupportedEncodingException {
         JSONArray jsonArray_fyf = JSONArray.fromObject(jlryjxlist_fyf); 
         jlryjxlist_fyf_1=jsonArray_fyf.toString();
 
-        gwryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khjslr,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id and p.xmjl = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
+        gwryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khjslr,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id and p.xmjl = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
         gwryjxlist_fnm = cs.cqlQuery("ryjx","select distinct c.id,c.name as text,c.name as value from ryjx r inner join project p on r.xmmc=p.id and p.xmjl= = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5"); //筛选姓名
         
         JSONArray jsonArray_fnm = JSONArray.fromObject(gwryjxlist_fnm); 
@@ -121,7 +125,8 @@ throws UnsupportedEncodingException {
         jlryjxlist_fxm_1="[]";
         jlryjxlist_fyf_1="[]";
         gwryjxlist_fnm_1="[]";
-        gwryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khjslr,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5' and bkhr= '"+uid+"' order by yf desc"); //2020年5月后才改为计算创佣值 
+        //gwryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khjslr,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5' and bkhr= '"+uid+"' order by yf desc"); //2020年5月后才改为计算创佣值 
+        gwryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khjslr,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 and bkhr= '"+uid+"' order by yf desc"); //2020年5月后才改为计算创佣值 20201106 修改筛选条件,年度和月份由字符变为数字
         //gwryjxlist_fnm = cs.cqlQuery("ryjx","select distinct c.id,c.name as text,c.name as value from ryjx r inner join project p on r.xmmc=p.id and p.xmjl= = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5'"); //筛选姓名
         
         //JSONArray jsonArray_fnm = JSONArray.fromObject(gwryjxlist_fnm); 
@@ -133,18 +138,23 @@ throws UnsupportedEncodingException {
 	//List<CCObject> projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'"); //该经理管理的代理中的项目 
 	//[{"CCObjectAPI":"Project","name":"广州海珠同创汇","id":"a05201825B086F3UiZWa"},{"CCObjectAPI":"Project","name":"广州誉城同创汇","id":"a05201835C43A40C4KAS"}]
 	//List<CCObject> Accountlist = cs.cqlQuery("Account","SELECT a.id as id, a.name as name, a.xylx as industry, CASE a.recordtype when '20186166515AE4A8ZfOc' then '租赁客户' when '2018525F215221DtlTXV' then '进线客户' else '销售客户' end as type, a.khdj as level , a.khlyqy as area FROM Account a inner join ccuser b on a.ownerid = b.id WHERE a.createbyid <> a.ownerid and a.ghkh = '是' and a.ownerid <> '005201852146611JQCTr' and b.profile = 'aaa2018A38306ED9syVe' and a.lxrdh not like '%0000%' and a.is_deleted = '0' ");
-	String xmmc =""; //项目id
+    
+    String ryjxid =""; //绩效id
+    String xmmc =""; //项目id
 	String pjnm =""; //项目名称 
 	String jxbh = ""; //绩效编号 
     String name =""; //被考核人姓名
     String nd =""; //年度
     int yf =0; //月份
     double khfz = 0.0; //考核分值
+    String nameId = ""; // 人员id
     double tdcymb = 0.0;//团队创佣目标
     double grcymb = 0.0;//个人创佣目标
     double tdcywcz = 0.0;//团队创佣完成值
-    double tdhkmb = 0.0;//团队回款目标
-    double tdhkwcz = 0.0; //团队回款完成值
+    //double tdhkmb = 0.0;//团队回款目标
+    String tdmbms = "";
+    //double tdhkwcz = 0.0; //团队回款完成值
+    double yjdf = 0.0; //业绩得分
 
     String xmda = "";//项目档案
     String xcgzgl = "";//现场工作管理及公司文化建设
@@ -173,27 +183,31 @@ throws UnsupportedEncodingException {
     
     //项目经理
 	for(CCObject item:jlryjxlist){ 
-		khfz = 0.0; 
+		    khfz = 0.0; 
         tdcymb = 0.0;
         grcymb = 0.0;
         tdcywcz = 0.0;
-        tdhkmb = 0.0;
-        tdhkwcz = 0.0;
+        //tdhkmb = 0.0;
+        //tdhkwcz = 0.0;
         khmyd = 0.0;//客户满意度
-		
+        
+        ryjxid = item.get("ryjxid")==null?"":item.get("ryjxid") + ""; 
         xmmc = item.get("xmmc")==null?"":item.get("xmmc") + ""; 
         pjnm = item.get("pjnm")==null?"":item.get("pjnm") + ""; 
         jxbh = item.get("jxbh")==null?"":item.get("jxbh") + ""; 
         name = item.get("name")==null?"":item.get("name") + ""; 
         nd = item.get("nd")==null?"":item.get("nd") + ""; 
         yf = item.get("yf")==null?0:Integer.parseInt(item.get("yf")+""); 
-
+        nameId = item.get("nameid")==null?"":item.get("nameid") + "";
+        // out.print("$"+nameId+"^");
         khfz = item.get("khfz")==null?0.0:Double.valueOf(item.get("khfz")+""); 
         tdcymb = item.get("tdcymb")==null?0.0:Double.valueOf(item.get("tdcymb")+""); 
         grcymb = item.get("grcymb")==null?0.0:Double.valueOf(item.get("grcymb")+"");
         tdcywcz = item.get("tdcywcz")==null?0.0:Double.valueOf(item.get("tdcywcz")+"");
-        tdhkmb = item.get("tdhkmb")==null?0.0:Double.valueOf(item.get("tdhkmb")+"");
-        tdhkwcz = item.get("tdhkwcz")==null?0.0:Double.valueOf(item.get("tdhkwcz")+"");
+        //tdhkmb = item.get("tdhkmb")==null?0.0:Double.valueOf(item.get("tdhkmb")+"");
+        //tdhkwcz = item.get("tdhkwcz")==null?0.0:Double.valueOf(item.get("tdhkwcz")+"");
+        tdmbms = item.get("tdmbms")==null?"":item.get("tdmbms") + ""; 
+        yjdf = item.get("yjdf")==null?0.0:Double.valueOf(item.get("yjdf")+"");
 
         xmda = item.get("xmda")==null?"":item.get("xmda") + ""; 
         xcgzgl = item.get("xcgzgl")==null?"":item.get("xcgzgl") + ""; 
@@ -203,20 +217,52 @@ throws UnsupportedEncodingException {
         zwlh = item.get("zwlh")==null?"":item.get("zwlh") + ""; 
         khs = item.get("khs")==null?"0":item.get("khs") + ""; 
         khmyd = item.get("khmyd")==null?0.0:Double.valueOf(item.get("khmyd")+"");
-		
+
+        // begin 获取应出勤数
+        int endnd = 0; // 结束年分
+        int endyf = 0; // 结束月份
+        int ndInt = Integer.parseInt(nd);
+        if (yf == 12) { // 如果月份 是12 则为 1月
+          endyf = 1; // 结束月份
+          endnd = ndInt + 1; // 结束年分
+        } else {
+          endyf = yf + 1; // 开始年分
+          endnd = ndInt; // 开始年分
+        }
+        String ksrq2 = ndInt+"-"+yf; // 组装开始时间
+        String jsrq2 = endnd+"-"+endyf; // 组装结束时间
+        String datetime2 = " and a.createdate >= str_to_date('"+ksrq2+"', '%Y-%m')  AND a.createdate <= str_to_date('"+jsrq2+"', '%Y-%m') "; // 时间sql片段
+        // String userid = "";
+        // 封装一个人员的考勤信息的集合
+        // String userSql = "select id from ccuser where name = '"+name+"' and is_deleted = '0' and isusing = '1'";
+        // List<CCObject> useridList = cs.cqlQuery("ccuser",userSql);
+        // for (CCObject user:useridList) {
+        //     userid = user.get("id")==null?"":user.get("id")+""; // 人员的id
+        // }
+        // 根据员工的  id  查询 所有的考勤 
+        String kaoqingSql="select count(1) as con from attendance a where is_deleted = '0' and a.ownerid = '"+nameId+"' " + datetime2 + " order by createdate desc";
+        // out.print(kaoqingSql);
+        List<CCObject> countKaoList = cs.cqlQuery("attendance",kaoqingSql);
+        String countKao = countKaoList.get(0).get("con")==null?"0":String.valueOf(countKaoList.get(0).get("con")+"");
+        // end xiong
+        
+        ryjxjson.put("ryjxid",ryjxid);
         ryjxjson.put("xmmc",xmmc); 
         ryjxjson.put("pjnm",pjnm); 
         ryjxjson.put("jxbh",jxbh); 
         ryjxjson.put("name",name); 
         ryjxjson.put("nd",nd); 
         ryjxjson.put("yf",yf); 
-        
+        ryjxjson.put("countKao",countKao);
+
         ryjxjson.put("khfz",khfz); 
         ryjxjson.put("tdcymb",tdcymb); 
         ryjxjson.put("grcymb",grcymb); 
         ryjxjson.put("tdcywcz",tdcywcz); 
-        ryjxjson.put("tdhkmb",tdhkmb); 
-        ryjxjson.put("tdhkwcz",tdhkwcz); 
+        //ryjxjson.put("tdhkmb",tdhkmb); 
+        //ryjxjson.put("tdhkwcz",tdhkwcz); 
+        ryjxjson.put("tdmbms",tdmbms); 
+        ryjxjson.put("yjdf",yjdf); 
 
         ryjxjson.put("xmda",xmda); 
         ryjxjson.put("xcgzgl",xcgzgl); 
@@ -237,14 +283,15 @@ throws UnsupportedEncodingException {
         grcymb = 0.0;
         grcywcz = 0.0;
         khmyd = 0.0;//客户满意度
-		
+        
+        ryjxid = item.get("ryjxid")==null?"":item.get("ryjxid") + ""; 
         xmmc = item.get("xmmc")==null?"":item.get("xmmc") + ""; 
         pjnm = item.get("pjnm")==null?"":item.get("pjnm") + ""; 
         jxbh = item.get("jxbh")==null?"":item.get("jxbh") + ""; 
         name = item.get("name")==null?"":item.get("name") + ""; 
         nd = item.get("nd")==null?"":item.get("nd") + ""; 
         yf = item.get("yf")==null?0:Integer.parseInt(item.get("yf")+""); 
-
+        nameId = item.get("nameid")==null?"":item.get("nameid") + ""; 
         khfz = item.get("khfz")==null?0.0:Double.valueOf(item.get("khfz")+""); 
         grcymb = item.get("grcymb")==null?0.0:Double.valueOf(item.get("grcymb")+"");
         grcywcz = item.get("grcywcz")==null?0.0:Double.valueOf(item.get("grcywcz")+"");
@@ -259,14 +306,43 @@ throws UnsupportedEncodingException {
         khjslr = item.get("khjslr")==null?"":item.get("khjslr") + ""; 
         khs = item.get("khs")==null?"0":item.get("khs") + ""; 
         khmyd = item.get("khmyd")==null?0.0:Double.valueOf(item.get("khmyd")+"");
-		
+
+        // begin 获取应出勤数
+        int endnd = 0; // 结束年分
+        int endyf = 0; // 结束月份
+        int ndInt = Integer.parseInt(nd);
+        if (yf == 12) { // 如果月份 是12 则为 1月
+          endyf = 1; // 结束月份
+          endnd = ndInt + 1; // 结束年分
+        } else {
+          endyf = yf + 1; // 开始年分
+          endnd = ndInt; // 开始年分
+        }
+        String ksrq2 = ndInt+"-"+yf; // 组装开始时间
+        String jsrq2 = endnd+"-"+endyf; // 组装结束时间
+        String datetime2 = " and a.createdate >= str_to_date('"+ksrq2+"', '%Y-%m')  AND a.createdate <= str_to_date('"+jsrq2+"', '%Y-%m') "; // 时间sql片段
+        // String userid = "";
+        // // 封装一个人员的考勤信息的集合
+        // String userSql = "select id from ccuser where name = '"+name+"' and is_deleted = '0' and isusing = '1'";
+        // List<CCObject> useridList = cs.cqlQuery("ccuser",userSql);
+        // for (CCObject user:useridList) {
+        //     userid = user.get("id")==null?"":user.get("id")+""; // 人员的id
+        // }
+        // 根据员工的  id  查询 所有的考勤 
+        String kaoqingSql="select count(1) as con from attendance a where is_deleted = '0' and a.ownerid = '"+nameId+"' " + datetime2 + " order by createdate desc";
+        List<CCObject> countKaoList = cs.cqlQuery("attendance",kaoqingSql);
+        String countKao = countKaoList.get(0).get("con")==null?"0":String.valueOf(countKaoList.get(0).get("con")+"");
+        // end xiong
+
+        gwryjxjson.put("ryjxid",ryjxid); 
         gwryjxjson.put("xmmc",xmmc); 
         gwryjxjson.put("pjnm",pjnm); 
         gwryjxjson.put("jxbh",jxbh); 
         gwryjxjson.put("name",name); 
         gwryjxjson.put("nd",nd); 
         gwryjxjson.put("yf",yf); 
-        
+        gwryjxjson.put("countKao",countKao);
+
         gwryjxjson.put("khfz",khfz);  
         gwryjxjson.put("grcymb",grcymb); 
         gwryjxjson.put("grcywcz",grcywcz); 
@@ -292,6 +368,7 @@ throws UnsupportedEncodingException {
   <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
   <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
   <style type="text/css">
     .el-dropdown-link {
       cursor: pointer;
@@ -308,236 +385,335 @@ throws UnsupportedEncodingException {
         <el-header>
         </el-header>
         <el-main>
-            <template v-if="showJl">
-                <!-- <el-button @click="resetDateFilter">清除项目过滤器</el-button>
-                <el-button @click="resetDateFilter">清除月份过滤器</el-button> -->
-                <el-button @click="clearFilter" >清除所有过滤器</el-button>
-                <el-table
-                  ref="filterTable"
-                  :data="tableData1"
-                  style="width: 100%">
-                  <el-table-column
-                    prop="pjnm"
-                    label="项目"
-                    sortable
-                    width="100"
-                    column-key="date"
-                    :filters="fildata1"
-                    :filter-method="filterHandler"
-                  >
-                  </el-table-column>
-                  <el-table-column
-                    prop="name"
-                    label="姓名"
-                    width="100"
-                    fixed>
-                    <template slot-scope="scope">
-                      <a  style="color:#1890ff;cursor:pointer" @click="getCheckDate(scope.$index,scope.row)" >{{scope.row.name}}</a>
+            <el-tabs v-model="activeName" type="card" @tab-click="handleClickTab">
+                <el-tab-pane label="月度考核" name="monthkh">
+                    <template v-if="showJl">
+                        <!-- <el-button @click="resetDateFilter">清除项目过滤器</el-button>
+                        <el-button @click="resetDateFilter">清除月份过滤器</el-button> -->
+                        <el-button @click="clearFilter" >清除所有过滤器</el-button>
+                        <el-table
+                          ref="filterTable"
+                          :data="tableData1"
+                          style="width: 100%">
+                          <el-table-column
+                            prop="pjnm"
+                            label="项目"
+                            sortable
+                            width="100"
+                            column-key="date"
+                            :filters="fildata1"
+                            :filter-method="filterHandler"
+                          >
+                          </el-table-column>
+                          <el-table-column
+                            prop="name"
+                            label="姓名"
+                            width="100"
+                            fixed>
+                            <template slot-scope="scope">
+                                <a  style="color:#1890ff;cursor:pointer" @click="getCheckJx(scope.row.ryjxid)" >{{scope.row.name}}</a>
+                              </template>
+                          </el-table-column>
+                          <el-table-column
+                            prop="nd"
+                            label="年度"
+                            width="60"></el-table-column>>
+                          </el-table-column>
+                          <el-table-column
+                            prop="yf"
+                            label="月份"
+                            width="60"
+                            :filters="fildata3"
+                            :filter-method="filterHandler">
+                            <!-- <template slot-scope="scope">
+                              <el-tag
+                                :type="scope.row.tag === '家' ? 'primary' : 'success'"
+                                disable-transitions>{{scope.row.tag}}</el-tag>
+                            </template> -->
+                          </el-table-column>
+                          <el-table-column
+                            prop="countKao"
+                            label="实出勤数"
+                            width="100">
+                            <template slot-scope="scope">
+                              <a  style="color:#1890ff;cursor:pointer" @click="getCheckDate(scope.$index,scope.row)" >{{scope.row.countKao}}</a>
+                            </template>
+                          </el-table-column>
+                          <el-table-column
+                            prop="khfz"
+                            label="考核分值"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="tdcymb"
+                            label="团队创佣目标"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="grcymb"
+                            label="个人创佣目标"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="tdcywcz"
+                            label="团队创佣完成值"
+                            width="100">
+                          </el-table-column>
+                          <!-- <el-table-column
+                            prop="tdhkmb"
+                            label="团队回款目标"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="tdhkwcz"
+                            label="团队回款完成值"
+                            width="100">
+                          </el-table-column> -->
+                          <el-table-column
+                            prop="tdmbms"
+                            label="特殊目标描述"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="yjdf"
+                            label="业绩得分"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="xmda"
+                            label="项目档案"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="xcgzgl"
+                            label="现场工作管理及公司文化建设"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="khzblr"
+                            label="客户指标录入"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="rz"
+                            label="日志"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="scsj"
+                            label="市场数据"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="zwlh"
+                            label="早晚例会"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="khs"
+                            label="当月上门客户数"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="khmyd"
+                            label="客户满意度"
+                            width="100">
+                          </el-table-column>
+                        </el-table>
                     </template>
-                  </el-table-column>
-                  <el-table-column
-                    prop="nd"
-                    label="年度"
-                    width="60"></el-table-column>>
-                  </el-table-column>
-                  <el-table-column
-                    prop="yf"
-                    label="月份"
-                    width="60"
-                    :filters="fildata3"
-                    :filter-method="filterHandler">
-                    <!-- <template slot-scope="scope">
-                      <el-tag
-                        :type="scope.row.tag === '家' ? 'primary' : 'success'"
-                        disable-transitions>{{scope.row.tag}}</el-tag>
-                    </template> -->
-                  </el-table-column>
-                  <el-table-column
-                    prop="khfz"
-                    label="考核分值"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="tdcymb"
-                    label="团队创佣目标"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="grcymb"
-                    label="个人创佣目标"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="tdcywcz"
-                    label="团队创佣完成值"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="tdhkmb"
-                    label="团队回款目标"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="tdhkwcz"
-                    label="团队回款完成值"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="xmda"
-                    label="项目档案"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="xcgzgl"
-                    label="现场工作管理及公司文化建设"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khzblr"
-                    label="客户指标录入"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="rz"
-                    label="日志"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="scsj"
-                    label="市场数据"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="zwlh"
-                    label="早晚例会"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khs"
-                    label="当月上门客户数"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khmyd"
-                    label="客户满意度"
-                    width="100">
-                  </el-table-column>
-                </el-table>
-            </template>
-            <template>
-                <!-- <el-button @click="resetDateFilter">清除项目过滤器</el-button>
-                <el-button @click="resetDateFilter">清除月份过滤器</el-button> -->
-                <el-button @click="clearFiltergw">清除所有过滤器</el-button>
-                <el-table
-                  ref="filterTable_gw"
-                  :data="tableData2"
-                  style="width: 100%">
-                  <el-table-column
-                    prop="pjnm"
-                    label="项目"
-                    sortable
-                    width="100"
-                    column-key="date"
-                    :filters="fildata1"
-                    :filter-method="filterHandler"
-                  >
-                  </el-table-column>
-                  <el-table-column
-                    prop="name"
-                    label="姓名"
-                    width="100"
-                    fixed
-                    :filters="fildata2"
-                    :filter-method="filterHandler">
-                    <template slot-scope="scope">
-                      <a  style="color:#1890ff;cursor:pointer" @click="getCheckDate(scope.$index,scope.row)" >{{scope.row.name}}</a>
+                    <template>
+                        <!-- <el-button @click="resetDateFilter">清除项目过滤器</el-button>
+                        <el-button @click="resetDateFilter">清除月份过滤器</el-button> -->
+                        <el-button @click="clearFiltergw">清除所有过滤器</el-button>
+                        <el-table
+                          ref="filterTable_gw"
+                          :data="tableData2"
+                          style="width: 100%">
+                          <el-table-column
+                            prop="pjnm"
+                            label="项目"
+                            sortable
+                            width="100"
+                            column-key="date"
+                            :filters="fildata1"
+                            :filter-method="filterHandler"
+                          >
+                          </el-table-column>
+                          <el-table-column
+                            prop="name"
+                            label="姓名"
+                            width="100"
+                            fixed
+                            :filters="fildata2"
+                            :filter-method="filterHandler">
+                            <template slot-scope="scope">
+                            <a  style="color:#1890ff;cursor:pointer" @click="getCheckJx(scope.row.ryjxid)" >{{scope.row.name}}</a>
+                          </template>
+                          </el-table-column>
+                          <el-table-column
+                            prop="nd"
+                            label="年度"
+                            width="60"></el-table-column>>
+                          </el-table-column>
+                          <el-table-column
+                            prop="yf"
+                            label="月份"
+                            width="60"
+                            :filters="fildata3"
+                            :filter-method="filterHandler">
+                            <!-- <template slot-scope="scope">
+                              <el-tag
+                                :type="scope.row.tag === '家' ? 'primary' : 'success'"
+                                disable-transitions>{{scope.row.tag}}</el-tag>
+                            </template> -->
+                          </el-table-column>
+                          <el-table-column
+                          prop="countKao"
+                          label="实出勤数"
+                          width="100">
+                          <template slot-scope="scope">
+                            <a  style="color:#1890ff;cursor:pointer" @click="getCheckDate(scope.$index,scope.row)" >{{scope.row.countKao}}</a>
+                          </template>
+                        </el-table-column>
+                          <el-table-column
+                            prop="khfz"
+                            label="考核分值"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="grcymb"
+                            label="个人创佣目标"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="grcywcz"
+                            label="个人创佣完成值"
+                            width="100">
+                          </el-table-column>
+
+                          <el-table-column
+                            prop="yryb"
+                            label="仪容仪表"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="khzblr"
+                            label="客户指标录入"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="phgl"
+                            label="配合管理"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="hs"
+                            label="话术"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="rz"
+                            label="日志"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="scsj"
+                            label="市场数据"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="xmdyldsmps"
+                            label="一般代理转介数"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="khjslr"
+                            label="客户及时录入"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="khs"
+                            label="当月上门客户数"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="khmyd"
+                            label="客户满意度"
+                            width="100">
+                          </el-table-column>
+                        </el-table>
                     </template>
-                  </el-table-column>
-                  <el-table-column
-                    prop="nd"
-                    label="年度"
-                    width="60"></el-table-column>>
-                  </el-table-column>
-                  <el-table-column
-                    prop="yf"
-                    label="月份"
-                    width="60"
-                    :filters="fildata3"
-                    :filter-method="filterHandler">
-                    <!-- <template slot-scope="scope">
-                      <el-tag
-                        :type="scope.row.tag === '家' ? 'primary' : 'success'"
-                        disable-transitions>{{scope.row.tag}}</el-tag>
-                    </template> -->
-                  </el-table-column>
-                  <el-table-column
-                    prop="khfz"
-                    label="考核分值"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="grcymb"
-                    label="个人创佣目标"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="grcywcz"
-                    label="个人创佣完成值"
-                    width="100">
-                  </el-table-column>
-                  
-                  <el-table-column
-                    prop="yryb"
-                    label="仪容仪表"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khzblr"
-                    label="客户指标录入"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="phgl"
-                    label="配合管理"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="hs"
-                    label="话术"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="rz"
-                    label="日志"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="scsj"
-                    label="市场数据"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="xmdyldsmps"
-                    label="一般代理转介数"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khjslr"
-                    label="客户及时录入"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khs"
-                    label="当月上门客户数"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khmyd"
-                    label="客户满意度"
-                    width="100">
-                  </el-table-column>
-                </el-table>
-            </template>
+                </el-tab-pane>
+                <el-tab-pane label="季度考核" name="seasonkh">
+                    <template>
+                        <!-- <el-button @click="resetDateFilter">清除项目过滤器</el-button>
+                        <el-button @click="resetDateFilter">清除月份过滤器</el-button> -->
+                        <el-button @click="clearFilter" >清除所有过滤器</el-button>
+                        <el-table
+                          ref="filterTable_jljd"
+                          :data="tableData_jd"
+                          v-loading="loading_jd"
+                          style="width: 100%">
+                          <!-- <el-table-column
+                            prop="pjnm"
+                            label="项目"
+                            sortable
+                            width="100"
+                            column-key="date"
+                            :filters="fildata1"
+                            :filter-method="filterHandler"
+                          > -->
+                          </el-table-column>
+                          <el-table-column
+                            prop="name"
+                            label="姓名"
+                            width="100"
+                            fixed>
+                            <template slot-scope="scope">
+                                <a  style="color:#1890ff;cursor:pointer" @click="getCheckJx(scope.row.id)" >{{scope.row.name}}</a>
+                              </template>
+                          </el-table-column>
+                          <el-table-column
+                            prop="nd"
+                            label="年度"
+                            width="60"></el-table-column>>
+                          </el-table-column>
+                          <el-table-column
+                            prop="yf"
+                            label="月份"
+                            width="100"
+                            :filters="fildata3"
+                            :filter-method="filterHandler">
+                            <!-- <template slot-scope="scope">
+                              <el-tag
+                                :type="scope.row.tag === '家' ? 'primary' : 'success'"
+                                disable-transitions>{{scope.row.tag}}</el-tag>
+                            </template> -->
+                          </el-table-column>
+                          <el-table-column
+                            prop="dyjdf"
+                            label="第一月得分"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="deydf "
+                            label="第二月得分"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="dsydf"
+                            label="第三月得分"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="jddf"
+                            label="季度得分"
+                            width="100">
+                          </el-table-column>
+                        </el-table>
+                    </template>
+                </el-tab-pane>
+            <el-tabs>
         </el-main>
       </el-container>
       <br />
@@ -555,7 +731,9 @@ throws UnsupportedEncodingException {
         fildata2: <cc:outprint>gwryjxlist_fnm_1</cc:outprint>,
         fildata3: <cc:outprint>jlryjxlist_fyf_1</cc:outprint>,
         showJl:<cc:outprint>b</cc:outprint>,
-
+        activeName:'monthkh',
+        loading_jd:true,
+        tableData_jd:null,
 
       },
       watch: {
@@ -577,6 +755,10 @@ throws UnsupportedEncodingException {
           // tempwindow.location = "attendanceCheck.jsp?pjnm="+ row.pjnm+"&name=" + row.name+"&nd=" + row.nd + "&yf="+row.yf;
           window.location.href = "attendanceCheck.jsp?pjnm="+ row.pjnm+"&name=" + row.name+"&nd=" + row.nd + "&yf="+row.yf;
         },
+        getCheckJx(val){
+            //window.location.href = "'/query.action?m=query&id="+val;
+            window.open("/query.action?m=query&id="+val); 
+        },
         // formatter(row, column) {
         //   return row.address;
         // },
@@ -589,7 +771,35 @@ throws UnsupportedEncodingException {
           const property = column['property'];
           //console.log(property);
           return row[property] === value;
-        }
+        },
+        handleClickTab(tab, event) {
+            console.log(tab, event);
+            console.log(tab.label);
+            if(tab.label=='季度考核'&&this.loading_jd){
+				//alert(this.jsrq_bd);
+				var that = this;
+				
+				axios.get('/controller.action', {
+					params: {
+						name:'khckapi',
+				   		type:'getjd',
+					}
+				})
+				.then(function (response) {
+					//alert("ok!");
+					that.tableData_jd=response.data.data;
+					
+					that.loading_jd=false;
+					//console.log(this.bindingcode);
+					
+					
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+				//alert("end1!");
+			}
+        },
       },
     });
   </script>
