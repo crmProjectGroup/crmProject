@@ -382,9 +382,12 @@ throws UnsupportedEncodingException {
   <div id="app">
     <br />
     <el-container>
-        <el-header>
-        </el-header>
+     
         <el-main>
+          <el-page-header @back="goBack" content="大客户绩效" title="进入">
+          </el-page-header>
+        </br>
+        </br>
             <el-tabs v-model="activeName" type="card" @tab-click="handleClickTab">
                 <el-tab-pane label="月度考核" name="monthkh">
                     <template v-if="showJl">
@@ -758,6 +761,10 @@ throws UnsupportedEncodingException {
         getCheckJx(val){
             //window.location.href = "'/query.action?m=query&id="+val;
             window.open("/query.action?m=query&id="+val); 
+        },
+        goBack(){
+            //window.location.href = "'/query.action?m=query&id="+val;
+            window.location.href = "/customize/page/9291p1140/dkhjxb.jsp?name=dkhjxb"; 
         },
         // formatter(row, column) {
         //   return row.address;
