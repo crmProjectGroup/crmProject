@@ -581,12 +581,15 @@ for(CCObject item3:list3){
     // 当月 1 号 至今
     String datetimeone = " and createdate >= str_to_date('"+begin_day+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate<= str_to_date('"+nowday+" 23:59:59', '%Y-%m-%d %H:%i:%s')";
     List<CCObject> viplist = cs.cqlQuery("ryjx","select * from ryjx where nd='"+year+"' and yf ='"+month+"' and is_deleted = '0' and recordtype='2020A3CA317261AEpAQJ'");
+    // 通过成交的情况产生的代理明细获取创佣金额,成交时间5月select * from `user` where month(birthday) = 8 ;(获取所有成交的数据)
+    List<CCObject> cylist = this.cqlQuery("Opportunity","select d.sjsy as sjsy,o.id as oppoid,o.ownerid as ownerid,o.xmmc as xmmc from Opportunity o inner join dljsmxb d on o.id = d.ywjh and d.is_deleted='0' where o.is_deleted='0' and o.jieduan='成交' and o.spzt='审批通过' and o.cjsj >= str_to_date('"+begin_day+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND o.cjsj<= str_to_date('"+nowday+" 23:59:59', '%Y-%m-%d %H:%i:%s')");
+    // 遍历所有大客户的人员(计算分数)
     for(CCObject vipobj:viplist) {  // 遍历每个大客户人员, 计算分数
         int kaiguan = 0; // 如果有一个客户跟进信息没有录入,就没有 khxx  这个分数
         double khkt = 0.0; // 存储客户开拓 和 客户跟进 的分数
         double khxx = 0.0; // 存储客户信息分数
 // 1. 获取客户开拓分数begin
-        String userid = vipobj.get("ownerid")==null?"":vipobj.get("ownerid")+""; // 获取绩效数据的 所有者
+        String userid = vipobj.get("bkhr")==null?"":vipobj.get("bkhr")+""; // 获取绩效数据的 所有者
         // 测试 薛超一  0052020581DE67CmBKwy
         // select *  from account a where a.is_deleted = '0' and a.createbyid = '0052020581DE67CmBKwy' and createdate >= str_to_date('2020-11-01 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate<= str_to_date('2020-11-23 23:59:59', '%Y-%m-%d %H:%i:%s') 
         String accountSql = "select id,lxrdh  from account a where a.is_deleted = '0' and a.createbyid = '"+userid+"'" + datetimeone ;
@@ -665,6 +668,18 @@ for(CCObject item3:list3){
             countScore = (double) Math.round(countScore * 100) / 100;
             // 客户开拓总批数 (含跟进记录)
             int countaccount = accountList.size() + nrList.size();
+            // 设置 个人创佣完成值
+            for(CCObject cywcobj:cylist) {
+                String ownerid = cywcobj.get("ownerid")==null?"":cywcobj.get("ownerid")+"";//ownerid 成交者
+                if (userid.equals(ownerid)) {
+                    List<CCObject> rylist = cs.cqlQuery("ryjx","select id,grcywcz from ryjx where nd='"+year+"' and yf ='"+month+"'  and bkhr = '"+userid+"' and is_deleted = '0' and recordtype='2020A3CA317261AEpAQJ'");
+                    double grcywcz = rylist.get(0).get("grcywcz")==null?0:Double.valueOf(rylist.get(0).get("grcywcz")+"");// 获取人员绩效里个人创佣完成值
+                    //实际创佣
+                    double sjsy = cywcobj.get("sjsy")==null?0:Double.valueOf(cywcobj.get("sjsy")+"");
+                    vipobj.put("grcywcz",grcywcz + sjsy);
+                    cs.updateLt(vipobj);
+                }
+            }
             // 加入到 数据库中
             vipobj.put("grdywcyjs",khkt); // 客户开拓分数 (个人当月完成业绩数 字段)
             vipobj.put("rz",rz); // 日志分数
