@@ -24,7 +24,7 @@ java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
 String nowday = df.format(new Date());
 String begin_day=year+"-"+month+"-01";
 cal.set(Calendar.DATE, cal.get(Calendar.DATE) - 7);
-String last7dt = df.format(cal);
+String last7dt = df.format(cal.getTime());
 //out.print(nowday);
 //String ksrq = request.getParameter("startTime")==null?begin_day:request.getParameter("startTime")+"";//开始日期
 //out.print(ksrq);
@@ -681,10 +681,10 @@ for(CCObject item3:list3){
                 }
             }
             // 加入到 数据库中
-            vipobj.put("grdywcyjs",khkt); // 客户开拓分数 (个人当月完成业绩数 字段)
+            vipobj.put("khkt",khkt); // 客户开拓分数
             vipobj.put("rz",rz); // 日志分数
             vipobj.put("khmyd",khmyd); // 客户满意度分数
-            vipobj.put("khjslr",khxx); // 客户信息分数 (客户及时录入 字段)
+            vipobj.put("khxx",khxx); // 客户信息分数 (客户及时录入 字段)
             vipobj.put("khfz",countScore); // 考核总分 (考核分值 字段)
             // 辅助 展示
             vipobj.put("khs",countaccount); // 客户开拓总批数 (客户数 字段)

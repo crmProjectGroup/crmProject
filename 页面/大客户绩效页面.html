@@ -48,7 +48,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 
 	if ("aaa2018A4671C21Hu0yi".equals(profid)) { // 如果是 大客户经理 人员 , 则展示下面所有的人
 		// 获取所有大客户人员的绩效数据 降序排序
-		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid from ryjx r join ccuser c on r.ownerid = c.id where c.manager = '"+uid+"' and c.is_deleted = '0' and c.isusing = '1' and r.is_deleted = '0' and r.recordtype = '2020A3CA317261AEpAQJ' order by r.createdate desc";
+		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid,r.khkt,r.khxx from ryjx r join ccuser c on r.ownerid = c.id where c.manager = '"+uid+"' and c.is_deleted = '0' and c.isusing = '1' and r.is_deleted = '0' and r.recordtype = '2020A3CA317261AEpAQJ' order by r.createdate desc";
 		selecrysql = cs.cqlQuery("ryjx",rysql);
 		// 获取所有大客户 名字的列 去重(下拉选) begin
 		String namesql = "select distinct c.id,c.name as text,c.name as value from ryjx r join ccuser c on r.ownerid = c.id where c.manager = '"+uid+"' and r.is_deleted = '0' and c.is_deleted = '0' and c.isusing = '1' and r.recordtype = '2020A3CA317261AEpAQJ'";
@@ -71,7 +71,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 	}else if ("aaa20180D5809FBsQZab".equals(profid) || "aaa20180681351FmekUG".equals(profid) ||  "aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid) || "aaa20188BF02AA11vijc".equals(profid)){
 		// 管理员展示所有人 大客户 绩效的数据
 		// 获取所有大客户人员的绩效数据 降序排序
-		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid from ryjx r join ccuser c on r.ownerid = c.id where r.is_deleted = '0'  and c.is_deleted = '0' and c.isusing = '1' and r.recordtype = '2020A3CA317261AEpAQJ'  order by r.createdate desc";
+		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid,r.khkt,r.khxx from ryjx r join ccuser c on r.ownerid = c.id where r.is_deleted = '0'  and c.is_deleted = '0' and c.isusing = '1' and r.recordtype = '2020A3CA317261AEpAQJ'  order by r.createdate desc";
 		
 		selecrysql = cs.cqlQuery("ryjx",rysql);
 		// 获取所有大客户 名字的列 去重(下拉选) begin
@@ -96,7 +96,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 		namejsonstr = "[]";
 		ndjsonstr = "[]";
 		yfjsonstr = "[]";
-		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid from ryjx r join ccuser c on r.ownerid = c.id where r.ownerid = '"+uid+"' r.is_deleted = '0' and r.recordtype = '2020A3CA317261AEpAQJ' order by r.createdate desc";
+		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid,r.khkt,r.khxx from ryjx r join ccuser c on r.ownerid = c.id where r.ownerid = '"+uid+"' r.is_deleted = '0' and r.recordtype = '2020A3CA317261AEpAQJ' order by r.createdate desc";
 		selecrysql = cs.cqlQuery("ryjx",rysql);
 	}
 	String name = ""; // 姓名
@@ -116,10 +116,10 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 	for(CCObject ryobj:selecrysql) {
 		name = ryobj.get("ryname")==null?"":ryobj.get("ryname") + ""; // 人员绩效id
 		ryjxid = ryobj.get("id")==null?"":ryobj.get("id") + ""; // 人员绩效id
-		khkt = ryobj.get("grdywcyjs")==null?0.0:Double.valueOf(ryobj.get("grdywcyjs")+""); // 客户开拓分数
+		khkt = ryobj.get("khkt")==null?0.0:Double.valueOf(ryobj.get("khkt")+""); // 客户开拓分数
 		rz = ryobj.get("rz")==null?"":ryobj.get("rz") + ""; // 日志分数
 		khmyd = ryobj.get("khmyd")==null?"":ryobj.get("khmyd") + ""; // 客户满意度分数
-		khxx = ryobj.get("khjslr")==null?"":ryobj.get("khjslr") + ""; // 客户信息分数
+		khxx = ryobj.get("khxx")==null?"":ryobj.get("khxx") + ""; // 客户信息分数
 		nd = ryobj.get("nd")==null?"":ryobj.get("nd") + ""; // 年度
 		yf = ryobj.get("yf")==null?0:Integer.parseInt(ryobj.get("yf")+""); // 月份
 		khfz = ryobj.get("khfz")==null?0.0:Double.valueOf(ryobj.get("khfz")+""); // 考核分值
@@ -151,7 +151,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 </cc>
 
 <html>
-  <script src="//unpkg.com/vue/dist/vue.js"></script>
+	<script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
   <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
   <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/>
