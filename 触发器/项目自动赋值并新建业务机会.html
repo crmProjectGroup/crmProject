@@ -10,27 +10,34 @@
       recordtype 类型
 		20183DD9667FA14v9YSK  租赁
 		2018BD60B25D1A2mLTd7  销售	
+
+	3: 20201203 新增大客户人员,创建客户
+		1: 根据简档判断是否是大客户人员.
+		2: 大客户人员创建客户,必须填写项目名称.
  */
 
 //自动写入项目名称,通过新建的user所在的项目销售小组
 String uid = userInfo.getUserId();  //获取用户ID
+String profileid = userInfo.getProfileId();//简档id
 String id = record_new.get("id")==null?"":record_new.get("id")+"";  //获取此条客户记录的ID
 String xmmc = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";  //判断是否填写项目名称
-
-	List<CCObject> list = this.cquery("ProjectSaleGroup","xmxsy = '"+uid+"'");  //用户ID读取项目销售小组
-	if(list.size()==1){ //获取唯一对应的项目组
-		String xmmcc = list.get(0).get("xmmc")==null?"":list.get(0).get("xmmc")+""; //获取项目名称id
-		String xmjl = list.get(0).get("xmjl")==null?"":list.get(0).get("xmjl")+""; //获取项目经理
+	if ("aaa201858C360ADNceRX".equals(profileid)) { // 如果简档是运营中心简档(大客户简档)
+		if ("".equals(xmmc)) { // 如果是大客户人员创建客户, 必须填写项目名称
+			xmmc = "a05201955D07905hz3vm";
+		} else if(!"a05201955D07905hz3vm".equals(xmmc)){
+			trigger.addErrorMessage("vip企业顾问创建客户,必须填写大客户项目名称!");
+		}
 		CCObject obj = new CCObject("Account");  //回写客户表中的项目字段
-		obj.put("xmmc",xmmcc);
+		obj.put("xmmc",xmmc);
 		obj.put("id",id);
 		this.updateLt(obj);
-
 		//新建业务机会
 		//项目名称: xmmcc id 
-		List<CCObject> list1 = this.cqlQuery("Project","select name from Project where id = '"+xmmcc+"' and is_deleted = '0' "); //项目表中根据id取名称
+		List<CCObject> list1 = this.cqlQuery("Project","select name,xmjl from Project where id = '"+xmmc+"'  and is_deleted = '0' "); //项目表中根据id取名称
 		String xmmcn=null;
+		String xmjl = "";
 		if(list1.size()>0){
+			xmjl = list1.get(0).get("xmjl")==null?"":list1.get(0).get("xmjl")+""; //获取项目经理
 			xmmcn = list1.get(0).get("name")==null?"":list1.get(0).get("name")+"";
 		}
 		//客户名称
@@ -39,52 +46,7 @@ String xmmc = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";  //判�
 		java.text.SimpleDateFormat sdf= new java.text.SimpleDateFormat("yyyyMMdd"); //日期 MM需大写
 		String date1=sdf.format(new Date());
 		String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
-		String xqmj = record_new.get("xqmj")==null?"":record_new.get("xqmj")+"";//需求面积xqmj  double初始为"", string为null
-                String khlb = record_new.get("khlb")==null?"":record_new.get("khlb")+"";//客户类别
-		if (xmmcn.length()>0){  //,项目名称长度>0
-			CCObject obj1 = new CCObject("Opportunity"); //业务机会
-
-            if (recordtype.equals("2020F8FFFACC18DmPXQ1")) { // 客户表中  recordtype 公寓类型的id
-				obj1.put("recordtype","20207F690752C251UJfO"); // 业务机会表中  recordtype 公寓类型的id
-			} else if (recordtype.equals("2018496272C934EtLhWs")){  // 类型是租凭时
-				obj1.put("recordtype","20183DD9667FA14v9YSK");     //recordtype 租赁
-			} else if (recordtype.equals("2018525F215221DtlTXV")){ // 类型是 进线时
-				if (khlb.equals("销售客户")){
-                    obj1.put("recordtype","2018BD60B25D1A2mLTd7");
-                } else if (khlb.equals("租赁客户")){
-                    obj1.put("recordtype","20183DD9667FA14v9YSK");
-                } 
-			} else {
-            	obj1.put("recordtype","2018BD60B25D1A2mLTd7");     //recordtype 销售
-            }
-			obj1.put("name",xmmcn+"_"+name+"_"+date1); //写业务机会名称
-			obj1.put("xqmj",xqmj); //需求面积
-			obj1.put("xmmc",xmmcc); //项目ID
-			obj1.put("khmc",id); //客户名称
-			obj1.put("xmjl",xmjl);//项目经理
-            obj1.put("spzt","草稿");//审批状态
-            obj1.put("jieduan","犹豫中");//阶段
-			this.insert(obj1);
-		}
-	} else if(list.size()>1 && xmmc.length()==0){
-		trigger.addErrorMessage("您处在多个项目销售小组,请手动选择项目!");
-	} else if(list.size()>1 && xmmc.length()>0){
-        String xmjl = list.get(0).get("xmjl")==null?"":list.get(0).get("xmjl")+""; //获取项目经理
-
-    //新建业务机会
-		//项目名称: xmmcc id 
-		List<CCObject> list1 = this.cqlQuery("Project","select name from Project where id = '"+xmmc+"'  and is_deleted = '0' "); //项目表中根据id取名称
-		String xmmcn=null;
-		if(list1.size()>0){
-			xmmcn = list1.get(0).get("name")==null?"":list1.get(0).get("name")+"";
-		}
-		//客户名称
-		String name = record_new.get("name")==null?"":record_new.get("name")+"";
-		//日期
-		java.text.SimpleDateFormat sdf= new java.text.SimpleDateFormat("yyyyMMdd"); //日期 MM需大写
-		String date1=sdf.format(new Date());
-		String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
-                String khlb = record_new.get("khlb")==null?"":record_new.get("khlb")+"";//客户类别
+				String khlb = record_new.get("khlb")==null?"":record_new.get("khlb")+"";//客户类别
 		String xqmj = record_new.get("xqmj")==null?"":record_new.get("xqmj")+"";//需求面积xqmj  double初始为"", string为null
 			if(xmmcn.length()>0){  //客户等级为ABC,项目名称长度>0
 				CCObject obj1 = new CCObject("Opportunity"); //业务机会
@@ -111,9 +73,105 @@ String xmmc = record_new.get("xmmc")==null?"":record_new.get("xmmc")+"";  //判�
 				obj1.put("jieduan","犹豫中");//阶段
 				this.insert(obj1);
 			}
-        } else {
-	 		trigger.addErrorMessage("您未处于任何项目的销售小组,请联系项目经理确认归属!");
-		  }
+	} else {
+		List<CCObject> list = this.cquery("ProjectSaleGroup","xmxsy = '"+uid+"'");  //用户ID读取项目销售小组
+		if(list.size()==1){ //获取唯一对应的项目组
+			String xmmcc = list.get(0).get("xmmc")==null?"":list.get(0).get("xmmc")+""; //获取项目名称id
+			String xmjl = list.get(0).get("xmjl")==null?"":list.get(0).get("xmjl")+""; //获取项目经理
+			CCObject obj = new CCObject("Account");  //回写客户表中的项目字段
+			obj.put("xmmc",xmmcc);
+			obj.put("id",id);
+			this.updateLt(obj);
+
+			//新建业务机会
+			//项目名称: xmmcc id 
+			List<CCObject> list1 = this.cqlQuery("Project","select name from Project where id = '"+xmmcc+"' and is_deleted = '0' "); //项目表中根据id取名称
+			String xmmcn=null;
+			if(list1.size()>0){
+				xmmcn = list1.get(0).get("name")==null?"":list1.get(0).get("name")+"";
+			}
+			//客户名称
+			String name = record_new.get("name")==null?"":record_new.get("name")+"";
+			//日期
+			java.text.SimpleDateFormat sdf= new java.text.SimpleDateFormat("yyyyMMdd"); //日期 MM需大写
+			String date1=sdf.format(new Date());
+			String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
+			String xqmj = record_new.get("xqmj")==null?"":record_new.get("xqmj")+"";//需求面积xqmj  double初始为"", string为null
+					String khlb = record_new.get("khlb")==null?"":record_new.get("khlb")+"";//客户类别
+			if (xmmcn.length()>0){  //,项目名称长度>0
+				CCObject obj1 = new CCObject("Opportunity"); //业务机会
+
+				if (recordtype.equals("2020F8FFFACC18DmPXQ1")) { // 客户表中  recordtype 公寓类型的id
+					obj1.put("recordtype","20207F690752C251UJfO"); // 业务机会表中  recordtype 公寓类型的id
+				} else if (recordtype.equals("2018496272C934EtLhWs")){  // 类型是租凭时
+					obj1.put("recordtype","20183DD9667FA14v9YSK");     //recordtype 租赁
+				} else if (recordtype.equals("2018525F215221DtlTXV")){ // 类型是 进线时
+					if (khlb.equals("销售客户")){
+						obj1.put("recordtype","2018BD60B25D1A2mLTd7");
+					} else if (khlb.equals("租赁客户")){
+						obj1.put("recordtype","20183DD9667FA14v9YSK");
+					} 
+				} else {
+					obj1.put("recordtype","2018BD60B25D1A2mLTd7");     //recordtype 销售
+				}
+				obj1.put("name",xmmcn+"_"+name+"_"+date1); //写业务机会名称
+				obj1.put("xqmj",xqmj); //需求面积
+				obj1.put("xmmc",xmmcc); //项目ID
+				obj1.put("khmc",id); //客户名称
+				obj1.put("xmjl",xmjl);//项目经理
+				obj1.put("spzt","草稿");//审批状态
+				obj1.put("jieduan","犹豫中");//阶段
+				this.insert(obj1);
+			}
+		} else if(list.size()>1 && xmmc.length()==0){
+			trigger.addErrorMessage("您处在多个项目销售小组,请手动选择项目!");
+		} else if(list.size()>1 && xmmc.length()>0){
+			String xmjl = list.get(0).get("xmjl")==null?"":list.get(0).get("xmjl")+""; //获取项目经理
+
+			//新建业务机会
+			//项目名称: xmmcc id 
+			List<CCObject> list1 = this.cqlQuery("Project","select name from Project where id = '"+xmmc+"'  and is_deleted = '0' "); //项目表中根据id取名称
+			String xmmcn=null;
+			if(list1.size()>0){
+				xmmcn = list1.get(0).get("name")==null?"":list1.get(0).get("name")+"";
+			}
+			//客户名称
+			String name = record_new.get("name")==null?"":record_new.get("name")+"";
+			//日期
+			java.text.SimpleDateFormat sdf= new java.text.SimpleDateFormat("yyyyMMdd"); //日期 MM需大写
+			String date1=sdf.format(new Date());
+			String recordtype = record_new.get("recordtype")==null?"":record_new.get("recordtype")+"";//记录类型
+					String khlb = record_new.get("khlb")==null?"":record_new.get("khlb")+"";//客户类别
+			String xqmj = record_new.get("xqmj")==null?"":record_new.get("xqmj")+"";//需求面积xqmj  double初始为"", string为null
+				if(xmmcn.length()>0){  //客户等级为ABC,项目名称长度>0
+					CCObject obj1 = new CCObject("Opportunity"); //业务机会
+
+					if (recordtype.equals("2020F8FFFACC18DmPXQ1")) {  // 客户表中  recordtype 公寓类型的id
+						obj1.put("recordtype","20207F690752C251UJfO"); // 业务机会表中  recordtype 公寓类型的id
+					} else if (recordtype.equals("2018496272C934EtLhWs")){ // 判断 客户表中 recordtype 租赁
+						obj1.put("recordtype","20183DD9667FA14v9YSK");     //recordtype 租赁 业务机会表
+					} else if (recordtype.equals("2018525F215221DtlTXV")){ // 判断 客户表中 recordtype 进线 (判断客户类别: 销售 / 租赁)
+						if (khlb.equals("销售客户")){
+							obj1.put("recordtype","2018BD60B25D1A2mLTd7");
+						} else if (khlb.equals("租赁客户")){
+							obj1.put("recordtype","20183DD9667FA14v9YSK");
+						} 
+					} else {
+						obj1.put("recordtype","2018BD60B25D1A2mLTd7");     //recordtype 销售
+					}
+					obj1.put("name",xmmcn+"_"+name+"_"+date1); //写业务机会名称
+					obj1.put("xqmj",xqmj); //需求面积
+					obj1.put("xmmc",xmmc); //项目ID
+					obj1.put("khmc",id); //客户名称
+					obj1.put("xmjl",xmjl);//项目经理
+					obj1.put("spzt","草稿");//审批状态
+					obj1.put("jieduan","犹豫中");//阶段
+					this.insert(obj1);
+				}
+			} else {
+				trigger.addErrorMessage("您未处于任何项目的销售小组,请联系项目经理确认归属!");
+			}
+		}
 
 
                 

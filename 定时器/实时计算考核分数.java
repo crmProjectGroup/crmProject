@@ -669,7 +669,7 @@ for(CCObject item3:list3){
             // 客户开拓总批数 (含跟进记录)
             int countaccount = accountList.size() + nrList.size();
             // 设置 个人创佣完成值
-            for(CCObject cywcobj:cylist) {
+            for(CCObject cywcobj:cylist) { // 可能分别开了多次票, 会有多个成交对象
                 String ownerid = cywcobj.get("ownerid")==null?"":cywcobj.get("ownerid")+"";//ownerid 成交者
                 if (userid.equals(ownerid)) {
                     List<CCObject> rylist = cs.cqlQuery("ryjx","select id,grcywcz from ryjx where nd='"+year+"' and yf ='"+month+"'  and bkhr = '"+userid+"' and is_deleted = '0' and recordtype='2020A3CA317261AEpAQJ'");
