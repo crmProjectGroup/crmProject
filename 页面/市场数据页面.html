@@ -8,6 +8,8 @@ author:tom
 log:
 20200629 调用查询接口,而不是cqlquery的接口
 20200729 在app内调用接口有问题,只好把接口从'/controller.action'改成'/customize/page/9291p1140/pbbapi.jsp'
+20201208 加入编辑和成交详情的单条删除
+20201217 增加跳转到条件查询页面, 市场数据根据多种条件混合查询
 */
 
 /** * 将ISO-8859-1编码格式的字符串转码为UTF-8 * 
@@ -292,7 +294,8 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 			<mu-row gutter>
 				<mu-col span="6" lg="6" sm="2">
 					<mu-flex justify-content="center" align-items="center" align-content="center">
-						<mu-button round small color="success" @click="showjsdetal()">查询</mu-button>
+                        <mu-button round small color="success" @click="showjsdetal()">查询</mu-button>
+                        <mu-button flat @click="gotoshichang()">条件查询</mu-button>
 					</mu-flex>
 				</mu-col>
 				<mu-col span="6" lg="6" sm="2">
@@ -330,7 +333,20 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 							  <td>{{scope.row.lc}}</td>
 							  <td>{{scope.row.mj}}</td>
 							  <td>{{scope.row.dj}}</td>
-							  <td>{{scope.row.bz}}</td>
+                              <td>{{scope.row.bz}}</td>
+                              <!-- <td><a @click="delcjsj(item.idlist)"  >删除</a></td> -->
+                              <td>
+                                  <mu-flex class="" align-items="center">
+                                    <mu-flex class="flex-demo" justify-content="center" fill>
+                                        <mu-button round small color="success" @click="edtcjsjxq(scope.row,item.recid)">编辑</mu-button>
+                                    </mu-flex>
+                                    <mu-flex class="flex-demo" justify-content="center" fill>
+                                        <mu-button round small color="error" @click="delcjsjxq(item.recid,scope.row.recid)">删除</mu-button>
+                                    </mu-flex>
+                                  </mu-flex>
+                                  <!-- <mu-button round small color="success" @click="delcjsjxq(item.recid,scope.row.recid)"  >编辑</mu-button>
+                                  <mu-button round small color="error" @click="delcjsjxq(item.recid,scope.row.recid)"  >删除</mu-button> -->
+                              </td>
 							</template>
 						</mu-data-table>
 					<!-- </mu-card-text> -->
@@ -338,7 +354,38 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 					  <mu-button round small color="error" @click="delcjsj(item.idlist)"  >删除</mu-button>
 					</mu-card-actions>
 				  </mu-card>
-			</mu-paper>
+            </mu-paper>
+            <mu-dialog title="成交编辑" width="360" scrollable :open.sync="openScroll">
+                <mu-container>
+                    <mu-form :model="form_cjxq" class="mu-demo-form" :label-position="labelPosition" label-width="120">
+                        <mu-form-item prop="select" label="行业">
+                            <mu-select v-model="form_cjxq.hy">
+                                <mu-option v-for="option,index in optionhylist" :key="option" :label="option" :value="option">
+                                </mu-option>
+                            </mu-select>
+                        </mu-form-item>
+                        <mu-form-item prop="select" label="客户来源区域">
+                            <mu-select v-model="form_cjxq.qy">
+                                <mu-option v-for="option,index in optionkhqylist" :key="option" :label="option" :value="option">
+                                </mu-option>
+                            </mu-select>
+                        </mu-form-item>
+                        <mu-form-item prop="input" label="楼层">
+                            <mu-text-field v-model="form_cjxq.lc"></mu-text-field>
+                        </mu-form-item>
+                        <mu-form-item prop="input" label="面积">
+                            <mu-text-field v-model="form_cjxq.mj"></mu-text-field>
+                        </mu-form-item>
+                        <mu-form-item prop="input" label="单价">
+                            <mu-text-field v-model="form_cjxq.dj"></mu-text-field>
+                        </mu-form-item>
+                        <mu-form-item prop="input" label="备注">
+                            <mu-text-field v-model="form_cjxq.bz"></mu-text-field>
+                        </mu-form-item>
+                    </mu-form>
+                </mu-container>
+                <mu-button slot="actions" flat color="primary" @click="closeScrollDialog">ok</mu-button>
+            </mu-dialog>
 		</div>
 		<div class="demo-text" v-if="active3 === 2">
 			开发中,待上线
@@ -388,8 +435,20 @@ private static String encodeParameters(String parameterValue) throws Unsupported
       			    { title: '楼层', name: 'lc', width: 80},
       			    { title: '面积', name: 'mj', width: 100, sortable: true },
       			    { title: '单价', name: 'dj', width: 100 },
-      			    { title: '备注', name: 'bz', width: 200 }
+      			    { title: '备注', name: 'bz', width: 200 },
+                    { title: '操作', name: 'cz', width: 200 }
       			],
+                form_cjxq: {
+					hy:'',
+                    qy:'',
+					lc: '',
+					mj: '',
+					dj: '',
+					bz:'',
+                    recid:''
+				},
+                keyid:'',
+                openScroll: false,
 				  ////align: 'right',
     		};
 		},
@@ -652,47 +711,47 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 			},
 
 			//同步获取数据
-			async funA(item,datetime){
-                //var item = that.dataFortot[i];
-				var xm=item.scpymc; //盘源
-				var lrr=item.createbyid; //录入人
-                //获取头像
-                var imgsrc = "/distributor.action?serviceName=showChatterImage&type=user&id="+lrr+"&binding="+this.bindingcode;
-				Vue.set(item, 'imgsrc', imgsrc);
+			// async funA(item,datetime){
+            //     //var item = that.dataFortot[i];
+			// 	var xm=item.scpymc; //盘源
+			// 	var lrr=item.createbyid; //录入人
+            //     //获取头像
+            //     var imgsrc = "/distributor.action?serviceName=showChatterImage&type=user&id="+lrr+"&binding="+this.bindingcode;
+			// 	Vue.set(item, 'imgsrc', imgsrc);
 
-				//var res =  await axios.post('') //这里的res就是axios请求回来的结果
-                var expresssql1="select a.xy as hy,a.qy as qy,a.lc as lc,a.mj as mj, a.dj as dj,a.bz as bz,a.id as recid from cjqk a where a.is_deleted='0' and a.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx') and a.createbyid ='"+ lrr +"' and a.scpymc = '" +xm +"'"  + datetime + " order by a.createdate desc";
-				//alert(expresssql1);   
+			// 	//var res =  await axios.post('') //这里的res就是axios请求回来的结果
+            //     var expresssql1="select a.xy as hy,a.qy as qy,a.lc as lc,a.mj as mj, a.dj as dj,a.bz as bz,a.id as recid from cjqk a where a.is_deleted='0' and a.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx') and a.createbyid ='"+ lrr +"' and a.scpymc = '" +xm +"'"  + datetime + " order by a.createdate desc";
+			// 	//alert(expresssql1);   
                    
                 
-				await axios.get('/distributor.action', {
-					params: {
-						serviceName: 'cqlQuery',
-						//serviceName: 'cqlQueryWithRoleRight',
-						objectApiName: 'cjqk',
-						expressions:expresssql1,
-						binding:this.bindingcode
-					}
-				})
-				.then(function (response) {
-					//console.log("ok");
-					//alert(response.data.data);
-					//item.cjxq=response.data.data;
-					Vue.set(item, 'cjxq', response.data.data);
+			// 	await axios.get('/distributor.action', {
+			// 		params: {
+			// 			serviceName: 'cqlQuery',
+			// 			//serviceName: 'cqlQueryWithRoleRight',
+			// 			objectApiName: 'cjqk',
+			// 			expressions:expresssql1,
+			// 			binding:this.bindingcode
+			// 		}
+			// 	})
+			// 	.then(function (response) {
+			// 		//console.log("ok");
+			// 		//alert(response.data.data);
+			// 		//item.cjxq=response.data.data;
+			// 		Vue.set(item, 'cjxq', response.data.data);
 
-					for ( var i = 0; i <item.cjxq.length; i++){
-						//item.idlist.push(item.cjxq);
-						var item1= item.cjxq[i];
-						//console.log(item.cjxq[i]);
-						//console.log(item1.recid);
-						item.idlist.push(item1.recid);
-					}
-					//console.log(that.dataFortot);
-				})
-				.catch(function (error) {
-					console.log(error);
-				});
-			},
+			// 		for ( var i = 0; i <item.cjxq.length; i++){
+			// 			//item.idlist.push(item.cjxq);
+			// 			var item1= item.cjxq[i];
+			// 			//console.log(item.cjxq[i]);
+			// 			//console.log(item1.recid);
+			// 			item.idlist.push(item1.recid);
+			// 		}
+			// 		//console.log(that.dataFortot);
+			// 	})
+			// 	.catch(function (error) {
+			// 		console.log(error);
+			// 	});
+			// },
 			delcjsj: function(val){
 				//console.log(val);
 				var that = this;
@@ -723,12 +782,124 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 					console.log(error);
 				});
 			},
+            delcjsjxq: function(val1,val2){
+				//console.log(val);
+				var that = this;
+				axios.get('/controller.action', {
+					params: {
+						name: 'scsjapi',
+						type: 'delxq',
+						recid:encodeURI(val2)
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.binding;
+					alert("记录删除成功!");
+					//that.checkbox.value_js=[];
+					//console.log("结算单已生成!");
+					
+					//提交成功后显示上清楚这条记录
+					that.dataFortot.forEach(function(item,index){
+						if(item.recid==val1){
+							//alert("index:"+index);
+							//that.dataFortot.splice(index, 1);
+                            item.cjxq.forEach(function(item1,index1){
+                                if(item1.recid==val2){
+                                    //item1.splice(index1, 1);
+                                    item.cjxq.splice(index, 1);
+                                    return;
+                                }
+                            });
+							
+						}
+					});
+
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			},
+            edtcjsjxq(obj,val){
+                this.form_cjxq.hy = obj.hy;
+                this.form_cjxq.qy = obj.qy;
+                this.form_cjxq.lc=obj.lc;
+                this.form_cjxq.mj=obj.mj;
+                this.form_cjxq.dj=obj.dj;
+                this.form_cjxq.bz=obj.bz;
+                this.form_cjxq.recid=obj.recid;
+                this.keyid = val;
+                this.openScroll= true;
+            },
+            closeScrollDialog() {
+				this.openScroll = false;
+				var that = this;
+				//var reg = new RegExp("^[0-9]*$");
+				var reg = new RegExp("^[0-9]*\\.{0,1}[0-9]*$");
+				
+				// if(this.form.dlfjsbl.length==0){
+				// 	alert('代理费比例不允许为空值!');
+				// 	return;
+				// }
+                if(!reg.test(this.form_cjxq.mj))
+        		{
+					alert("面积必须是数字!");
+					return;
+				}    
+				//alert(tha
+				if(!reg.test(this.form_cjxq.dj))
+        		{
+					alert("价格必须是数字!");
+					return;
+				}    
+				axios.get('/controller.action', {
+					params: {
+						name: 'scsjapi',
+						type: 'edtxq',
+						id : that.form_cjxq.recid,
+                        hy : that.form_cjxq.hy,
+                        qy : that.form_cjxq.qy,
+                        lc : that.form_cjxq.lc,
+                        dj : that.form_cjxq.dj,
+                        mj : that.form_cjxq.mj,
+                        bz : that.form_cjxq.bz,
+					}
+				})
+				.then(function (response) {
+					//that.bindingcode = response.data.binding;
+					alert("成功修改!");
+					that.dataFortot.forEach(function(item,index){
+						if(item.recid==that.keyid){
+							//alert("index:"+index);
+							//that.dataFortot.splice(index, 1);
+                            item.cjxq.forEach(function(item1,index1){
+                                if(item1.recid==that.form_cjxq.recid){
+                                    //item1.splice(index1, 1);
+                                    item1.hy=that.form_cjxq.hy;
+                                    item1.qy=that.form_cjxq.qy;
+                                    item1.lc=that.form_cjxq.lc;
+                                    item1.mj=that.form_cjxq.mj;
+                                    item1.bz=that.form_cjxq.bz;
+                                    return;
+                                }
+                            });
+							
+						}
+					});
+					//console.log(this.bindingcode);
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			},
 			dc: function(){
     			if("005201827888B25tm2iq"==this.uid || "0052018FF9F7905NEd6u"==this.uid){    
 					 window.location.href = "xcjqklrdc.jsp?ksrq="+ this.timebegin+"&jsrq="+this.timeend;
     			}else{
     			     alert("权限不足!");
     			}
+			},
+            gotoshichang: function(){ // 跳转到 条件查询 市场数据页面
+				window.location.href = "scsjgw.jsp?name=scsjgw";
 			},
 		},
 		computed: {

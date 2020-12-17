@@ -287,7 +287,252 @@ try {
         jsonmsg.put("message", idlist);
         jsonmsg.put("data", rtnMsg);
 
-    } 
+    } else if ("guwensel".equals(type) || "getproject".equals(type)) { // 顾问部的查询
+        if ("guwensel".equals(type)) { // 获取表格里的数据
+            // out.print("0^进来了");
+            //时间范围
+            SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd");
+            String jsondatastr = "";
+            String ksrq = request.getParameter("ksrq") == null ? "" :request.getParameter("ksrq");
+            String jsrq = request.getParameter("jsrq") == null ? "" :request.getParameter("jsrq");
+            String datetime = "and TO_CHAR(c.createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(c.createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
+// 项目下拉选sql语句拼接 begin
+            String xmsqlone = "";
+            String xmliststr = request.getParameter("xmlist")==null?"":java.net.URLDecoder.decode(request.getParameter("xmlist")+"","UTF-8");
+            if (xmliststr != null && !"".equals(xmliststr) && !"\"\"".equals(xmliststr)) {
+                xmsqlone = " and s.name  in (";
+                xmliststr = xmliststr.replaceAll("[\\[\\]]","");
+                xmsqlone = xmsqlone + xmliststr;
+                xmsqlone = xmsqlone +")";
+                // xmsqlone = xmliststr.replace("[\\["," and s.name  in (");
+                // xmsqlone = xmliststr.replace("]", ")");
+            }
+            // out.print("1^"+xmliststr);
+            // out.print("2^"+xmsqlone);
+            // 项目下拉选 end
+            // out.print("1^进");
+// 项目区域sql语句拼接 begin
+            String qysqlone = "";
+            String qyliststr = request.getParameter("qylist")==null?"":java.net.URLDecoder.decode(request.getParameter("qylist")+"","UTF-8");
+            if (qyliststr != null && !"".equals(qyliststr) && !"\"\"".equals(qyliststr)) {
+                qysqlone = " and s.qy  in (";
+                qyliststr = qyliststr.replaceAll("[\\[\\]]","");
+                qysqlone = qysqlone + qyliststr;
+                qysqlone = qysqlone +")";
+                // qysqlone = qylist.replace("["," and s.qy in (");
+                // out.print("4@^"+qylist);
+                // qysqlone = qylist.replace("]", ")");
+            }
+            // 项目区域 end
+            // out.print("2^来");
+//项目类型 sql拼接 begin
+            String typeliststr = request.getParameter("typelist")==null?"":java.net.URLDecoder.decode(request.getParameter("typelist")+"","UTF-8");
+            // out.print("!^"+typeliststr);
+            // 组装类型sql 语句添加 片段begin
+            String typesqlone = "";
+            if (typeliststr != null && !"".equals(typeliststr) && !"\"\"".equals(typeliststr)) {  // 如果传过来的参数是空, 这段代码不执行
+                // out.print("8^"+"".equals(typeliststr));
+                typesqlone = " and s.recordtype in (";
+                int i = 0; // 用来判断加不加逗号
+                if (typeliststr.indexOf("二级租赁") != -1) {
+                    i = 1;
+                    typesqlone =  typesqlone + "'2018D7CDD5A5418hbgiJ'";
+                }
+                if (typeliststr.indexOf("二级销售") != -1) {
+                    if (i!=0) {
+                        typesqlone =  typesqlone + ",'2018B9CEA41BA6AJFw0R'";
+                    } else {
+                        i = 1;
+                        typesqlone =  typesqlone + "'2018B9CEA41BA6AJFw0R'";
+                    }
+                }
+                if (typeliststr.indexOf("三级租赁") != -1) {
+                    if (i!=0) {
+                        typesqlone =  typesqlone + ",'20180B02945019FsyYVx'";
+                    } else {
+                        i = 1;
+                        typesqlone =  typesqlone + "'20180B02945019FsyYVx'";
+                    }
+                }
+                if (typeliststr.indexOf("三级销售") != -1) {
+                    if (i!=0) {
+                        typesqlone =  typesqlone + ",'2018BC817EB9158Sxq8B'";
+                    } else {
+                        i = 1;
+                        typesqlone =  typesqlone + "'2018BC817EB9158Sxq8B'";
+                    }
+                }
+                if (typeliststr.indexOf("公寓") != -1) {
+                    if (i!=0) {
+                        typesqlone =  typesqlone + ",'2020CA38DA2EA62GseBx'";
+                    } else {
+                        i = 1;
+                        typesqlone =  typesqlone + "'2020CA38DA2EA62GseBx'";
+                    }
+                }
+                typesqlone = typesqlone +")";
+            }
+            // out.print("3^了");
+            // 市场判断类型sql拼接 end
+            String prosql = "";
+            String scpystypesql = "";
+            //获取盘源信息和上门进线情况( 当项目为空时, sql中会有多的双引号, 但不影响sql执行)
+            String sql = "SELECT s.name AS name,s.qy as scpyqy,s.id as scpyid,c.sms AS sms,c.cjss AS cjss,c.cjts AS cjts,c.jxs AS jxs,u.name AS lrrnm,c.createbyid as lrrid ,case s.recordtype when '2020CA38DA2EA62GseBx' then '公寓' when '2018D7CDD5A5418hbgiJ' then '二级租赁' when '20180B02945019FsyYVx' then '三级租赁' when '2018B9CEA41BA6AJFw0R' then '二级销售' else '三级销售' end as scpytype,TO_CHAR(c.createdate,'YYYY-MM-DD hh24:mi:ss') as lrsj FROM cjqk c LEFT JOIN scpy s ON c.scpymc = s.id LEFT JOIN ccuser u ON c.createbyid = u.id WHERE c.recordtype = '201945938A54BAEfBWgh' "+xmsqlone+typesqlone+qysqlone+" AND c.is_deleted = '0' "+datetime+" order by c.createbyid";
+            // out.print("4^"+sql);
+            List<CCObject> scpylist = cs.cqlQuery("scpy", sql); // 执行sql语句, 获取所有市场盘源的数据(根据条件)
+            // 获取页面传来的面积 double 类型 begin
+            String mjvalue = request.getParameter("mjvalue") == null ? "0" :request.getParameter("mjvalue");
+            String mjsql = "";
+            if (mjvalue != null && !"".equals(mjvalue)) {
+                double mjdouble = Double.parseDouble(mjvalue); 
+                mjsql = " and  c.mj >="+mjdouble;
+            }
+            // 面积大小 end
+    // 遍历所有的市场盘源的成交信息
+            JSONArray dataobjlist = new JSONArray();
+            JSONObject dataobj = new JSONObject();
+            JSONArray rtnMsg1 = new JSONArray();
+            // out.print("这里了"+sql);
+            for(CCObject item:scpylist) {
+                String scpynm = item.get("name")==null?"":item.get("name")+ "";  //市场盘源的名称
+                String scpytype = item.get("scpytype")==null?"":item.get("scpytype")+ "";  //市场盘源的类型
+                String scpyqy = item.get("scpyqy")==null?"":item.get("scpyqy")+ "";  //市场盘源的类型
+                String usernm = item.get("lrrnm")==null?"":item.get("lrrnm")+ "";  //usernm 录入人的名字
+                String lrsj = item.get("lrsj")==null?"":item.get("lrsj")+ "";  //录入时间
+                String sms = item.get("sms")==null?"":item.get("sms")+ "";  //上门数 sms
+                String jxs = item.get("jxs")==null?"":item.get("jxs")+ "";  //进线数 jxs
+                String cjss = item.get("cjss")==null?"":item.get("cjss")+ "";  //成交手数 cjss
+                String cjts = item.get("cjts")==null?"":item.get("cjts")+ "";  //成交套数 cjts
+                String createbyid = item.get("createbyid")==null?"":item.get("createbyid")+ "";  //录入人id createbyid
+                String recid = item.get("recid")==null?"":item.get("recid")+ "";  //成交概况id recid
+                // 获取成交情况集合
+                String sql0= "select ifnull(c.lc,'-') as lc,ifnull(c.mj,'-') as mj,ifnull(c.dj,'-') as dj,ifnull(c.xy,'-') as xy,ifnull(c.qy,'-') as qy,ifnull(c.bz,'-') as bz from cjqk c where c.is_deleted = '0' "+datetime+" and c.scpymc = '"+item.get("scpyid")+"' and c.createbyid='"+item.get("lrrid")+"' and c.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx')"+mjsql;
+                //String sql0 = "select ifnull(c.lc,'-') as lc,ifnull(c.mj,'-') as mj,ifnull(c.dj,'-') as dj,ifnull(c.xy,'-') as xy,ifnull(c.qy,'-') as qy,ifnull(c.bz,'-') as bz from cjqk c where c.is_deleted = '0' and TO_CHAR(c.createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('2020-12-06T16:00:00.000Z','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(c.createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('2020-12-14 23:59:59','YYYY-MM-DD'),'YYYY-MM-DD') and c.scpymc = 'a1420191682F3C37O4q8' and c.createbyid='0052020BEF5833FzUpDA' and c.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx')  and  c.mj >= 143.0";
+                //  out.print("2^"+sql0);
+                List<CCObject> cjqklist = cs.cqlQuery("cjqk",sql0);
+                if (cjqklist.size() == 0) {
+                    if ("".equals(mjsql)) {
+                        JSONObject jsobj = new JSONObject(); // 储存数据集合list    
+                        // 设置市场盘源的概况和基本信息
+                        jsobj.put("usernm",usernm);
+                        jsobj.put("lrsj",lrsj);
+                        jsobj.put("scpynm",scpynm);
+                        jsobj.put("scpytype",scpytype);
+                        jsobj.put("scpyqy",scpyqy);
+                        jsobj.put("sms",sms);
+                        jsobj.put("jxs",jxs);
+                        jsobj.put("cjss",cjss);
+                        jsobj.put("cjts",cjts);
+                        jsobj.put("createbyid",createbyid);
+                        jsobj.put("recid",recid);
+                        rtnMsg1.add(jsobj); // 将每条数据放到集合中
+                    }
+                } else {
+                    for(CCObject item1:cjqklist) {
+                        // out.print("2^"+sql0);
+                        JSONObject jsobj = new JSONObject(); // 储存数据集合list
+                        // 设置市场盘源的概况和基本信息
+                        jsobj.put("usernm",usernm);
+                        jsobj.put("lrsj",lrsj);
+                        jsobj.put("scpynm",scpynm);
+                        jsobj.put("scpytype",scpytype);
+                        jsobj.put("scpyqy",scpyqy);
+                        jsobj.put("sms",sms);
+                        jsobj.put("jxs",jxs);
+                        jsobj.put("cjss",cjss);
+                        jsobj.put("cjts",cjts);
+                        jsobj.put("createbyid",createbyid);
+                        jsobj.put("recid",recid);
+                        // 设置成交情况的信息
+                        String xy = item1.get("xy")==null?"":item1.get("xy")+ "";  //行业
+                        String qy = item1.get("qy")==null?"":item1.get("qy")+ "";  //区域
+                        String lc = item1.get("lc")==null?"":item1.get("lc")+ "";  //楼层
+                        String mj = item1.get("mj")==null?"":item1.get("mj")+ "";  //面积
+                        String dj = item1.get("dj")==null?"":item1.get("dj")+ "";  //单价
+                        String bz = item1.get("bz")==null?"":item1.get("bz")+ "";  //备注
+                        String recid_xq = item1.get("recid")==null?"":item1.get("recid")+ "";  //记录id
+                        jsobj.put("xy",xy);
+                        jsobj.put("qy",qy);
+                        jsobj.put("lc",lc);
+                        jsobj.put("mj",mj);
+                        jsobj.put("dj",dj);
+                        jsobj.put("bz",bz);
+                        jsobj.put("recid_xq",recid_xq);
+                        rtnMsg1.add(jsobj); // 将每条数据放到集合中
+                    }
+                }  
+            }
+            // out.print(rtnMsg1.toString());
+            jsonmsg.put("success", true);
+            jsonmsg.put("message", sql);
+            jsonmsg.put("data", rtnMsg1);
+        } else if("getproject".equals(type)) { // 动态获取项目下拉选
+            String jsondatastr = "";
+            //项目类型
+            String typeliststr = request.getParameter("typelist")==null?"":java.net.URLDecoder.decode(request.getParameter("typelist")+"","UTF-8");
+            // 组装类型sql 语句添加 片段begin
+            String typesqlone = "";
+            if (typeliststr != null && !"".equals(typeliststr)) {  // 如果传过来的参数是空, 这段代码不执行
+                typesqlone = " and recordtype in (";
+                int i = 0; // 用来判断加不加逗号
+                if (typeliststr.indexOf("二级租赁") != -1) {
+                    i = 1;
+                    typesqlone =  typesqlone + "'2018D7CDD5A5418hbgiJ'";
+                }
+                if (typeliststr.indexOf("二级销售") != -1) {
+                    if (i!=0) {
+                        typesqlone =  typesqlone + ",'2018B9CEA41BA6AJFw0R'";
+                    } else {
+                        i = 1;
+                        typesqlone =  typesqlone + "'2018B9CEA41BA6AJFw0R'";
+                    }
+                }
+                if (typeliststr.indexOf("三级租赁") != -1) {
+                    if (i!=0) {
+                        typesqlone =  typesqlone + ",'20180B02945019FsyYVx'";
+                    } else {
+                        i = 1;
+                        typesqlone =  typesqlone + "'20180B02945019FsyYVx'";
+                    }
+                }
+                if (typeliststr.indexOf("三级销售") != -1) {
+                    if (i!=0) {
+                        typesqlone =  typesqlone + ",'2018BC817EB9158Sxq8B'";
+                    } else {
+                        i = 1;
+                        typesqlone =  typesqlone + "'2018BC817EB9158Sxq8B'";
+                    }
+                }
+                if (typeliststr.indexOf("公寓") != -1) {
+                    if (i!=0) {
+                        typesqlone =  typesqlone + ",'2020CA38DA2EA62GseBx'";
+                    } else {
+                        i = 1;
+                        typesqlone =  typesqlone + "'2020CA38DA2EA62GseBx'";
+                    }
+                }
+                typesqlone = typesqlone +")";
+            }
+            // out.print(typesqlone);
+            // 类型判断sql语句片段end
+            String scpyprosql = "select s.id as scpyid,s.name as scpyxmname  from scpy s where s.is_deleted = '0' "+typesqlone+" group by s.name";
+            List<CCObject> scpyprolist = cs.cqlQuery("scpy",scpyprosql);
+            JSONArray scpyprojsonarr = new JSONArray(); 
+            for(CCObject item:scpyprolist){
+               JSONObject scpyprojson= new JSONObject();
+               String scpyid = item.get("scpyid")==null?"":item.get("scpyid")+ "";  //类型的id
+               String scpyxmname = item.get("scpyxmname")==null?"":item.get("scpyxmname")+ "";  //类型的显示名称
+               scpyprojson.put("lable",scpyid); 
+               scpyprojson.put("value",scpyxmname); 
+               scpyprojsonarr.add(scpyprojson);
+            }
+            jsondatastr = scpyprojsonarr.toString();  
+            jsonmsg.put("success", true);
+            jsonmsg.put("message", typeliststr);
+            jsonmsg.put("data", jsondatastr);
+            jsonmsg.put("sql", scpyprosql);
+        }
+    }
 
 } catch (Exception e) {
 	jsonmsg.put("success", false);
@@ -299,7 +544,7 @@ try {
 
 request.setAttribute("jsonmsg", jsonmsg.toString());
 </cc>
-<!-- <html>
+<!--<html>
 	hello
 </html> -->
 <cc:forward page="/platform/activity/task/getNodes.jsp"/>
