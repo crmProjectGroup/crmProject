@@ -48,7 +48,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 
 	if ("aaa2018A4671C21Hu0yi".equals(profid)) { // 如果是 大客户经理 人员 , 则展示下面所有的人
 		// 获取所有大客户人员的绩效数据 降序排序
-		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid,r.khkt,r.khxx from ryjx r join ccuser c on r.ownerid = c.id where c.manager = '"+uid+"' and c.is_deleted = '0' and c.isusing = '1' and r.is_deleted = '0' and r.recordtype = '2020A3CA317261AEpAQJ' order by r.createdate desc";
+		String rysql = "select distinct r.scqs,c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid,r.khkt,r.khxx from ryjx r join ccuser c on r.ownerid = c.id where c.manager = '"+uid+"' and c.is_deleted = '0' and c.isusing = '1' and r.is_deleted = '0' and r.recordtype = '2020A3CA317261AEpAQJ' order by r.createdate desc";
 		selecrysql = cs.cqlQuery("ryjx",rysql);
 		// 获取所有大客户 名字的列 去重(下拉选) begin
 		String namesql = "select distinct c.id,c.name as text,c.name as value from ryjx r join ccuser c on r.ownerid = c.id where c.manager = '"+uid+"' and r.is_deleted = '0' and c.is_deleted = '0' and c.isusing = '1' and r.recordtype = '2020A3CA317261AEpAQJ'";
@@ -71,7 +71,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 	}else if ("aaa20180D5809FBsQZab".equals(profid) || "aaa20180681351FmekUG".equals(profid) ||  "aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid) || "aaa20188BF02AA11vijc".equals(profid)){
 		// 管理员展示所有人 大客户 绩效的数据
 		// 获取所有大客户人员的绩效数据 降序排序
-		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid,r.khkt,r.khxx from ryjx r join ccuser c on r.ownerid = c.id where r.is_deleted = '0'  and c.is_deleted = '0' and c.isusing = '1' and r.recordtype = '2020A3CA317261AEpAQJ'  order by r.createdate desc";
+		String rysql = "select distinct r.scqs,c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid,r.khkt,r.khxx from ryjx r join ccuser c on r.ownerid = c.id where r.is_deleted = '0'  and c.is_deleted = '0' and c.isusing = '1' and r.recordtype = '2020A3CA317261AEpAQJ'  order by r.createdate desc";
 		
 		selecrysql = cs.cqlQuery("ryjx",rysql);
 		// 获取所有大客户 名字的列 去重(下拉选) begin
@@ -96,7 +96,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 		namejsonstr = "[]";
 		ndjsonstr = "[]";
 		yfjsonstr = "[]";
-		String rysql = "select distinct c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid,r.khkt,r.khxx from ryjx r join ccuser c on r.ownerid = c.id where r.ownerid = '"+uid+"' r.is_deleted = '0' and r.recordtype = '2020A3CA317261AEpAQJ' order by r.createdate desc";
+		String rysql = "select distinct r.scqs,c.name as ryname,r.id,r.name,r.nd,r.yf,r.grdywcyjs,r.rz,r.khmyd,r.khjslr,r.khfz,r.khs,r.dyycqts,r.yyxrzs,r.yjhmb,r.createdate,r.ownerid,r.khkt,r.khxx from ryjx r join ccuser c on r.ownerid = c.id where r.ownerid = '"+uid+"' r.is_deleted = '0' and r.recordtype = '2020A3CA317261AEpAQJ' order by r.createdate desc";
 		selecrysql = cs.cqlQuery("ryjx",rysql);
 	}
 	String name = ""; // 姓名
@@ -107,7 +107,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 	String khxx  = ""; // 客户信息分数
 	double khfz = 0.0; // 考核分数
 	String khs = ""; // 客户总批数(包含 重复拜访)
-	String dyycqts = ""; // 当月考勤总数
+	String scqs = ""; // 当月考勤总数
 	String yyxrzs = ""; // 当月日志总数
 	// String yjhmb = ""; // 月计划目标
 	String nd = ""; // 年度
@@ -128,7 +128,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 		// out.print(yjhmbint);
 
 		khs = ryobj.get("khs")==null?"":ryobj.get("khs") + ""; // 客户开拓总匹数 (含重复拜访)
-		dyycqts = ryobj.get("dyycqts")==null?"":ryobj.get("dyycqts") + ""; // 当月考勤总数
+		scqs = ryobj.get("scqs")==null?"":ryobj.get("scqs") + ""; // 当月考勤总数
 		yyxrzs = ryobj.get("yyxrzs")==null?"":ryobj.get("yyxrzs") + ""; // 当月日志总数
 		
 		JSONObject ryjxjson = new JSONObject();
@@ -143,7 +143,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
         ryjxjson.put("nd",nd); // 年度
         ryjxjson.put("yf",yf); // 月份
 		ryjxjson.put("khfz",khfz); // 考核总分数
-        ryjxjson.put("dyycqts",dyycqts); // 当月考勤总数
+        ryjxjson.put("scqs",scqs); // 当月考勤总数
 		ryjxjson.put("yyxrzs",yyxrzs);  // 当月日志总数
 		ryjxjsonarr.add(ryjxjson); 
 	}
@@ -210,11 +210,11 @@ private static String encodeParameters(String parameterValue) throws Unsupported
                     </template> -->
                   </el-table-column>
                   <el-table-column
-                    prop="dyycqts"
+                    prop="scqs"
                     label="实出勤数(天)"
                     width="150">
                     <template slot-scope="scope">
-                      <a  style="color:#1890ff;cursor:pointer" @click="getCheckDate(scope.$index,scope.row)" >{{scope.row.dyycqts}}</a>
+                      <a  style="color:#1890ff;cursor:pointer" @click="getCheckDate(scope.$index,scope.row)" >{{scope.row.scqs}}</a>
                     </template>
                   </el-table-column>
                   <el-table-column

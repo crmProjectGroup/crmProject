@@ -9,6 +9,8 @@ log:
 
 3.20201124 加入大客户考核分数的计算
 4.20201125 更新绩效方案:不再每月考核不再计算业绩分数,改为在季度中去核算季度得分;
+5.20201204 个人创佣完成值没有初始化为0, 会重复计算;
+6:20201218 将考核查看的 "实出勤数" 的汇总动作, 放在定时类中, 提高 考核查看的性能
 */
 
 CCService cs = new CCService((UserInfo)userInfo);
@@ -186,6 +188,7 @@ for(CCObject ryjitem:ryjxlist){
     }   
 
     ryjitem.put("tdcywcz",0); //20201027 a 先将创佣完成值都改为0,避免重复计算
+    ryjitem.put("grcywcz",0); //20201204 个人考核完成值初始化避免重复计算
 
     this.update(ryjitem);
 }
@@ -462,11 +465,19 @@ for(CCObject item1:list1){
 
     //double khfz = cy_d + ldzj_d + acgf_d + crm_d;
     double khfz = acgf_d + crm_d; //考核分值由案场管理和crm两部分组成,去掉业绩和联动两个部分
-
+    // begin 获取应出勤数
+    String datetimeTwo = "and createdate >= str_to_date('"+begin_day+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate<= str_to_date('"+nowday+"  23:59:59', '%Y-%m-%d %H:%i:%s')";
+    // 根据员工的  id  查询 所有的考勤 
+    String nameId = item1.get("bkhr")==null?"":item1.get("bkhr")+"";//考核人的id
+    String kaoqingSql="select count(1) as con from attendance a where is_deleted = '0' and a.ownerid = '"+nameId+"' " + datetimeTwo + " order by createdate desc";
+    List<CCObject> countKaoList = cs.cqlQuery("attendance",kaoqingSql);
+    String countKao = countKaoList.get(0).get("con")==null?"0":String.valueOf(countKaoList.get(0).get("con")+"");
+// end xiong
 	//CCObject obj = new CCObject("ryjx");
 	//obj.put("id",id);
 	item1.put("rz",rz);
-	item1.put("khfz",khfz);
+    item1.put("khfz",khfz);
+    item1.put("scqs",countKao);
 	cs.updateLt(item1);
 }
 
@@ -568,12 +579,21 @@ for(CCObject item3:list3){
 
     //double khfz = cy_d + hk_d + acgf_d + crm_d;
     double khfz =acgf_d + crm_d; //不再计算创佣和回款
-
+// begin 获取应出勤数
+    String datetimeTwo = "and createdate >= str_to_date('"+begin_day+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate<= str_to_date('"+nowday+"  23:59:59', '%Y-%m-%d %H:%i:%s')";
+    // 根据员工的  id  查询 所有的考勤 
+    String nameId = item3.get("bkhr")==null?"":item3.get("bkhr")+"";//考核人的id
+    String kaoqingSql="select count(1) as con from attendance a where is_deleted = '0' and a.ownerid = '"+nameId+"' " + datetimeTwo + " order by createdate desc";
+    // out.print(kaoqingSql);
+    List<CCObject> countKaoList = cs.cqlQuery("attendance",kaoqingSql);
+    String countKao = countKaoList.get(0).get("con")==null?"0":String.valueOf(countKaoList.get(0).get("con")+"");
+// end xiong
 	//CCObject obj = new CCObject("ryjx");
 	//obj.put("id",id);
 	item3.put("rz",rz);
 	item3.put("zwlh",zwlh);
-	item3.put("khfz",khfz);
+    item3.put("khfz",khfz);
+    item3.put("scqs",countKao);
 	cs.updateLt(item3);
 }
 
@@ -669,7 +689,7 @@ for(CCObject item3:list3){
             // 客户开拓总批数 (含跟进记录)
             int countaccount = accountList.size() + nrList.size();
             // 设置 个人创佣完成值
-            for(CCObject cywcobj:cylist) { // 可能分别开了多次票, 会有多个成交对象
+            for(CCObject cywcobj:cylist) {
                 String ownerid = cywcobj.get("ownerid")==null?"":cywcobj.get("ownerid")+"";//ownerid 成交者
                 if (userid.equals(ownerid)) {
                     List<CCObject> rylist = cs.cqlQuery("ryjx","select id,grcywcz from ryjx where nd='"+year+"' and yf ='"+month+"'  and bkhr = '"+userid+"' and is_deleted = '0' and recordtype='2020A3CA317261AEpAQJ'");
@@ -681,14 +701,14 @@ for(CCObject item3:list3){
                 }
             }
             // 加入到 数据库中
-            vipobj.put("khkt",khkt); // 客户开拓分数
+            vipobj.put("khkt",khkt); // 客户开拓分数 (个人当月完成业绩数 字段)
             vipobj.put("rz",rz); // 日志分数
             vipobj.put("khmyd",khmyd); // 客户满意度分数
             vipobj.put("khxx",khxx); // 客户信息分数 (客户及时录入 字段)
             vipobj.put("khfz",countScore); // 考核总分 (考核分值 字段)
             // 辅助 展示
             vipobj.put("khs",countaccount); // 客户开拓总批数 (客户数 字段)
-            vipobj.put("dyycqts",dyycqts); // 有效考勤总数 (当月应出勤天数 字段)
+            vipobj.put("scqs",dyycqts); // 实出勤数 (实出勤数 字段)
             vipobj.put("yyxrzs",yyxrzs); // 有效日志总数 (当月日志数 字段)
             cs.updateLt(vipobj);
     }// end

@@ -12,6 +12,9 @@ log:
 4.20201123 随绩效方案修改进行大改,分为月度和季度两个部分
     @1.加入tab,分为月度和季度两部分;
     @2.去掉月度考核中的回款部分,加入特殊绩效说明和业绩得分;
+5.20201204 调整考核表内容展示(业务员加入业绩得分,去掉市场数据和转介)
+6.20201208 业务员业绩部分显示bug
+7.20201210 加入备注
 */
 
 /**
@@ -91,7 +94,7 @@ throws UnsupportedEncodingException {
 
 
         //jlryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdhkmb,ROUND(r.tdhkwcz,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5' order by yf desc"); //2020年5月后才改为计算创佣值 
-        jlryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdmbms,ROUND(r.yjdf,2) as yjdf,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
+        jlryjxlist = cs.cqlQuery("ryjx","select r.scqs,r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdmbms,ROUND(r.yjdf,2) as yjdf,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,r.khs,ROUND(r.khmyd,2) as khmyd,r.bz as bz from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
         jlryjxlist_fxm = cs.cqlQuery("ryjx","select distinct r.xmmc,p.name as text,p.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5"); //筛选项目
         jlryjxlist_fyf = cs.cqlQuery("ryjx","select distinct r.yf as text, CAST(r.yf AS int) as value from ryjx r where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf"); //筛选月份
 
@@ -101,13 +104,13 @@ throws UnsupportedEncodingException {
         JSONArray jsonArray_fyf = JSONArray.fromObject(jlryjxlist_fyf); 
         jlryjxlist_fyf_1=jsonArray_fyf.toString();
 
-        gwryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khs,r.khjslr,ROUND(r.khmyd,2) as khmyd,r.khjdwh from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
+        gwryjxlist = cs.cqlQuery("ryjx","select r.scqs,r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,ROUND(r.yjdf,2) as yjdf,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khs,r.khjslr,ROUND(r.khmyd,2) as khmyd,r.khjdwh,r.bz as bz from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
         gwryjxlist_fnm = cs.cqlQuery("ryjx","select distinct c.id,c.name as text,c.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5'"); //筛选姓名
 
         JSONArray jsonArray_fnm = JSONArray.fromObject(gwryjxlist_fnm); 
         gwryjxlist_fnm_1=jsonArray_fnm.toString();
     } else if ("aaa2018A38306ED9syVe".equals(profid)){ //项目经理
-        jlryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdmbms,ROUND(r.yjdf,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id and p.xmjl = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
+        jlryjxlist = cs.cqlQuery("ryjx","select r.scqs,r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdmbms,ROUND(r.yjdf,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,r.khs,ROUND(r.khmyd,2) as khmyd,r.bz as bz from ryjx r inner join project p on r.xmmc=p.id and p.xmjl = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
         jlryjxlist_fxm = cs.cqlQuery("ryjx","select distinct r.xmmc,p.name as text,p.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.bkhr = '"+uid+"' and r.nd>=2020 and r.yf>5"); //筛选项目
         jlryjxlist_fyf = cs.cqlQuery("ryjx","select distinct r.yf as text, CAST(r.yf AS int) as value from ryjx r where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>=2020 and r.yf>5 order by yf"); //筛选月份
         JSONArray jsonArray_fxm = JSONArray.fromObject(jlryjxlist_fxm); 
@@ -116,7 +119,7 @@ throws UnsupportedEncodingException {
         JSONArray jsonArray_fyf = JSONArray.fromObject(jlryjxlist_fyf); 
         jlryjxlist_fyf_1=jsonArray_fyf.toString();
 
-        gwryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khjslr,r.khs,ROUND(r.khmyd,2) as khmyd,r.khjdwh from ryjx r inner join project p on r.xmmc=p.id and p.xmjl = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
+        gwryjxlist = cs.cqlQuery("ryjx","select r.scqs,r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,ROUND(r.yjdf,2) as yjdf,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khjslr,r.khs,ROUND(r.khmyd,2) as khmyd,r.khjdwh,r.bz as bz from ryjx r inner join project p on r.xmmc=p.id and p.xmjl = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 order by yf desc"); //2020年5月后才改为计算创佣值 
         gwryjxlist_fnm = cs.cqlQuery("ryjx","select distinct c.id,c.name as text,c.name as value from ryjx r inner join project p on r.xmmc=p.id and p.xmjl= = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5"); //筛选姓名
         
         JSONArray jsonArray_fnm = JSONArray.fromObject(gwryjxlist_fnm); 
@@ -126,7 +129,7 @@ throws UnsupportedEncodingException {
         jlryjxlist_fyf_1="[]";
         gwryjxlist_fnm_1="[]";
         //gwryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khjslr,r.khs,ROUND(r.khmyd,2) as khmyd from ryjx r inner join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5' and bkhr= '"+uid+"' order by yf desc"); //2020年5月后才改为计算创佣值 
-        gwryjxlist = cs.cqlQuery("ryjx","select r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khjslr,r.khs,ROUND(r.khmyd,2) as khmyd,r.khjdwh from ryjx r inner join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 and bkhr= '"+uid+"' order by yf desc"); //2020年5月后才改为计算创佣值 20201106 修改筛选条件,年度和月份由字符变为数字
+        gwryjxlist = cs.cqlQuery("ryjx","select r.scqs,r.id as ryjxid,c.id as nameid,r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,cast(r.nd as unsigned integer) as nd,cast(r.yf as unsigned integer) as yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,ROUND(r.yjdf,2) as yjdf,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.xmdyldsmps,r.khjslr,r.khs,ROUND(r.khmyd,2) as khmyd,r.khjdwh,r.bz as bz from ryjx r inner join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>=2020 and r.yf>5 and bkhr= '"+uid+"' order by yf desc"); //2020年5月后才改为计算创佣值 20201106 修改筛选条件,年度和月份由字符变为数字
         //gwryjxlist_fnm = cs.cqlQuery("ryjx","select distinct c.id,c.name as text,c.name as value from ryjx r inner join project p on r.xmmc=p.id and p.xmjl= = '"+uid+"' left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5'"); //筛选姓名
         
         //JSONArray jsonArray_fnm = JSONArray.fromObject(gwryjxlist_fnm); 
@@ -174,6 +177,8 @@ throws UnsupportedEncodingException {
     String khjslr ="";//khjslr 客户及时录入
     String khjdwh = "";// 客户接待/维护质量
 
+    String bz = "";// 备注
+
 	//Map ywymap = new HashMap(); 
 	JSONObject ryjxjson = new JSONObject();
 	JSONArray ryjxjsonarr = new JSONArray(); 
@@ -218,48 +223,25 @@ throws UnsupportedEncodingException {
         zwlh = item.get("zwlh")==null?"":item.get("zwlh") + ""; 
         khs = item.get("khs")==null?"0":item.get("khs") + ""; 
         khmyd = item.get("khmyd")==null?0.0:Double.valueOf(item.get("khmyd")+"");
+        bz = item.get("bz")==null?"":item.get("bz") + ""; 
 
         // begin 获取应出勤数
-        int endnd = 0; // 结束年分
-        int endyf = 0; // 结束月份
-        int ndInt = Integer.parseInt(nd);
-        if (yf == 12) { // 如果月份 是12 则为 1月
-          endyf = 1; // 结束月份
-          endnd = ndInt + 1; // 结束年分
-        } else {
-          endyf = yf + 1; // 开始年分
-          endnd = ndInt; // 开始年分
-        }
-        String ksrq2 = ndInt+"-"+yf; // 组装开始时间
-        String jsrq2 = endnd+"-"+endyf; // 组装结束时间
-        String datetime2 = " and a.createdate >= str_to_date('"+ksrq2+"', '%Y-%m')  AND a.createdate <= str_to_date('"+jsrq2+"', '%Y-%m') "; // 时间sql片段
-        // String userid = "";
-        // 封装一个人员的考勤信息的集合
-        // String userSql = "select id from ccuser where name = '"+name+"' and is_deleted = '0' and isusing = '1'";
-        // List<CCObject> useridList = cs.cqlQuery("ccuser",userSql);
-        // for (CCObject user:useridList) {
-        //     userid = user.get("id")==null?"":user.get("id")+""; // 人员的id
-        // }
-        // 根据员工的  id  查询 所有的考勤 
-        String kaoqingSql="select count(1) as con from attendance a where is_deleted = '0' and a.ownerid = '"+nameId+"' " + datetime2 + " order by createdate desc";
-        // out.print(kaoqingSql);
-        List<CCObject> countKaoList = cs.cqlQuery("attendance",kaoqingSql);
-        String countKao = countKaoList.get(0).get("con")==null?"0":String.valueOf(countKaoList.get(0).get("con")+"");
+        String countKao = item.get("scqs")==null?"":item.get("scqs") + ""; 
         // end xiong
         
         ryjxjson.put("ryjxid",ryjxid);
-        ryjxjson.put("xmmc",xmmc); 
+        ryjxjson.put("xmmc",xmmc);
         ryjxjson.put("pjnm",pjnm); 
-        ryjxjson.put("jxbh",jxbh); 
+        ryjxjson.put("jxbh",jxbh);
         ryjxjson.put("name",name); 
         ryjxjson.put("nd",nd); 
         ryjxjson.put("yf",yf); 
         ryjxjson.put("countKao",countKao);
 
         ryjxjson.put("khfz",khfz); 
-        ryjxjson.put("tdcymb",tdcymb); 
-        ryjxjson.put("grcymb",grcymb); 
-        ryjxjson.put("tdcywcz",tdcywcz); 
+        ryjxjson.put("tdcymb",tdcymb);
+        ryjxjson.put("grcymb",grcymb);
+        ryjxjson.put("tdcywcz",tdcywcz);
         //ryjxjson.put("tdhkmb",tdhkmb); 
         //ryjxjson.put("tdhkwcz",tdhkwcz); 
         ryjxjson.put("tdmbms",tdmbms); 
@@ -273,6 +255,7 @@ throws UnsupportedEncodingException {
         ryjxjson.put("zwlh",zwlh); 
         ryjxjson.put("khs",khs); 
         ryjxjson.put("khmyd",khmyd); 
+        ryjxjson.put("bz",bz); 
 		
 		ryjxjsonarr.add(ryjxjson); 
 	} 
@@ -296,6 +279,7 @@ throws UnsupportedEncodingException {
         khfz = item.get("khfz")==null?0.0:Double.valueOf(item.get("khfz")+""); 
         grcymb = item.get("grcymb")==null?0.0:Double.valueOf(item.get("grcymb")+"");
         grcywcz = item.get("grcywcz")==null?0.0:Double.valueOf(item.get("grcywcz")+"");
+        yjdf = item.get("yjdf")==null?0.0:Double.valueOf(item.get("yjdf")+"");
 
         yryb = item.get("yryb")==null?"":item.get("yryb") + ""; 
         khzblr = item.get("khzblr")==null?"":item.get("khzblr") + ""; 
@@ -308,31 +292,9 @@ throws UnsupportedEncodingException {
         khs = item.get("khs")==null?"0":item.get("khs") + ""; 
         khmyd = item.get("khmyd")==null?0.0:Double.valueOf(item.get("khmyd")+"");
         khjdwh = item.get("khjdwh")==null?"":item.get("khjdwh") + ""; 
+        bz = item.get("bz")==null?"":item.get("bz") + ""; 
         // begin 获取应出勤数
-        int endnd = 0; // 结束年分
-        int endyf = 0; // 结束月份
-        int ndInt = Integer.parseInt(nd);
-        if (yf == 12) { // 如果月份 是12 则为 1月
-          endyf = 1; // 结束月份
-          endnd = ndInt + 1; // 结束年分
-        } else {
-          endyf = yf + 1; // 开始年分
-          endnd = ndInt; // 开始年分
-        }
-        String ksrq2 = ndInt+"-"+yf; // 组装开始时间
-        String jsrq2 = endnd+"-"+endyf; // 组装结束时间
-        String datetime2 = " and a.createdate >= str_to_date('"+ksrq2+"', '%Y-%m')  AND a.createdate <= str_to_date('"+jsrq2+"', '%Y-%m') "; // 时间sql片段
-        // String userid = "";
-        // // 封装一个人员的考勤信息的集合
-        // String userSql = "select id from ccuser where name = '"+name+"' and is_deleted = '0' and isusing = '1'";
-        // List<CCObject> useridList = cs.cqlQuery("ccuser",userSql);
-        // for (CCObject user:useridList) {
-        //     userid = user.get("id")==null?"":user.get("id")+""; // 人员的id
-        // }
-        // 根据员工的  id  查询 所有的考勤 
-        String kaoqingSql="select count(1) as con from attendance a where is_deleted = '0' and a.ownerid = '"+nameId+"' " + datetime2 + " order by createdate desc";
-        List<CCObject> countKaoList = cs.cqlQuery("attendance",kaoqingSql);
-        String countKao = countKaoList.get(0).get("con")==null?"0":String.valueOf(countKaoList.get(0).get("con")+"");
+        String countKao = item.get("scqs")==null?"":item.get("scqs")+"";
         // end xiong
 
         gwryjxjson.put("ryjxid",ryjxid); 
@@ -347,6 +309,7 @@ throws UnsupportedEncodingException {
         gwryjxjson.put("khfz",khfz);  
         gwryjxjson.put("grcymb",grcymb); 
         gwryjxjson.put("grcywcz",grcywcz); 
+        gwryjxjson.put("yjdf",yjdf); 
 
         gwryjxjson.put("yryb",yryb); 
         gwryjxjson.put("khzblr",khzblr); 
@@ -359,6 +322,7 @@ throws UnsupportedEncodingException {
         gwryjxjson.put("khs",khs); 
         gwryjxjson.put("khmyd",khmyd); 
         gwryjxjson.put("khjdwh",khjdwh); 
+        gwryjxjson.put("bz",bz); 
 		
 		gwryjxjsonarr.add(gwryjxjson); 
 	} 
@@ -525,6 +489,11 @@ throws UnsupportedEncodingException {
                             label="客户满意度"
                             width="100">
                           </el-table-column>
+                          <el-table-column
+                            prop="bz"
+                            label="备注"
+                            width="100">
+                          </el-table-column>
                         </el-table>
                     </template>
                     <template>
@@ -596,7 +565,11 @@ throws UnsupportedEncodingException {
                             label="个人创佣完成值"
                             width="100">
                           </el-table-column>
-
+                          <el-table-column
+                            prop="yjdf"
+                            label="业绩得分"
+                            width="100">
+                          </el-table-column>
                            <el-table-column
                             prop="yryb"
                             label="仪容仪表"
@@ -627,7 +600,7 @@ throws UnsupportedEncodingException {
                             label="日志"
                             width="100">
                           </el-table-column>
-                          <el-table-column
+                          <!-- <el-table-column
                             prop="scsj"
                             label="市场数据"
                             width="100">
@@ -636,7 +609,7 @@ throws UnsupportedEncodingException {
                             prop="xmdyldsmps"
                             label="一般代理转介数"
                             width="100">
-                          </el-table-column>
+                          </el-table-column> -->
                           <el-table-column
                             prop="khjslr"
                             label="客户及时录入"
@@ -650,6 +623,11 @@ throws UnsupportedEncodingException {
                           <el-table-column
                             prop="khmyd"
                             label="客户满意度"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="bz"
+                            label="备注"
                             width="100">
                           </el-table-column>
                         </el-table>
