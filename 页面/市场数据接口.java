@@ -9,6 +9,9 @@ author:tom
 log:
 1.20191230 因为楼层数据取了int,当多层或者汉字时候转换失败造成数据insert出错
 2.20200628 cqlquery只对管理员可用后,查询录入的市场数据需要些一个接口来返回
+3.20201208 1.给x成交详情加入关联概况的id,方便关联查询;2.修复bug,idlist没有初始化;
+4.20201209 1.查询成交明细的的记录也加入recid字段,方便删除单挑记录操作;2.加入删除单挑成交详情得接口;
+5.20201217 1.新增顾问部查询数据,根据类型type,执行代码块, 根据多选条件过滤数据, 并导出
 */
 
 /**
@@ -129,9 +132,9 @@ try {
         //out.print(sr0.toString());
         String sr0id = sr0.getString("id");
         //out.print(sr0id);
-        String sql= "update cjqk set sms = "+sm+",jxs="+jx+",cjss="+cjss+",cjts="+ts+" where id='"+sr0id+"'";
+        //String sql= "update cjqk set sms = "+sm+",jxs="+jx+",cjss="+cjss+",cjts="+ts+" where id='"+sr0id+"'";
         //out.print(sql);
-        cs.cqlQuery("kpsq",sql);
+        //cs.cqlQuery("cjqk",sql);
 
 
         //成交数据明细
@@ -175,6 +178,7 @@ try {
             cjqk.put("mj",mj);//面积
             cjqk.put("dj",dj);//单价
             cjqk.put("bz",bz);//备注
+            cjqk.put("relationid",sr0id);//把楼盘概况关联上
 	
 			cjqk.put("ownerid",userid);
             cjqk.put("createbyid",userid);  //createbyid赋值为项目经理
@@ -227,6 +231,7 @@ try {
         List<CCObject> scpy_l = cs.cqlQuery("cjqk",expresssql);
         for(CCObject item:scpy_l){
             out.print("cycle");
+            idlist.clear();
             //JSONObject ccuserjson= new JSONObject();
             String scpymc = item.get("scpymc")==null?"":item.get("scpymc")+ "";  //市场盘源的id
             String scpynm = item.get("scpynm")==null?"":item.get("scpynm")+ "";  //市场盘源的名称
@@ -256,7 +261,7 @@ try {
             rtnjbdata.put("imgsrc",imgsrc);
 
             //var expresssql1="select a.xy as hy,a.qy as qy,a.lc as lc,a.mj as mj, a.dj as dj,a.bz as bz,a.id as recid from cjqk a where a.is_deleted='0' and a.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa') and a.createbyid ='"+ lrr +"' and a.scpymc = '" +xm +"'"  + datetime + " order by a.createdate desc";
-            String expresssql1="select a.xy as hy,a.qy as qy,a.lc as lc,a.mj as mj, a.dj as dj,a.bz as bz,a.id as recid from cjqk a where a.is_deleted='0' and a.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx') and a.createbyid ='"+ createbyid +"' and a.scpymc = '" +scpymc +"'"  + datetime + " order by a.createdate desc";
+            String expresssql1="select a.xy as hy,a.qy as qy,a.lc as lc,a.mj as mj, a.dj as dj,a.bz as bz,a.id as recid from cjqk a where a.is_deleted='0' and a.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx') and (a.relationid='"+ recid +"'  or (a.createdate<'2020-12-09 00:00:00' and a.relationid is null)) and  a.createbyid ='"+ createbyid +"' and a.scpymc = '" +scpymc +"'"  + datetime + " order by a.createdate desc";
             JSONArray cjsjjsary = new JSONArray();
             List<CCObject> scsj_l = cs.cqlQuery("cjqk",expresssql1);
             for(CCObject item1:scsj_l){
@@ -275,6 +280,7 @@ try {
                 cjsjjson.put("dj",dj);
                 cjsjjson.put("bz",bz);
                 //cjsjjson.put("recid",recid);
+                cjsjjson.put("recid",recid_xq);
                 cjsjjsary.add(cjsjjson);
                 idlist.add(recid_xq);
             }
@@ -287,7 +293,57 @@ try {
         jsonmsg.put("message", idlist);
         jsonmsg.put("data", rtnMsg);
 
-    } else if ("guwensel".equals(type) || "getproject".equals(type)) { // 顾问部的查询
+    } else if("delxq".equals(type)){ //删除单条成交明细
+        //获取要删除成交情况记录的id
+        String cjxqid = request.getParameter("recid")==null?"":encodeParameters(request.getParameter("recid")+"");
+        
+		cs.cqlQuery("cjqk","update cjqk set is_deleted='1' where id = '"+cjxqid+"' and is_deleted='0' ");
+        //CCObject cjqk = new CCObject("cjqk");
+		//cjqk.put("id",cjxqid); //维护的对象
+        //cjqk.put("is_deleted","1"); //删除标志位改为1
+	
+        //cs.updateLt(cjqk);//更新记录
+        
+        jsonmsg.put("success", true);
+        jsonmsg.put("message", cjxqid);
+    } else if("delxq".equals(type)){ //删除单条成交明细
+        //获取要删除成交情况记录的id
+        String cjxqid = request.getParameter("recid")==null?"":encodeParameters(request.getParameter("recid")+"");
+        
+		cs.cqlQuery("cjqk","update cjqk set is_deleted='1' where id = '"+cjxqid+"' and is_deleted='0' ");
+        //CCObject cjqk = new CCObject("cjqk");
+		//cjqk.put("id",cjxqid); //维护的对象
+        //cjqk.put("is_deleted","1"); //删除标志位改为1
+	
+        //cs.updateLt(cjqk);//更新记录
+        
+        jsonmsg.put("success", true);
+        jsonmsg.put("message", cjxqid);
+    } else if("edtxq".equals(type)){ //编辑单条成交明细
+        //获取要编辑的成交情况的字段
+        String id = request.getParameter("id")==null?"":encodeParameters(request.getParameter("id")+"");
+        String hy = request.getParameter("hy")==null?"":encodeParameters(request.getParameter("hy")+"");
+        String qy = request.getParameter("qy")==null?"":encodeParameters(request.getParameter("qy")+"");
+        int lc = request.getParameter("lc")==null?0:Integer.parseInt(encodeParameters(request.getParameter("lc")+""));
+        Double mj = request.getParameter("mj")==null?0.0:Double.valueOf(encodeParameters(request.getParameter("mj")+""));
+        Double dj = request.getParameter("dj")==null?0.0:Double.valueOf(encodeParameters(request.getParameter("dj")+""));
+        String bz = request.getParameter("bz")==null?"":encodeParameters(request.getParameter("bz")+"");
+
+		//cs.cqlQuery("cjqk","update cjqk set is_deleted='1' where id = '"+cjxqid+"' and is_deleted='0' ");
+        CCObject cjqk = new CCObject("cjqk");
+		cjqk.put("id",id); //维护的对象
+        cjqk.put("xy",hy);
+        cjqk.put("qy",qy);
+        cjqk.put("lc",lc);
+        cjqk.put("mj",mj);
+        cjqk.put("dj",dj);
+        cjqk.put("bz",bz);
+	
+        cs.updateLt(cjqk);//更新记录
+        
+        jsonmsg.put("success", true);
+        jsonmsg.put("message", id);
+    }  else if ("guwensel".equals(type) || "getproject".equals(type)) { // 顾问部的查询
         if ("guwensel".equals(type)) { // 获取表格里的数据
             // out.print("0^进来了");
             //时间范围
@@ -544,7 +600,7 @@ try {
 
 request.setAttribute("jsonmsg", jsonmsg.toString());
 </cc>
-<!--<html>
+<!-- <html>
 	hello
 </html> -->
 <cc:forward page="/platform/activity/task/getNodes.jsp"/>
