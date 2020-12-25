@@ -45,12 +45,12 @@
     String datetime = "and TO_CHAR(c.createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(c.createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
 
 //获取盘源信息和上门进线情况
- String sql = "SELECT s.name AS name,s.qy as qy,s.id as scpyid, c.sms AS sms, c.cjss AS cjss, c.cjts AS cjts, c.jxs AS jxs , u.name AS lrrnm ,c.createbyid as lrrid , case s.recordtype when '2020CA38DA2EA62GseBx' then '公寓' when '2018D7CDD5A5418hbgiJ' then '二级租赁' when '20180B02945019FsyYVx' then '三级租赁' when '2018B9CEA41BA6AJFw0R' then '二级销售' else '三级销售' end as type,TO_CHAR(c.createdate,'YYYY-MM-DD hh24:mi:ss') as lrsj FROM cjqk c LEFT JOIN scpy s ON c.scpymc = s.id LEFT JOIN ccuser u ON c.createbyid = u.id WHERE c.recordtype = '201945938A54BAEfBWgh' AND c.is_deleted = '0'"+datetime+" order by c.createbyid";
-
+ String sql = "SELECT c.id as smid,s.name AS name,s.qy as qy,s.id as scpyid, c.sms AS sms, c.cjss AS cjss, c.cjts AS cjts, c.jxs AS jxs , u.name AS lrrnm ,c.createbyid as lrrid , case s.recordtype when '2020CA38DA2EA62GseBx' then '公寓' when '2018D7CDD5A5418hbgiJ' then '二级租赁' when '20180B02945019FsyYVx' then '三级租赁' when '2018B9CEA41BA6AJFw0R' then '二级销售' else '三级销售' end as type,TO_CHAR(c.createdate,'YYYY-MM-DD hh24:mi:ss') as lrsj FROM cjqk c LEFT JOIN scpy s ON c.scpymc = s.id LEFT JOIN ccuser u ON c.createbyid = u.id WHERE c.recordtype = '201945938A54BAEfBWgh' AND c.is_deleted = '0'"+datetime+" order by c.createbyid";
+    // out.print(sql+"//");
     List<CCObject> list = cs.cqlQuery("scpy", sql); // 执行sql语句
     double mjtotal = 0.0;//面积总计
 
-   String file_name = new String("市场数据.xls".getBytes(), "ISO-8859-1");
+    String file_name = new String("市场数据.xls".getBytes(), "ISO-8859-1");
     response.setHeader("Content-disposition","attachment;filename="+file_name);
     response.setContentType("application/vnd.ms-excel;charset=UTF-8");
 </cc>
@@ -117,8 +117,8 @@ td {
   <cc>
   if(list.size()>0){
        for(CCObject item:list){
-             String sql0= "select ifnull(c.lc,'-') as lc,ifnull(c.mj,'-') as mj,ifnull(c.dj,'-') as dj,ifnull(c.xy,'-') as xy,ifnull(c.qy,'-') as qy,ifnull(c.bz,'-') as bz from cjqk c where c.is_deleted = '0' "+datetime+" and c.scpymc = '"+item.get("scpyid")+"' and c.createbyid='"+item.get("lrrid")+"' and c.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx')";
-             //out.print(sql0);
+             String sql0= "select ifnull(c.lc,'-') as lc,ifnull(c.mj,'-') as mj,ifnull(c.dj,'-') as dj,ifnull(c.xy,'-') as xy,ifnull(c.qy,'-') as qy,ifnull(c.bz,'-') as bz from cjqk c where c.is_deleted = '0' "+datetime+" and c.scpymc = '"+item.get("scpyid")+"' and c.createbyid='"+item.get("lrrid")+"' and (c.relationid='"+ item.get("smid") +"'  or (c.createdate<'2020-12-09 00:00:00' and c.relationid is null)) and  c.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx') ";
+            //  out.print(sql0);
              List<CCObject> detaillist = cs.cqlQuery("cjqk",sql0);
              //out.print(String.valueOf(detaillist.size()));
              </cc>

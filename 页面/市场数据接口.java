@@ -433,7 +433,7 @@ try {
             String prosql = "";
             String scpystypesql = "";
             //获取盘源信息和上门进线情况( 当项目为空时, sql中会有多的双引号, 但不影响sql执行)
-            String sql = "SELECT s.name AS name,s.qy as scpyqy,s.id as scpyid,c.sms AS sms,c.cjss AS cjss,c.cjts AS cjts,c.jxs AS jxs,u.name AS lrrnm,c.createbyid as lrrid ,case s.recordtype when '2020CA38DA2EA62GseBx' then '公寓' when '2018D7CDD5A5418hbgiJ' then '二级租赁' when '20180B02945019FsyYVx' then '三级租赁' when '2018B9CEA41BA6AJFw0R' then '二级销售' else '三级销售' end as scpytype,TO_CHAR(c.createdate,'YYYY-MM-DD hh24:mi:ss') as lrsj FROM cjqk c LEFT JOIN scpy s ON c.scpymc = s.id LEFT JOIN ccuser u ON c.createbyid = u.id WHERE c.recordtype = '201945938A54BAEfBWgh' "+xmsqlone+typesqlone+qysqlone+" AND c.is_deleted = '0' "+datetime+" order by c.createbyid";
+            String sql = "SELECT c.id as smid,s.name AS name,s.qy as scpyqy,s.id as scpyid,c.sms AS sms,c.cjss AS cjss,c.cjts AS cjts,c.jxs AS jxs,u.name AS lrrnm,c.createbyid as lrrid ,case s.recordtype when '2020CA38DA2EA62GseBx' then '公寓' when '2018D7CDD5A5418hbgiJ' then '二级租赁' when '20180B02945019FsyYVx' then '三级租赁' when '2018B9CEA41BA6AJFw0R' then '二级销售' else '三级销售' end as scpytype,TO_CHAR(c.createdate,'YYYY-MM-DD hh24:mi:ss') as lrsj FROM cjqk c LEFT JOIN scpy s ON c.scpymc = s.id LEFT JOIN ccuser u ON c.createbyid = u.id WHERE c.recordtype = '201945938A54BAEfBWgh' "+xmsqlone+typesqlone+qysqlone+" AND c.is_deleted = '0' "+datetime+" order by c.createbyid";
             // out.print("4^"+sql);
             List<CCObject> scpylist = cs.cqlQuery("scpy", sql); // 执行sql语句, 获取所有市场盘源的数据(根据条件)
             // 获取页面传来的面积 double 类型 begin
@@ -462,7 +462,7 @@ try {
                 String createbyid = item.get("createbyid")==null?"":item.get("createbyid")+ "";  //录入人id createbyid
                 String recid = item.get("recid")==null?"":item.get("recid")+ "";  //成交概况id recid
                 // 获取成交情况集合
-                String sql0= "select ifnull(c.lc,'-') as lc,ifnull(c.mj,'-') as mj,ifnull(c.dj,'-') as dj,ifnull(c.xy,'-') as xy,ifnull(c.qy,'-') as qy,ifnull(c.bz,'-') as bz from cjqk c where c.is_deleted = '0' "+datetime+" and c.scpymc = '"+item.get("scpyid")+"' and c.createbyid='"+item.get("lrrid")+"' and c.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx')"+mjsql;
+                String sql0= "select ifnull(c.lc,'-') as lc,ifnull(c.mj,'-') as mj,ifnull(c.dj,'-') as dj,ifnull(c.xy,'-') as xy,ifnull(c.qy,'-') as qy,ifnull(c.bz,'-') as bz from cjqk c where c.is_deleted = '0' "+datetime+" and c.scpymc = '"+item.get("scpyid")+"' and (c.relationid='"+ item.get("smid") +"'  or (c.createdate<'2020-12-09 00:00:00' and c.relationid is null)) and c.createbyid='"+item.get("lrrid")+"' and c.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx')"+mjsql;
                 //String sql0 = "select ifnull(c.lc,'-') as lc,ifnull(c.mj,'-') as mj,ifnull(c.dj,'-') as dj,ifnull(c.xy,'-') as xy,ifnull(c.qy,'-') as qy,ifnull(c.bz,'-') as bz from cjqk c where c.is_deleted = '0' and TO_CHAR(c.createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('2020-12-06T16:00:00.000Z','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(c.createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('2020-12-14 23:59:59','YYYY-MM-DD'),'YYYY-MM-DD') and c.scpymc = 'a1420191682F3C37O4q8' and c.createbyid='0052020BEF5833FzUpDA' and c.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx')  and  c.mj >= 143.0";
                 //  out.print("2^"+sql0);
                 List<CCObject> cjqklist = cs.cqlQuery("cjqk",sql0);
