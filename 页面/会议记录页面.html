@@ -1,0 +1,319 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" isELIgnored="false" />
+<cc!>
+/*
+description:市场数据页面
+version: 1.0
+date:20191209
+author:tom
+log:
+20200629 调用查询接口,而不是cqlquery的接口
+20200729 在app内调用接口有问题,只好把接口从'/controller.action'改成'/customize/page/9291p1140/pbbapi.jsp'
+20201208 加入编辑和成交详情的单条删除
+20201217 增加跳转到条件查询页面, 市场数据根据多种条件混合查询
+*/
+
+/** * 将ISO-8859-1编码格式的字符串转码为UTF-8 * 
+ * * @param parameterValue 
+ * * @return 
+ * * @throws UnsupportedEncodingException 
+ * */ 
+private static String encodeParameters(String parameterValue) throws UnsupportedEncodingException { 
+	if (parameterValue != null && parameterValue.length()> 0) { 
+		byte[] iso = parameterValue.getBytes("ISO-8859-1"); 
+		if (parameterValue.equals(new String(iso, "ISO-8859-1"))) { 
+			parameterValue= new String(iso, "UTF-8"); 
+			return parameterValue; 
+		} 
+	} 
+	return parameterValue; 
+}
+</cc>
+<cc>
+	CCService cs = new CCService(userInfo); 
+	String uid = userInfo.getUserId();//当前登录用户id 
+	List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'"); //登录人的账号
+	String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; //账号用于获取bindingcode 
+	
+	//String uid = "0052018470A714CaerX7"; //李荣武id 测试用 
+	String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id,后续对查询数据权限控制用
+	//日期的处理
+	java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd"); //定义日期格式
+	String nowday = df.format(new Date()); //获取当前日期
+	//因为是取的时间,作用于一开始给个初始值,默认当天的00:00 到24:00
+	String kstm = nowday +" 00:00:00";
+	String jstm = nowday +" 23:59:59";
+    //String datetime = " and a.createdate >= str_to_date('"+kstm+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+jstm+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
+	// 查询代理中的项目
+	String sql1 = "";
+	if("aaa20180D5809FBsQZab".equals(profid) || "aaa20180681351FmekUG".equals(profid) || "aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid)){
+		sql1 = "select id,name from Project where is_deleted='0' and ssbm like '代理%' and xmzt='代理中'";
+    } else {
+		sql1 = "select id,name from Project where is_deleted='0' and ssbm like '代理%' and xmzt='代理中' and xmjl= '"+uid+"' ";
+	}
+	List<CCObject> options = cs.cqlQuery("Project",sql1); //下拉框数据源
+	JSONArray scpy2jsonarr = new JSONArray(); 
+	for(CCObject item:options){
+		JSONObject scpy2json= new JSONObject();
+		String proid = item.get("id")==null?"":item.get("id")+ "";  //id
+		String proname = item.get("name")==null?"":item.get("name")+ "";  //name
+		scpy2json.put("id",proid); 
+		scpy2json.put("name",proname); 
+		scpy2jsonarr.add(scpy2json);
+	}
+	String scpy2js=scpy2jsonarr.toString();
+	// 查询项目经理 , 封装下拉选 ( 根据项目经理的简档, 查询所有的项目经理 )
+	// String sql2 = "select id,name from ccuser where profile = 'aaa2018A38306ED9syVe' and is_deleted = '0' and   isusing = '1'";
+	// List<CCObject> xmjloptions = cs.cqlQuery("ccuser",sql2); //下拉框数据源
+	// JSONArray xmjljsonarr = new JSONArray(); 
+	// for(CCObject xmjlboj:xmjloptions){
+	// 	JSONObject xmjljson= new JSONObject();
+	// 	String xmjlid = xmjlboj.get("id")==null?"":xmjlboj.get("id")+ "";  // 项目经理的id
+	// 	String xmjlname = xmjlboj.get("name")==null?"":xmjlboj.get("name")+ "";  // 项目经理的name
+	// 	xmjljson.put("id",xmjlid); 
+	// 	xmjljson.put("name",xmjlname); 
+	// 	xmjljsonarr.add(xmjljson);
+	// }
+	// String xmjljsonstr=xmjljsonarr.toString();
+</cc>
+		<html>
+
+		<head>
+		<!--<meta http-equiv="refresh" content="5">-->
+		<!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
+        <script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
+        <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+        <!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
+        <script src="//unpkg.com/element-ui@2.14.1/lib/index.js"></script>
+		<!-- <script src="https://unpkg.com/muse-ui/dist/muse-ui.js"></script> -->
+		<script src="https://cdn.jsdelivr.net/npm/muse-ui@3.0.2/dist/muse-ui.js"></script>
+		<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+		<script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
+		<!-- <script src="//unpkg.com/vue-easytable/umd/js/index.js"></script> -->
+		<!-- <link rel="stylesheet" href="https://unpkg.com/muse-ui/dist/muse-ui.css -->
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/muse-ui@3.0.2/dist/muse-ui.css">
+		<link rel="stylesheet" href="https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css">
+		<!-- <link rel="stylesheet" href="https://unpkg.com/vue-easytable/umd/css/index.css"> -->
+
+
+		<STYLE TYPE="text/css"> 
+			.demo-text {
+			  padding: 16px;
+			  background: #fff;
+			  p {
+			    margin: 8px 0;
+			  }
+			}
+			.demo-list-wrap {
+			  width: 100%;
+			  /*max-width: 360px;*/
+			  overflow: hidden;
+			}
+				
+			.el-table--border {
+				
+				border: 1px solid #0f0f0f !important;
+				
+			}
+				
+			.el-table--border td,
+				
+			.el-table th, .el-table tr{
+				
+				border: 1px solid #0f0f0f !important;
+				
+				border-collapse: collapse;
+			}
+			th,td{
+                padding: 5px;
+                border: 1px solid #0f0f0f;
+                vertical-align: middle;
+
+            }
+            .text{
+                font-weight:400;
+            }
+		</STYLE> 
+		</head>
+
+		<body>
+
+<div id="app">
+	<mu-container>
+		<mu-tabs :value.sync="active3" center color="teal"  >
+		  <mu-tab>
+			<mu-icon value="assessment"></mu-icon>
+			会议记录
+		  </mu-tab>
+		</mu-tabs>
+		<div class="demo-text" v-if="active3 === 0">
+			<mu-row gutter>
+				<mu-col span="6" lg="6" sm="6">
+					<mu-select label="项目名称" v-model="projectId" filterable >
+						<mu-option v-for="option,index in options" :key="option.id" :label="option.name" :value="option.id" label-float full-width landscape></mu-option>
+					</mu-select>
+				</mu-col>
+				<mu-col span="6" lg="6" sm="6">
+					<mu-select label="是否有附件" v-model="fjvalue" filterable >
+						<mu-option v-for="fjobj,index in fjlist"  :key="fjobj" :label="fjobj" :value="fjobj" label-float full-width landscape></mu-option>
+					</mu-select>
+				</mu-col>	
+				<mu-col span="6" lg="6" sm="6">
+					<mu-date-input  icon="today" v-model="timebegin" label="选择起始时间" type="dateTime" clock-type="24hr" value-format="YYYY-MM-DD HH:mm:ss" label-float full-width landscape></mu-date-input>
+				</mu-col>
+				<mu-col span="6" lg="6" sm="6">
+					<mu-date-input  icon="today" v-model="timeend" label="选择结束时间" type="dateTime" clock-type="24hr" value-format="YYYY-MM-DD HH:mm:ss" label-float full-width landscape></mu-date-input>
+				</mu-col>
+			</mu-row>
+			<mu-row gutter>
+				<mu-col span="6" lg="6" sm="2">
+					<mu-flex justify-content="center" align-items="center" align-content="center">
+						<mu-button round small color="success" @click="showjsdetal()">查询</mu-button>&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+						<mu-button round small color="success" @click="reset()">重置</mu-button>
+					</mu-flex>
+				</mu-col>
+				<mu-col span="6" lg="6" sm="2">
+					<mu-flex justify-content="center" align-items="center" align-content="center">
+						<mu-button round small color="success" @click="dc()">导出</mu-button>
+					</mu-flex>
+				</mu-col>
+			</mu-row>
+			</br>
+			</br>
+            <template>
+                <el-table :data="tableData" style="width: 100% ;">
+                    <el-table-column  prop="hyname" label="项目会议编号">
+						<template slot-scope="scope">
+							<a  style="color:#1890ff;cursor:pointer" @click="gohypage(scope.row.hyid)" >{{scope.row.hyname}}</a>
+						  </template>
+                    </el-table-column>
+                    <el-table-column prop="pname" label="项目名称">
+						<template slot-scope="scope">
+							<a  style="color:#1890ff;cursor:pointer" @click="goxmpage(scope.row.xmmcid)" >{{scope.row.pname}}</a>
+						  </template>
+                    </el-table-column>
+                    <el-table-column prop="hyztxx" label="会议主题">
+					</el-table-column>
+					<!-- <el-table-column prop="hyzt" label="会议主题">
+                    </el-table-column> -->
+                    <el-table-column prop="hynr" label="会议内容">
+					</el-table-column>
+					<el-table-column prop="hycreatedate" label="创建时间">
+                    </el-table-column>
+                    <el-table-column prop="cname" label="创建人">
+                    </el-table-column>
+                    <el-table-column prop="accessory" label="附件">
+						<template slot-scope="scope">
+							<a  style="color:#1890ff;cursor:pointer" @click="gofjpage(scope.row.relatedid)" >{{scope.row.accessory}}</a>
+						  </template>
+                    </el-table-column>
+                </el-table>
+            </template>	
+		</div>
+    </mu-container>
+    <div>
+        
+    </div>
+</div>
+		<br>
+		<br>
+		<br>
+		
+
+<script>
+	var Main = {
+		data() {
+			return {
+				active3: 0,
+				projectId:'',  // 项目id, 值框
+				options:<cc:outprint>scpy2js</cc:outprint>, // 项目下拉选
+				fjvalue:'', // 项目经理文本框
+				fjlist:['有附件','无附件',''],
+                tableData: [], // 表格数据
+                timebegin:'<cc:outprint>kstm</cc:outprint>', // 开始时间
+                timeend:'<cc:outprint>jstm</cc:outprint>',  // 结束时间
+    		};
+		},
+		created: function() { // 首次发送请求
+			this.getBinding();
+
+		},
+		methods: {
+			// 点击会议编码, 跳转到会议详情页
+			gohypage:function(hyid) {
+				window.open("/query.action?m=query&id="+hyid); 
+			},
+			// 点击项目名称, 跳转到项目详情页
+			goxmpage:function(xmmcid) {
+				window.open("/query.action?m=query&id="+xmmcid); 
+			},
+			// 点击附件列查看, 跳转到附件详情页
+			gofjpage:function(relatedid) {
+				window.open("/document.action?m=detail&id="+relatedid); 
+			},
+			getBinding: function() {
+    			var that = this;
+    			axios.get('/distributor.action', {
+    				params: {
+    			    	serviceName: 'cssoLogin',
+    			    	userName: that.userName,
+    			    	authCode: '6b42a467259407218c0e6acdfc978c01'
+    			  }
+    			})
+    			  .then(function (response) {
+    			    that.bindingcode = response.data.binding;
+    			    //console.log(this.bindingcode);
+    			  })
+    			  .catch(function (error) {
+    			    console.log(error);
+    			  });
+    		},
+			py2choose: function(e,item){
+              item.xmid=e.id;
+              item.xmmc=e.name;
+            },
+			dc: function(){
+				debugger
+				// aaa20180D5809FBsQZab  aaa20180681351FmekUG   aaa2018E46BFCF90SnzU aaa201854696184hq4oN  aaa000001  aaa20188BF02AA11vijc
+    			if("005201827888B25tm2iq"=='<cc:outprint>uid</cc:outprint>' || "0052018FF9F7905NEd6u"== '<cc:outprint>uid</cc:outprint>' || "aaa20180D5809FBsQZab" == '<cc:outprint>profid</cc:outprint>' || "aaa20180681351FmekUG" == '<cc:outprint>profid</cc:outprint>' || "aaa2018E46BFCF90SnzU" == '<cc:outprint>profid</cc:outprint>' || "aaa201854696184hq4oN" == '<cc:outprint>profid</cc:outprint>' || "aaa20188BF02AA11vijc" == '<cc:outprint>profid</cc:outprint>'){
+					 window.location.href = "hyjldc.jsp?timebegin="+ this.timebegin+"&timeend="+this.timeend+"&projectId="+this.projectId+"&fjvalue="+this.fjvalue;
+    			}else{
+    			     alert("权限不足!");
+    			}	
+			},
+			reset: function(){ // 重置条件查询
+				var that = this;
+				that.projectId = '';  // 项目id, 值框
+				that.fjvalue = ''; // 项目经理文本框
+                that.timebegin = '<cc:outprint>kstm</cc:outprint>'; // 开始时间
+                that.timeend = '<cc:outprint>jstm</cc:outprint>';  // 结束时间
+			},
+			showjsdetal: function(){ //  查询 会议记录信息	
+				var that = this;
+				axios.get('/controller.action', {
+                    params: {
+						//name:'hyjlapi',
+						name:'hyjlapi', // 请求文件名
+						type: 'selhuiyi', // 请求处理代码类型
+						projectId:that.projectId, // 项目id
+						fjvalue:that.fjvalue, // 是否有附件
+						timebegin:that.timebegin, // 起始时间
+						timeend: that.timeend, // 结束时间
+						bindingcode: that.bindingcode
+					}
+				})
+				.then(function (response) {
+                    Vue.set(that,'tableData', response.data.data);
+                    that.$forceUpdate();
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+			},
+		},
+    };
+	var Ctor = Vue.extend(Main)
+	new Ctor().$mount('#app')
+</script >
+		</body>
+
+		</html>
