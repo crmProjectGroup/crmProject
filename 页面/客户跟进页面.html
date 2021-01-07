@@ -38,7 +38,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 	//因为是取的时间,作用于一开始给个初始值,默认当天的00:00 到24:00
 	String kstm = nowday +" 00:00:00";
 	String jstm = nowday +" 23:59:59";
-	String sql1 = "select id,name from Project where is_deleted='0' and ssbm like '代理%' and xmzt='代理中'";
+	String sql1 = "select id,name from Project where is_deleted='0'  and xmzt='代理中'";
 	List<CCObject> options = cs.cqlQuery("Project",sql1); //下拉框数据源
 	JSONArray scpy2jsonarr = new JSONArray(); 
 	for(CCObject item:options){

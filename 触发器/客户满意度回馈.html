@@ -6,6 +6,7 @@ author:tom
 log:
 20190711 修改了上门进线的模板,进线也假如满意度回复
 20201203 如果是vip企业顾问,创建的客户,都需要发短信
+20210106 加入百度发送短信
 */
 
 String dh = record_new.get("lxrdh")==null?"":record_new.get("lxrdh")+"";//获取电话
@@ -77,7 +78,8 @@ String smmb = "先生/女士您好!我是朗峻广场接待您的职业经理"+u
 String jxmb = "尊敬的客户您好！感谢您致电"+Projectname+"项目，我是刚跟您通话的置业顾问"+username+"，由于时间仓促，未能详尽阐述项目信息，诚邀您光临本项目营销中心进行全面了解。项目地址："+ProjectAddress+"；如需了解更多工商地产资讯，请随时致电，电话："+mobile+"，为更好的提升服务，请对本次服务进行满意度评分，您可直接回复数字（1满意、2不满意）。期待您的光临！";
 
 // if(!"aaa201858C360ADNceRX".equals(profileid) && "a0520206562E5ECNVIbC".equals(xmmc) ){
-if("aaa201858C360ADNceRX".equals(profileid) || "a0520206562E5ECNVIbC".equals(xmmc) ){
+// 大客户简档 \  朗峻广场  \ 百度深圳国际大厦
+if("aaa201858C360ADNceRX".equals(profileid) || "a0520206562E5ECNVIbC".equals(xmmc) || "a052018119B8FB52E6PM".equals(xmmc)){
   if(!"".equals(dh)){
      String txt = "";
      String result = "-20";
@@ -100,7 +102,11 @@ if("aaa201858C360ADNceRX".equals(profileid) || "a0520206562E5ECNVIbC".equals(xmm
           }
           txt = lxrxm+zuncheng+"您好!我是瑞信行大客户经理:"+username+".很高兴能为您服务!请您对本次服务进行满意度评分，可直接回复数字（1满意;2不满意）。感谢您的回复！公司地址："+ProjectAddress;
      } else {
-         txt = smmb;
+          if ("a052018119B8FB52E6PM".equals(xmmc)) {  // 百度国际大厦项目
+               txt = "先生/女士您好!我是百度深圳国际大厦接待您的职业经理"+username+".今天很高兴能为您服务,有任何疑问可电话或微信我, 我将竭诚为您服务;期待您的再次光临,祝您生活愉快!为更好的提升服务，请对我的服务进行满意度评分，您可直接回复数字（1满意;2不满意）。再次感谢您的光临！";
+          } else { 
+               txt = smmb;
+          }
      }  // end 
      String urls ="";
         //    if("顾问部".equals(department)){
