@@ -1,232 +1,259 @@
-    <cc:page type="normal" style="standard" showSidebar="false" showHeader="false" isELIgnored="false" />
-    <cc!>
-        /*
-        20201208 市场数据查询页面 (顾问部), 根据条件查询,对应的数据展示.
-        */
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" isELIgnored="false" />
+<cc!>
+    /*
+    20201208 市场数据查询页面 (顾问部), 根据条件查询,对应的数据展示.
+    */
 
-        /** * 将ISO-8859-1编码格式的字符串转码为UTF-8 *
-        * * @param parameterValue
-        * * @return
-        * * @throws UnsupportedEncodingException
-        * */
-        private static String encodeParameters(String parameterValue) throws UnsupportedEncodingException {
-        if (parameterValue != null && parameterValue.length()> 0) {
-        byte[] iso = parameterValue.getBytes("ISO-8859-1");
-        if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
-        parameterValue= new String(iso, "UTF-8");
-        return parameterValue;
+    /** * 将ISO-8859-1编码格式的字符串转码为UTF-8 *
+    * * @param parameterValue
+    * * @return
+    * * @throws UnsupportedEncodingException
+    * */
+    private static String encodeParameters(String parameterValue) throws UnsupportedEncodingException {
+    if (parameterValue != null && parameterValue.length()> 0) {
+    byte[] iso = parameterValue.getBytes("ISO-8859-1");
+    if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+    parameterValue= new String(iso, "UTF-8");
+    return parameterValue;
+    }
+    }
+    return parameterValue;
+    }
+    </cc>
+    <cc>
+        CCService cs = new CCService(userInfo);
+        String uid = userInfo.getUserId();//当前登录用户id
+        List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'");
+        //登录人的账号
+        String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; //账号用于获取bindingcode
+        String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id,后续对查询数据权限控制用
+        //日期的处理
+        java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd"); //定义日期格式
+        String nowday = df.format(new Date()); //获取当前日期
+        //因为是取的时间,作用于一开始给个初始值,默认当天的00:00 到24:00
+        String kstm = nowday +" 00:00:00";
+        String jstm = nowday +" 23:59:59";
+        String datetime = " and a.createdate between '"+kstm+"' AND '"+jstm+"'";
+        // 获取系统中存在的市场盘源的类型 begin
+        String scpytypesql = "select case s.recordtype when '2020CA38DA2EA62GseBx' then '公寓' when '2018D7CDD5A5418hbgiJ' then '二级租赁' when '20180B02945019FsyYVx' then '三级租赁' when '2018B9CEA41BA6AJFw0R' then '二级销售' else '三级销售' end as type, s.recordtype  from scpy s where is_deleted = '0' group by s.recordtype ";
+        List<CCObject> scpytypelist = cs.cqlQuery("scpy",scpytypesql);
+        JSONArray scpy2jsonarr = new JSONArray(); 
+        for(CCObject item:scpytypelist){
+            JSONObject scpy2json= new JSONObject();
+            String recordtypeid = item.get("recordtype")==null?"":item.get("recordtype")+ "";  //类型的id
+            String type = item.get("type")==null?"":item.get("type")+ "";  //类型的显示名称
+            scpy2json.put("lable",recordtypeid); 
+            scpy2json.put("value",type); 
+            scpy2jsonarr.add(scpy2json);
         }
+        // 类型end
+        // 获取项目下拉选 begin
+        // String scpyprosql = "select s.id as scpyid,s.name as scpyxmname  from scpy s where s.is_deleted = '0' group by s.name";
+        // List<CCObject> scpyprolist = cs.cqlQuery("scpy",scpyprosql);
+        // JSONArray scpyprojsonarr = new JSONArray(); 
+        // for(CCObject item:scpyprolist){
+        //     JSONObject scpyprojson= new JSONObject();
+        //     String scpyid = item.get("scpyid")==null?"":item.get("scpyid")+ "";  //类型的id
+        //     String scpyxmname = item.get("scpyxmname")==null?"":item.get("scpyxmname")+ "";  //类型的显示名称
+        //     scpyprojson.put("lable",scpyid); 
+        //     scpyprojson.put("value",scpyxmname); 
+        //     scpyprojsonarr.add(scpyprojson);
+        // }
+        // 项目下拉选 end
+        // 获取成交情况里的 "区域" 下拉选 begin
+        String scpyqysql = "select ifnull(c.qy,'-') as qy from cjqk c where c.is_deleted = '0' and c.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx') group by c.qy";
+        List<CCObject> scpyqylist = cs.cqlQuery("cjqk",scpyqysql);
+        JSONArray scpyqyjsonarr = new JSONArray(); 
+        for(CCObject item:scpyqylist){
+            JSONObject scpyqyjson= new JSONObject();
+            String qy = item.get("qy")==null?"":item.get("qy")+ "";  //类型的显示名称
+            scpyqyjson.put("lable",qy); 
+            scpyqyjson.put("value",qy); 
+            scpyqyjsonarr.add(scpyqyjson);
         }
-        return parameterValue;
+        // 区域下拉选 end
+    </cc>
+
+    <html>
+    <!-- <script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script> -->
+    <!-- <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script> -->
+    <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> <!--引入内部vue -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script> -->
+    <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610359371060HP6AYHCZ"></script> <!--引入内部axios -->
+    <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css" />
+    <style type="text/css">
+        .el-dropdown-link {
+            cursor: pointer;
+            color: #409eff;
         }
-        </cc>
-        <cc>
-            CCService cs = new CCService(userInfo);
-            String uid = userInfo.getUserId();//当前登录用户id
-            List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'");
-            //登录人的账号
-            String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; //账号用于获取bindingcode
-            String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id,后续对查询数据权限控制用
-            //日期的处理
-            java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd"); //定义日期格式
-            String nowday = df.format(new Date()); //获取当前日期
-            //因为是取的时间,作用于一开始给个初始值,默认当天的00:00 到24:00
-            String kstm = nowday +" 00:00:00";
-            String jstm = nowday +" 23:59:59";
-            String datetime = " and a.createdate between '"+kstm+"' AND '"+jstm+"'";
-            // 获取系统中存在的市场盘源的类型 begin
-            String scpytypesql = "select case s.recordtype when '2020CA38DA2EA62GseBx' then '公寓' when '2018D7CDD5A5418hbgiJ' then '二级租赁' when '20180B02945019FsyYVx' then '三级租赁' when '2018B9CEA41BA6AJFw0R' then '二级销售' else '三级销售' end as type, s.recordtype  from scpy s where is_deleted = '0' group by s.recordtype ";
-            List<CCObject> scpytypelist = cs.cqlQuery("scpy",scpytypesql);
-            JSONArray scpy2jsonarr = new JSONArray(); 
-            for(CCObject item:scpytypelist){
-                JSONObject scpy2json= new JSONObject();
-                String recordtypeid = item.get("recordtype")==null?"":item.get("recordtype")+ "";  //类型的id
-                String type = item.get("type")==null?"":item.get("type")+ "";  //类型的显示名称
-                scpy2json.put("lable",recordtypeid); 
-                scpy2json.put("value",type); 
-                scpy2jsonarr.add(scpy2json);
-            }
-            // 类型end
-            // 获取项目下拉选 begin
-            // String scpyprosql = "select s.id as scpyid,s.name as scpyxmname  from scpy s where s.is_deleted = '0' group by s.name";
-            // List<CCObject> scpyprolist = cs.cqlQuery("scpy",scpyprosql);
-            // JSONArray scpyprojsonarr = new JSONArray(); 
-            // for(CCObject item:scpyprolist){
-            //     JSONObject scpyprojson= new JSONObject();
-            //     String scpyid = item.get("scpyid")==null?"":item.get("scpyid")+ "";  //类型的id
-            //     String scpyxmname = item.get("scpyxmname")==null?"":item.get("scpyxmname")+ "";  //类型的显示名称
-            //     scpyprojson.put("lable",scpyid); 
-            //     scpyprojson.put("value",scpyxmname); 
-            //     scpyprojsonarr.add(scpyprojson);
-            // }
-            // 项目下拉选 end
-            // 获取成交情况里的 "区域" 下拉选 begin
-            String scpyqysql = "select ifnull(c.qy,'-') as qy from cjqk c where c.is_deleted = '0' and c.recordtype in ('20186A33481F087wkKC5','20186B76C925373c6GQa','2020CA38DA2EA62GseBx') group by c.qy";
-            List<CCObject> scpyqylist = cs.cqlQuery("cjqk",scpyqysql);
-            JSONArray scpyqyjsonarr = new JSONArray(); 
-            for(CCObject item:scpyqylist){
-                JSONObject scpyqyjson= new JSONObject();
-                String qy = item.get("qy")==null?"":item.get("qy")+ "";  //类型的显示名称
-                scpyqyjson.put("lable",qy); 
-                scpyqyjson.put("value",qy); 
-                scpyqyjsonarr.add(scpyqyjson);
-            }
-            // 区域下拉选 end
-        </cc>
 
-        <html>
-        <script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
-        <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
-        <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css" />
-        <style type="text/css">
-            .el-dropdown-link {
-                cursor: pointer;
-                color: #409eff;
-            }
+        .el-icon-arrow-down {
+            if font-size: 12px;
+        }
+        
+    </style>
 
-            .el-icon-arrow-down {
-                if font-size: 12px;
-            }
-            
-        </style>
+    <body>
+        <div id="app">
+            <br />
+            <template>
+                    开始时间: <el-date-picker type="date" placeholder="开始时间" v-model="starttime" style="height: 40px;" value-format="yyyy-MM-dd"></el-date-picker>
+                    结束时间: <el-date-picker type="date" placeholder="结束时间" v-model="endtime" style="height: 40px;" value-format="yyyy-MM-dd"></el-date-picker>
+            </template>
+            <template>
+                项目类型: <el-select v-model="typevalue" multiple placeholder="请选择" style="width: 130px;" @visible-change="getproject($event,typevalue)" @remove-tag="removeprotype($event,'')">
+                    <el-option
+                        v-for="item in typearray"
+                        :key="item.label"
+                        :label="item.label"
+                        :value="item.value" >
+                    </el-option>
+                </el-select>
 
-        <body>
-            <div id="app">
-                <br />
-                <template>
-                        开始时间: <el-date-picker type="date" placeholder="开始时间" v-model="starttime" style="height: 40px;" value-format="yyyy-MM-dd"></el-date-picker>
-                        结束时间: <el-date-picker type="date" placeholder="结束时间" v-model="endtime" style="height: 40px;" value-format="yyyy-MM-dd"></el-date-picker>
-                </template>
-                <template>
-                    项目类型: <el-select v-model="typevalue" multiple placeholder="请选择" style="width: 130px;" @visible-change="getproject($event,typevalue)" @remove-tag="removeprotype($event,'')">
-                        <el-option
-                            v-for="item in typearray"
-                            :key="item.label"
-                            :label="item.label"
-                            :value="item.value" >
-                        </el-option>
-                    </el-select>
+                项目名称: <el-select v-model="xmvalue" multiple   placeholder="请选择" filterable  style="width: 130px;">
+                    <el-option
+                        v-for="item in xmarray"
+                        :key="item.label"
+                        :label="item.label"
+                        :value="item.value">
+                    </el-option>
+                </el-select>
 
-                    项目名称: <el-select v-model="xmvalue" multiple   placeholder="请选择" filterable  style="width: 130px;">
-                        <el-option
-                            v-for="item in xmarray"
-                            :key="item.label"
-                            :label="item.label"
-                            :value="item.value">
-                        </el-option>
-                    </el-select>
+                区域: <el-select v-model="qyvalue" multiple placeholder="请选择" style="width: 130px;">
+                    <el-option
+                        v-for="item in qyarray"
+                        :key="item.label"
+                        :label="item.label"
+                        :value="item.value">
+                    </el-option>
+                </el-select>
+                面积: <el-input v-model="mjvalue" style="width: 150px;" placeholder="请输入面积"></el-input>
+                <el-button style="width: 80px;" @click="cjshins">查询</el-button>
+                <el-button style="width: 80px;" @click="chongzhi">重置</el-button>
+                <el-button style="width: 80px;" @click="daochu">导出</el-button>
+            </template>
+            <br/>
+            <br/>
+            <template>
+                <el-table :data="tableData" style="width: 100%">
+                    <el-table-column prop="usernm" label="录入人" width="100">
+                    </el-table-column>
+                    <el-table-column prop="lrsj" label="录入时间" width="100">
+                    </el-table-column>
+                    <el-table-column prop="scpynm" label="项目名称" width="100">
+                    </el-table-column>
+                    <el-table-column prop="scpytype" label="项目类型" width="100">
+                    </el-table-column>
+                    <el-table-column prop="scpyqy" label="区域" width="100">
+                    </el-table-column>
+                    <el-table-column label="概况">
+                        <el-table-column prop="sms" label="上门" width="100">
+                        </el-table-column>
+                        <el-table-column prop="jxs" label="进线" width="100">
+                        </el-table-column>
+                        <el-table-column prop="cjss" label="成交手数" width="100">
+                        </el-table-column>
+                        <el-table-column prop="cjts" label="套数" width="100">
+                        </el-table-column>
+                    </el-table-column>
+                    <el-table-column label="成交情况">
+                        <el-table-column prop="lc" label="楼层" width="120">
+                        </el-table-column>
+                        <el-table-column prop="mj" label="面积" width="120">
+                        </el-table-column>
+                        <el-table-column prop="dj" label="单价" width="120">
+                        </el-table-column>
+                        <el-table-column prop="xy" label="行业" width="120">
+                        </el-table-column>
+                        <el-table-column prop="qy" label="来源区域" width="120">
+                        </el-table-column>
+                        <el-table-column prop="bz" label="备注" width="300">
+                        </el-table-column>
+                    </el-table-column>
+                </el-table>
+            </template>
+            <br />
+        </div>
 
-                    区域: <el-select v-model="qyvalue" multiple placeholder="请选择" style="width: 130px;">
-                        <el-option
-                            v-for="item in qyarray"
-                            :key="item.label"
-                            :label="item.label"
-                            :value="item.value">
-                        </el-option>
-                    </el-select>
-                    面积: <el-input v-model="mjvalue" style="width: 150px;" placeholder="请输入面积"></el-input>
-                    <el-button style="width: 80px;" @click="cjshins">查询</el-button>
-                    <el-button style="width: 80px;" @click="chongzhi">重置</el-button>
-                    <el-button style="width: 80px;" @click="daochu">导出</el-button>
-                </template>
-                <br/>
-                <br/>
-                <template>
-                    <el-table :data="tableData" style="width: 100%">
-                        <el-table-column prop="usernm" label="录入人" width="100">
-                        </el-table-column>
-                        <el-table-column prop="lrsj" label="录入时间" width="100">
-                        </el-table-column>
-                        <el-table-column prop="scpynm" label="项目名称" width="100">
-                        </el-table-column>
-                        <el-table-column prop="scpytype" label="项目类型" width="100">
-                        </el-table-column>
-                        <el-table-column prop="scpyqy" label="区域" width="100">
-                        </el-table-column>
-                        <el-table-column label="概况">
-                            <el-table-column prop="sms" label="上门" width="100">
-                            </el-table-column>
-                            <el-table-column prop="jxs" label="进线" width="100">
-                            </el-table-column>
-                            <el-table-column prop="cjss" label="成交手数" width="100">
-                            </el-table-column>
-                            <el-table-column prop="cjts" label="套数" width="100">
-                            </el-table-column>
-                        </el-table-column>
-                        <el-table-column label="成交情况">
-                            <el-table-column prop="lc" label="楼层" width="120">
-                            </el-table-column>
-                            <el-table-column prop="mj" label="面积" width="120">
-                            </el-table-column>
-                            <el-table-column prop="dj" label="单价" width="120">
-                            </el-table-column>
-                            <el-table-column prop="xy" label="行业" width="120">
-                            </el-table-column>
-                            <el-table-column prop="qy" label="来源区域" width="120">
-                            </el-table-column>
-                            <el-table-column prop="bz" label="备注" width="300">
-                            </el-table-column>
-                        </el-table-column>
-                    </el-table>
-                </template>
-                <br />
-            </div>
+        <br>
+        <br>
+        <br>
+        <script>
+            var Main =  {
+            data() {
+                return {
+                tableData: [], // 表格数据
+                starttime: '<cc:outprint>kstm</cc:outprint>', // 开始时间
+                endtime: '<cc:outprint>jstm</cc:outprint>',  // 结束时间
+                qyarray: <cc:outprint>scpyqyjsonarr</cc:outprint>, // 区域下拉值
+                qyvalue: '', // 区域下拉初始化值
+                xmarray: [], // 项目下拉值
+                xmvalue: '', // 项目下拉初始化值
+                typearray: <cc:outprint>scpy2jsonarr</cc:outprint>, // 项目类型下拉值
+                typevalue: '', // 项目类型下拉初始化值
+                mjvalue: '', // 面积文本框初始化值
+                fullscreenLoading: false, // loading 控制
+                }
+            },
+            created: function() {
+                this.getBinding()
 
-            <br>
-            <br>
-            <br>
-            <script>
-                var Main =  {
-                data() {
-                    return {
-                    tableData: [], // 表格数据
-                    starttime: '<cc:outprint>kstm</cc:outprint>', // 开始时间
-                    endtime: '<cc:outprint>jstm</cc:outprint>',  // 结束时间
-                    qyarray: <cc:outprint>scpyqyjsonarr</cc:outprint>, // 区域下拉值
-                    qyvalue: '', // 区域下拉初始化值
-                    xmarray: [], // 项目下拉值
-                    xmvalue: '', // 项目下拉初始化值
-                    typearray: <cc:outprint>scpy2jsonarr</cc:outprint>, // 项目类型下拉值
-                    typevalue: '', // 项目类型下拉初始化值
-                    mjvalue: '', // 面积文本框初始化值
-                    fullscreenLoading: false, // loading 控制
-                    }
+                //this.getFollws()       //定义方法
                 },
-                created: function() {
-                    this.getBinding()
+            methods: {
+                getBinding: function() {
+                    var that = this;
+                    axios.get('/distributor.action', {
+                        params: {
+                            serviceName: 'cssoLogin',
+                            userName: that.userName,
+                            authCode: '6b42a467259407218c0e6acdfc978c01'
+                    }
+                    })
+                    .then(function (response) {
+                        that.bindingcode = response.data.binding;
+                        //console.log(this.bindingcode);
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+                },
 
-                    //this.getFollws()       //定义方法
-                    },
-                methods: {
-                    getBinding: function() {
-                        var that = this;
-                        axios.get('/distributor.action', {
-                            params: {
-                                serviceName: 'cssoLogin',
-                                userName: that.userName,
-                                authCode: '6b42a467259407218c0e6acdfc978c01'
+                getproject:function(callback,types) { // 当项目类型下拉选隐藏时,获取项目下拉选的值
+                    var that = this; // 开始发送请求,获取项目下拉选的值(根据类型的判断)
+                    if (callback) { // 为true ,显示下拉选,不做处理
+                        return;
+                    } else if(that.typevalue == null || that.typevalue == "") { // 如果类型下拉选没值,清空项目下拉选
+                        that.xmvalue = ''; // 项目框的值
+                        that.xmarray = null; // 项目下拉选的值
+                        return
+                    }
+                    that.xmvalue = ''; // 先清空项目框的值, 在发送请求获取项目( 防止项目框没有值时, 带[] 中括号, 如: 先选择了项目, 后 删除了项目  )
+                    axios.get('/controller.action', { // 隐藏下拉选时, 发送请求,获取项目下拉选
+                        params: {
+                            name: 'scsjapi',
+                            type: 'getproject',
+                            typelist:encodeURI(JSON.stringify(that.typevalue)), // 隐藏后项目类型框里的值
                         }
-                        })
-                        .then(function (response) {
-                            that.bindingcode = response.data.binding;
-                            //console.log(this.bindingcode);
-                        })
-                        .catch(function (error) {
-                            console.log(error);
-                        });
-                    },
+                    })
+                    .then(function (response) { // 将获取到的项目,添加到下拉选中
+                        Vue.set(that,'xmarray', response.data.data);
+                        that.$forceUpdate();
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
 
-                    getproject:function(callback,types) { // 当项目类型下拉选隐藏时,获取项目下拉选的值
-                        var that = this; // 开始发送请求,获取项目下拉选的值(根据类型的判断)
-                        if (callback) { // 为true ,显示下拉选,不做处理
-                            return;
-                        } else if(that.typevalue == null || that.typevalue == "") { // 如果类型下拉选没值,清空项目下拉选
-                            that.xmvalue = ''; // 项目框的值
-                            that.xmarray = null; // 项目下拉选的值
-                            return
-                        }
+                },
+
+                removeprotype:function(callback,types) { // 删除下拉里的值时,触发获取项目下拉选
+                    var that = this;
+                    var typelist = that.typevalue; 
+                    if (typelist.length == 0) { // 如果删除了所有类型,则项目下拉选也清空
+                        that.xmvalue = ''; // 项目框的值
+                        that.xmarray = null; // 项目下拉选的值
+                    } else {
                         that.xmvalue = ''; // 先清空项目框的值, 在发送请求获取项目( 防止项目框没有值时, 带[] 中括号, 如: 先选择了项目, 后 删除了项目  )
                         axios.get('/controller.action', { // 隐藏下拉选时, 发送请求,获取项目下拉选
                             params: {
@@ -234,7 +261,7 @@
                                 type: 'getproject',
                                 typelist:encodeURI(JSON.stringify(that.typevalue)), // 隐藏后项目类型框里的值
                             }
-				        })
+                        })
                         .then(function (response) { // 将获取到的项目,添加到下拉选中
                             Vue.set(that,'xmarray', response.data.data);
                             that.$forceUpdate();
@@ -242,113 +269,92 @@
                         .catch(function (error) {
                             console.log(error);
                         });
-
-                    },
-
-                    removeprotype:function(callback,types) { // 删除下拉里的值时,触发获取项目下拉选
-                        var that = this;
-                        var typelist = that.typevalue; 
-                        if (typelist.length == 0) { // 如果删除了所有类型,则项目下拉选也清空
-                            that.xmvalue = ''; // 项目框的值
-                            that.xmarray = null; // 项目下拉选的值
-                        } else {
-                            that.xmvalue = ''; // 先清空项目框的值, 在发送请求获取项目( 防止项目框没有值时, 带[] 中括号, 如: 先选择了项目, 后 删除了项目  )
-                            axios.get('/controller.action', { // 隐藏下拉选时, 发送请求,获取项目下拉选
-                                params: {
-                                    name: 'scsjapi',
-                                    type: 'getproject',
-                                    typelist:encodeURI(JSON.stringify(that.typevalue)), // 隐藏后项目类型框里的值
-                                }
-                            })
-                            .then(function (response) { // 将获取到的项目,添加到下拉选中
-                                Vue.set(that,'xmarray', response.data.data);
-                                that.$forceUpdate();
-                            })
-                            .catch(function (error) {
-                                console.log(error);
-                            });
-                        }
-                    },
-                    chongzhi:function() { // 重置按钮
-                        var that = this;
-                        that.starttime = '<cc:outprint>kstm</cc:outprint>'; // 开始时间
-                        that.endtime = '<cc:outprint>jstm</cc:outprint>'; // 结束时间
-                        that.qyvalue = '';
-                        that.xmvalue = '';
-                        that.typevalue = '';
-                        that.mjvalue = '';
-                        that.xmarray = null;
-                    },
-                    cjshins: function(){  // 查询表格中的数据
-                        var that = this;
-                        debugger
-                        var qylist = that.qyvalue;
-                        var xmlist = that.xmvalue;
-                        var typelist = that.typevalue;
-                        if (qylist.length == 0) {
-                            qylist = "";
-                        }
-                        if (xmlist.length == 0) {
-                            xmlist = "";
-                        }
-                        if (typelist.length == 0) {
-                            typelist = "";
-                        }
-                        // 页面获取数据 loading 
-                        const loading = this.$loading({
-                            lock: true,
-                            text: '拼命加载中',// 修改显示文字
-                            spinner: 'el-icon-loading',//可以设置图标
-                            background: 'rgba(255, 255, 255, 0.9)'
-                        });
-                        axios.get('/controller.action', {
-                            params: {
-                                name: 'scsjapi',
-                                type: 'guwensel',
-                                ksrq:that.starttime,
-                                jsrq:that.endtime,
-                                qylist:encodeURI(JSON.stringify(qylist)),
-                                xmlist:encodeURI(JSON.stringify(xmlist)),
-                                typelist:encodeURI(JSON.stringify(typelist)),
-                                mjvalue:that.mjvalue,
-                            }
-				        })
-                        .then(function (response) {
-                            // 获取到了数据, 关闭 loading
-                            setTimeout(() => {
-                                loading.close();
-                            }, 0);
-                            debugger
-                            Vue.set(that,'tableData', response.data.data);
-                            that.$forceUpdate();
-                        })
-                        .catch(function (error) {
-                            console.log(error);
-                        });
-                    },
-                    daochu:function() { // 导出按钮
-                        var that = this;
-                        debugger
-                        var qylist = that.qyvalue;
-                        var xmlist = that.xmvalue;
-                        var typelist = that.typevalue;
-                        if (qylist.length == 0) {
-                            qylist = "";
-                        }
-                        if (xmlist.length == 0) {
-                            xmlist = "";
-                        }
-                        if (typelist.length == 0) {
-                            typelist = "";
-                        }
-                        window.location.href = "scsjgwdc.jsp?ksrq="+ that.starttime+"&jsrq="+that.endtime+"&qylist="+encodeURI(JSON.stringify(qylist))+"&xmlist="+encodeURI(JSON.stringify(xmlist))+"&typelist="+encodeURI(JSON.stringify(typelist))+"&mjvalue="+that.mjvalue;  
-                    },
+                    }
                 },
-        };
-            var Ctor = Vue.extend(Main)
-            new Ctor().$mount('#app')
-            </script>
+                chongzhi:function() { // 重置按钮
+                    var that = this;
+                    that.starttime = '<cc:outprint>kstm</cc:outprint>'; // 开始时间
+                    that.endtime = '<cc:outprint>jstm</cc:outprint>'; // 结束时间
+                    that.qyvalue = '';
+                    that.xmvalue = '';
+                    that.typevalue = '';
+                    that.mjvalue = '';
+                    that.xmarray = null;
+                },
+                cjshins: function(){  // 查询表格中的数据
+                    var that = this;
+                    debugger
+                    var qylist = that.qyvalue;
+                    var xmlist = that.xmvalue;
+                    var typelist = that.typevalue;
+                    if (qylist.length == 0) {
+                        qylist = "";
+                    }
+                    if (xmlist.length == 0) {
+                        xmlist = "";
+                    }
+                    if (typelist.length == 0) {
+                        typelist = "";
+                    }
+                    // 页面获取数据 loading 
+                    const loading = this.$loading({
+                        lock: true,
+                        text: '拼命加载中',// 修改显示文字
+                        spinner: 'el-icon-loading',//可以设置图标
+                        background: 'rgba(255, 255, 255, 0.9)'
+                    });
+                    axios.get('/controller.action', {
+                        params: {
+                            name: 'scsjapi',
+                            type: 'guwensel',
+                            ksrq:that.starttime,
+                            jsrq:that.endtime,
+                            qylist:encodeURI(JSON.stringify(qylist)),
+                            xmlist:encodeURI(JSON.stringify(xmlist)),
+                            typelist:encodeURI(JSON.stringify(typelist)),
+                            mjvalue:that.mjvalue,
+                        }
+                    })
+                    .then(function (response) {
+                        // 获取到了数据, 关闭 loading
+                        setTimeout(() => {
+                            loading.close();
+                        }, 0);
+                        debugger
+                        Vue.set(that,'tableData', response.data.data);
+                        that.$forceUpdate();
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+                },
+                daochu:function() { // 导出按钮
+                    var that = this;
+                    debugger
+                    var qylist = that.qyvalue;
+                    var xmlist = that.xmvalue;
+                    var typelist = that.typevalue;
+                    if (qylist.length == 0) {
+                        qylist = "";
+                    }
+                    if (xmlist.length == 0) {
+                        xmlist = "";
+                    }
+                    if (typelist.length == 0) {
+                        typelist = "";
+                    }
+                    if("005201827888B25tm2iq"==this.uid || "0052018FF9F7905NEd6u"==this.uid){    
+                        window.location.href = "scsjgwdc.jsp?ksrq="+ that.starttime+"&jsrq="+that.endtime+"&qylist="+encodeURI(JSON.stringify(qylist))+"&xmlist="+encodeURI(JSON.stringify(xmlist))+"&typelist="+encodeURI(JSON.stringify(typelist))+"&mjvalue="+that.mjvalue;  
+                    }else{
+                        alert("权限不足!");
+                    }
+                },
+            },
+    };
+        var Ctor = Vue.extend(Main)
+        new Ctor().$mount('#app')
+        </script>
 
-        </body>
+    </body>
 
-        </html>
+    </html>

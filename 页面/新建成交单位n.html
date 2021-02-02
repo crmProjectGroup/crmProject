@@ -104,12 +104,17 @@ return parameterValue;
 <HTML>
 	<head>
 		<!--<meta http-equiv="refresh" content="5">-->
-		<script src="//unpkg.com/vue/dist/vue.js"></script>
-        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
+        <script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
+        <!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
+
+        <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/>
         <!-- 引入样式 -->
-        <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+        <!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
         <!-- 引入组件库 -->
-        <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+        <!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
 	</head>
 <body>
     <div id="app">
@@ -167,9 +172,11 @@ return parameterValue;
       },
       methods: {
         yxcjdwf: function(){
+            debugger
             //alert(this.yxcjdw);
             var that = this;
             this.yxcjdw.forEach(function(item,index){
+                debugger
                 //alert(that.checkeddws);
 				that.checkeddws.push(item.cjdw);
 			});
@@ -225,6 +232,14 @@ return parameterValue;
         cancelAdd(){
             window.location.href="/query.action?m=query&id="+this.oppoid;
         }
+      },
+      watch: {
+        checkeddws(val, oldVal) {
+            debugger
+            this.ld_option.lcxx.forEach(function(item,index){
+                debugger
+			});		
+      	}
       }
     };
     var Ctor = Vue.extend(Main)

@@ -356,7 +356,11 @@ for(CCObject item1:list1){
         if(grcymb==0){
             cy_d = 0 ;
         } else{
-            cy_d = grcywcz/grcymb*100 ;
+            if (grcywcz>=grcymb) {
+                cy_d=100;
+            } else {
+                cy_d = grcywcz/grcymb*100;
+            }
         }
     }
     item1.put("yjdf",cy_d);
@@ -495,7 +499,11 @@ for(CCObject item3:list3){
         if(grcymb==0){
             cy_d = 0 ;
         } else{
-            cy_d = tdcywcz/grcymb *100 ;
+            if (tdcywcz>=grcymb) {
+                cy_d=100;
+            } else {
+                cy_d = tdcywcz/grcymb *100 ;
+            }
         }
     }
     //不再需要计算业绩分在月度考核中

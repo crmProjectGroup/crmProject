@@ -9,6 +9,7 @@ log:
 
 3.20201124 加入大客户考核分数的计算
 4.20201125 更新绩效方案:不再每月考核不再计算业绩分数,改为在季度中去核算季度得分;
+5.20201204 个人创佣完成值没有初始化为0, 会重复计算;
 */
 
 CCService cs = new CCService((UserInfo)userInfo);
@@ -16,6 +17,7 @@ CCService cs = new CCService((UserInfo)userInfo);
 Calendar cal = Calendar.getInstance();
 int year = cal.get(Calendar.YEAR);//当前年份
 int month = cal.get(Calendar.MONTH) ;//上月
+// if(true) {trigger.addErrorMessage(year+"^"+month);}
 if(month==0){
   year=year-1;
 	month=12; 
@@ -23,9 +25,13 @@ if(month==0){
 java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
 
 String begin_day=year+"-"+month+"-01";
-cal.set(Calendar.DATE, cal.get(Calendar.DATE) - 7);
+if (month == 12) {
+    cal.add(Calendar.YEAR,-1);
+}
+cal.set(Calendar.MONTH, month-1); // 获取上个月
+cal.set(Calendar.DATE, cal.getActualMaximum(Calendar.DATE) - 7);
 String last7dt = df.format(cal.getTime());
-//if(true) {trigger.addErrorMessage(last7dt);}
+// if(true) {trigger.addErrorMessage(last7dt);}
 
 
 //获取上月最后一天
@@ -43,7 +49,9 @@ String nowday = df.format(cal.getTime());
 
 //String year = "2020"; //年
 //String month = "8"; //月month
-
+//  if(true){  // 打印日志
+//         trigger.addErrorMessage(begin_day + "^^"+nowday); 
+//     }
 
 
 //wbzj 一般代理转介
@@ -142,6 +150,11 @@ for(CCObject ryjitem:ryjxlist){
     if("2018ED6B4DF92033DeWs".equals(recordtype)){
         List<CCObject> xmhyjllist = this.cqlQuery("xmhyjl","select count(*) as num from xmhyjl where createbyid='"+ownerid+"' and is_deleted='0' and createdate >= str_to_date('"+begin_day+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate<= str_to_date('"+nowday+" 23:59:59', '%Y-%m-%d %H:%i:%s')");
         int ylhjls = xmhyjllist.get(0).get("num")==null?0:Integer.valueOf(xmhyjllist.get(0).get("num")+"");
+            // if ("0052018283AFC55mqWeb".equals(ownerid)) {
+            //     if(true){  // 打印日志
+            //         trigger.addErrorMessage(ylhjls+"");
+            //     }
+            // }
         ryjitem.put("ylhjls",ylhjls);
 
         //回款金额
@@ -185,8 +198,18 @@ for(CCObject ryjitem:ryjxlist){
         if((ryjitem.get("scsj")==null) || (scsj-20)<0.000001){
             
             List<CCObject> cjqklist = this.cqlQuery("cjqk","select count(*) as num from cjqk where is_deleted='0' and (createbyid = '"+ownerid+"' or createbyid in (select id from ccuser where manager = '"+ownerid+"' and isusing='1')) and createdate >= str_to_date('"+last7dt+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate<= str_to_date('"+nowday+" 23:59:59', '%Y-%m-%d %H:%i:%s')"); 
+            // if ("0052018283AFC55mqWeb".equals(ownerid)) {
+            //     if(true){  // 打印日志
+            //         trigger.addErrorMessage("select count(*) as num from cjqk where is_deleted='0' and (createbyid = '"+ownerid+"' or createbyid in (select id from ccuser where manager = '"+ownerid+"' and isusing='1')) and createdate >= str_to_date('"+last7dt+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND createdate<= str_to_date('"+nowday+" 23:59:59', '%Y-%m-%d %H:%i:%s')"); 
+            //     }
+            // }
             int cjqknum = cjqklist.get(0).get("num")==null?0:Integer.valueOf(cjqklist.get(0).get("num")+"");
             if(cjqknum>0){
+            //     if ("0052018283AFC55mqWeb".equals(ownerid)) {
+            //     if(true){  // 打印日志
+            //         trigger.addErrorMessage(cjqknum+"");
+            //     }
+            // }
                 ryjitem.put("scsj",20);
             } else{
                 ryjitem.put("scsj",0);
@@ -195,7 +218,8 @@ for(CCObject ryjitem:ryjxlist){
     }   
 
     ryjitem.put("tdcywcz",0); //20201027 a 先将创佣完成值都改为0,避免重复计算
-
+    ryjitem.put("grcywcz",0); 
+    
     this.update(ryjitem);
 }
 
@@ -361,8 +385,10 @@ for(CCObject item1:list1){
     } else{
         if(grcymb==0){
             cy_d = 0 ;
-        } else{
-            cy_d = grcywcz/grcymb*100 ;
+        } else if(grcywcz>=grcymb){
+            cy_d=100;
+        } else {
+            cy_d = grcywcz/grcymb*100;
         }
     }
     item1.put("yjdf",cy_d);
@@ -492,7 +518,9 @@ for(CCObject item3:list3){
     } else{
         if(grcymb==0){
             cy_d = 0 ;
-        } else{
+        } else if (tdcywcz>=grcymb){
+            cy_d=100;
+        }else{
             cy_d = tdcywcz/grcymb *100 ;
         }
     }
@@ -569,7 +597,11 @@ for(CCObject item3:list3){
 	}else{
 		zwlh = 0;
 	}
-
+    // if ("0052018283AFC55mqWeb".equals(item3.get("bkhr"))) {
+    //     if(true){  // 打印日志
+    //         trigger.addErrorMessage(ylhjls+"^"+dyycqts+"^");
+    //     }
+    // }
 	//客户满意度
 	double khmyd = item3.get("khmyd")==null?0.0:Double.valueOf(item3.get("khmyd")+""); //客户满意度 khmyd
 

@@ -78,22 +78,14 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 		<html>
 
 		<head>
-		<!--<meta http-equiv="refresh" content="5">-->
-		<!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
-        <script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
-        <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
-        <!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
-        <script src="//unpkg.com/element-ui@2.14.1/lib/index.js"></script>
-		<!-- <script src="https://unpkg.com/muse-ui/dist/muse-ui.js"></script> -->
+		<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> <!--引入内部vue -->
 		<script src="https://cdn.jsdelivr.net/npm/muse-ui@3.0.2/dist/muse-ui.js"></script>
-		<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
-		<script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
-		<!-- <script src="//unpkg.com/vue-easytable/umd/js/index.js"></script> -->
-		<!-- <link rel="stylesheet" href="https://unpkg.com/muse-ui/dist/muse-ui.css -->
+		<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610359371060HP6AYHCZ"></script> <!--引入内部axios-->
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/muse-ui@3.0.2/dist/muse-ui.css">
-		<link rel="stylesheet" href="https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css">
-		<!-- <link rel="stylesheet" href="https://unpkg.com/vue-easytable/umd/css/index.css"> -->
-
+		 <link rel="stylesheet" href="https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css">
+		<script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/> -->
+		<!-- <script src="https://cdn.jsdelivr.net/npm/vue-easytable@1.7.2/umd/js/index.js"></script> -->
 
 		<STYLE TYPE="text/css"> 
 			.demo-text {
@@ -179,8 +171,9 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 			</mu-row>
 			</br>
 			</br>
+
             <template>
-                <el-table :data="tableData" style="width: 100% ;">
+                <el-table :data="tableInfo" style="width: 100% ;">
                     <el-table-column  prop="hyname" label="项目会议编号">
 						<template slot-scope="scope">
 							<a  style="color:#1890ff;cursor:pointer" @click="gohypage(scope.row.hyid)" >{{scope.row.hyname}}</a>
@@ -227,8 +220,8 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 				projectId:'',  // 项目id, 值框
 				options:<cc:outprint>scpy2js</cc:outprint>, // 项目下拉选
 				fjvalue:'', // 项目经理文本框
-				fjlist:['有附件','无附件',''],
-                tableData: [], // 表格数据
+				fjlist:['有附件','无附件'],
+                tableInfo: [], // 表格数据
                 timebegin:'<cc:outprint>kstm</cc:outprint>', // 开始时间
                 timeend:'<cc:outprint>jstm</cc:outprint>',  // 结束时间
     		};
@@ -302,7 +295,9 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 					}
 				})
 				.then(function (response) {
-                    Vue.set(that,'tableData', response.data.data);
+					debugger
+					// that.tableInfo=response.data.data;
+                    Vue.set(that,'tableInfo', response.data.data);
                     that.$forceUpdate();
 				})
 				.catch(function (error) {

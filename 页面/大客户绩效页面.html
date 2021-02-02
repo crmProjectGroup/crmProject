@@ -151,8 +151,9 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 </cc>
 
 <html>
-	<script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
-  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+	<!-- <script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script> -->
+	<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> <!--引入内部vue -->
+  <!-- <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script> -->
   <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/>
   <style type="text/css">
@@ -298,7 +299,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
           window.location.href = "attendanceCheck.jsp?pjnm="+ row.pjnm+"&name=" + row.name+"&nd=" + row.nd + "&yf="+row.yf;
         },
         getCheckJx(val){
-            window.location.href = "'/query.action?m=query&id="+val;
+            window.location.href = "query.action?m=query&id="+val;
         },
 		goBack() { // 大客户考核页面 返回到考核页面
 			window.history.go(-1);

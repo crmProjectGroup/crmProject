@@ -32,7 +32,10 @@ DecimalFormat df = new DecimalFormat("#.00");
 List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'"); //登录人的账号
 String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; //账号用于获取bindingcode 
 
-String ksrq = "2019-01-01";
+//获取年度
+String nd = request.getParameter("nd")==null?"2020":request.getParameter("nd")+"";
+
+String ksrq = nd + "-01-01";
 //Sting ksrq = "2019-01-01";
 
 //控制选择项目
@@ -134,7 +137,7 @@ if("all".equals(xm)){
         projson.put("xmnm",xmnm); 
         //获取客户数据,A,B,C类客户各多少
         //String sql1= "select count(*) as num,sum(if((khdj = 'A'),1,0)) as anum,sum(if((khdj = 'B'),1,0)) as bnum,sum(if((khdj = 'C'),1,0)) as cnum,sum(if((recordtype = '20186166515AE4A8ZfOc' or recordtype = '2018525F215221DtlTXV'),1,0)) as smnum,sum(if((ownerid <> createbyid),1,0)) as gknum from account where is_deleted = '0' and createbyid='"+uid+"' and createdate >= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
-        String sql1= "select count(*) as num,sum(if((khdj = 'A'),1,0)) as anum,sum(if((khdj = 'B'),1,0)) as bnum,sum(if((khdj = 'C'),1,0)) as cnum,sum(if((recordtype <> '2018525F215221DtlTXV'),1,0)) as smnum,sum(if((sfzjkh='是'),1,0)) as zjnum,sum(if((ghkh = '是'),1,0)) as gknum,sum(if((khmyd = 5),1,0)) as hpnum,sum(if((rztj1='转介'),1,0)) as qdnum from account where is_deleted = '0' and xmmc='"+xm+"' and createdate >= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
+        String sql1= "select count(*) as num,sum(if((khdj = 'A'),1,0)) as anum,sum(if((khdj = 'B'),1,0)) as bnum,sum(if((khdj = 'C'),1,0)) as cnum,sum(if((recordtype <> '2018525F215221DtlTXV'),1,0)) as smnum,sum(if((sfzjkh='是'),1,0)) as zjnum,sum(if((ghkh = '是'),1,0)) as gknum,sum(if((khmyd = 5),1,0)) as hpnum,sum(if((rztj1='转介'),1,0)) as qdnum from account where is_deleted = '0' and xmmc='"+xm+"' and createdate >= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s')";
         //out.print(sql1);
         List<CCObject> accountlist = cs.cqlQuery("account",sql1);
         accountnum = accountlist.get(0).get("num")==null?"":accountlist.get(0).get("num")+ ""; //客户总数
@@ -158,14 +161,14 @@ if("all".equals(xm)){
         projson.put("qdnum",qdnum); 
 
         //跟进次数
-        String sql2="select count(*) as num from ywjhgjmx where is_deleted='0' and xm='"+xm+"' and createdate >= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
+        String sql2="select count(*) as num from ywjhgjmx where is_deleted='0' and xm='"+xm+"' and createdate >= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s')";
         List<CCObject> gjmxlist = cs.cqlQuery("ywjhgjmx",sql2);
         gjnum = gjmxlist.get(0).get("num")==null?"":gjmxlist.get(0).get("num")+ ""; //跟进数
         //out.print(gjnum);
         projson.put("gjnum",gjnum); 
 
         //成交手数,累计成交面积,累计成交额
-        String sql3="select count(*) as cjnum ,round(sum(a.cjmj),2) as ljcjmj,round(sum(a.cjmj*a.cjdj),2) as ljcje from Opportunity a where  a.is_deleted = '0' and a.xmmc='"+xm+"' and a.createdate >= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s') AND a.createdate <= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s') and a.jieduan='成交' and a.spzt='审批通过'";
+        String sql3="select count(*) as cjnum ,round(sum(a.cjmj),2) as ljcjmj,round(sum(a.cjmj*a.cjdj),2) as ljcje from Opportunity a where  a.is_deleted = '0' and a.xmmc='"+xm+"' and a.createdate >= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s') AND a.createdate <= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s') and a.jieduan='成交' and a.spzt='审批通过'";
         List<CCObject> cjlist1 = cs.cqlQuery("Opportunity",sql3);
         cjnum = cjlist1.get(0).get("cjnum")==null?"":cjlist1.get(0).get("cjnum")+ ""; //成交手数
         //String ljcjmj = cjlist1.get(0).get("ljcjmj")==null?"":cjlist1.get(0).get("ljcjmj")+ ""; //累计成交面积
@@ -177,7 +180,7 @@ if("all".equals(xm)){
         projson.put("ljcje",ljcje); 
 
         //结算单情况,取待确认以上
-        String sql4 = "select count(*) as jsnum,sum(if((jyzt in ('部分开票','全部开票')),1,0)) as jsykpnum from dljsmxb where is_deleted ='0' and xmmc='"+xm+"' and jyzt<>'待确认' and qysj>= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s') and qysj<= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
+        String sql4 = "select count(*) as jsnum,sum(if((jyzt in ('部分开票','全部开票')),1,0)) as jsykpnum from dljsmxb where is_deleted ='0' and xmmc='"+xm+"' and jyzt<>'待确认' and qysj>= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s') and qysj<= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s')";
         List<CCObject> jsdlist1 = cs.cqlQuery("dljsmxb",sql4);
         jsnum = jsdlist1.get(0).get("jsnum")==null?"0":jsdlist1.get(0).get("jsnum")+ ""; //结算单数量
         jsykpnum = jsdlist1.get(0).get("jsykpnum")==null?"0":jsdlist1.get(0).get("jsykpnum")+ ""; //已开票数量
@@ -185,7 +188,7 @@ if("all".equals(xm)){
         projson.put("jsykpnum",jsykpnum); 
 
         //开票情况
-        String sql5 = "select count(*) as kpnum,round(sum(fpje),2) as ljkpje from kpsq where is_deleted ='0' and xmmc='"+xm+"' and spzt='审批通过' and createdate>= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s') and createdate<= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
+        String sql5 = "select count(*) as kpnum,round(sum(fpje),2) as ljkpje from kpsq where is_deleted ='0' and xmmc='"+xm+"' and spzt='审批通过' and createdate>= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s') and createdate<= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s')";
         List<CCObject> kpsqlist1 = cs.cqlQuery("kpsq",sql5);
         //String jsnum = jsdlist1.get(0).get("jsnum")==null?"":jsdlist1.get(0).get("jsnum")+ ""; //结算单数量
         //int kpsqnum = kpsqlist1.size();
@@ -195,7 +198,7 @@ if("all".equals(xm)){
         projson.put("ljkpje",ljkpje); 
 
         //回款
-        String sql6 = "select round(sum(h.hkje),2) as ljhkje,round(sum(h.sjsy),2) as ljsjsy from hkjl h left join cloudccskjh c on h.skjhmc=c.id where c.xmmc='"+xm+"' and h.hkqrzt='已确认' and c.is_deleted='0' and h.is_deleted='0' and h.khrq>= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s') and h.khrq<= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
+        String sql6 = "select round(sum(h.hkje),2) as ljhkje,round(sum(h.sjsy),2) as ljsjsy from hkjl h left join cloudccskjh c on h.skjhmc=c.id where c.xmmc='"+xm+"' and h.hkqrzt='已确认' and c.is_deleted='0' and h.is_deleted='0' and h.khrq>= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s') and h.khrq<= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s')";
         List<CCObject> hklist1 = cs.cqlQuery("hkjl",sql6);
         //String jsnum = jsdlist1.get(0).get("jsnum")==null?"":jsdlist1.get(0).get("jsnum")+ ""; //结算单数量
         //int kpsqnum = kpsqlist1.size();
@@ -214,7 +217,7 @@ if("all".equals(xm)){
 
     //获取客户数据,A,B,C类客户各多少
     //String sql1= "select count(*) as num,sum(if((khdj = 'A'),1,0)) as anum,sum(if((khdj = 'B'),1,0)) as bnum,sum(if((khdj = 'C'),1,0)) as cnum,sum(if((recordtype = '20186166515AE4A8ZfOc'),1,0)) as smnum,sum(if((ownerid <> createbyid),1,0)) as gknum from account where is_deleted = '0' and createbyid='"+uid+"' and createdate >= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
-    String sql1= "select count(*) as num,sum(if((khdj = 'A'),1,0)) as anum,sum(if((khdj = 'B'),1,0)) as bnum,sum(if((khdj = 'C'),1,0)) as cnum,sum(if((recordtype = '20186166515AE4A8ZfOc'),1,0)) as smnum,sum(if((sfzjkh='是'),1,0)) as zjnum,sum(if((ghkh = '是'),1,0)) as gknum,sum(if((khmyd = 5),1,0)) as hpnum,sum(if((rztj1='转介'),1,0)) as qdnum from account where is_deleted = '0' and xmmc='"+xm+"' and createdate >= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
+    String sql1= "select count(*) as num,sum(if((khdj = 'A'),1,0)) as anum,sum(if((khdj = 'B'),1,0)) as bnum,sum(if((khdj = 'C'),1,0)) as cnum,sum(if((recordtype = '20186166515AE4A8ZfOc'),1,0)) as smnum,sum(if((sfzjkh='是'),1,0)) as zjnum,sum(if((ghkh = '是'),1,0)) as gknum,sum(if((khmyd = 5),1,0)) as hpnum,sum(if((rztj1='转介'),1,0)) as qdnum from account where is_deleted = '0' and xmmc='"+xm+"' and createdate >= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s')";
     //out.print(sql1);
     List<CCObject> accountlist = cs.cqlQuery("account",sql1);
     accountnum = accountlist.get(0).get("num")==null?"":accountlist.get(0).get("num")+ ""; //客户总数
@@ -229,13 +232,13 @@ if("all".equals(xm)){
     //out.print(accountnum);
     
     //跟进次数
-    String sql2="select count(*) as num from ywjhgjmx where is_deleted='0' and xm='"+xm+"' and createdate >= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
+    String sql2="select count(*) as num from ywjhgjmx where is_deleted='0' and xm='"+xm+"' and createdate >= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s')  AND createdate <= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s')";
     List<CCObject> gjmxlist = cs.cqlQuery("ywjhgjmx",sql2);
     gjnum = gjmxlist.get(0).get("num")==null?"":gjmxlist.get(0).get("num")+ ""; //跟进数
     //out.print(gjnum);
     
     //成交手数,累计成交面积,累计成交额
-    String sql3="select count(*) as cjnum ,round(sum(a.cjmj),2) as ljcjmj,round(sum(a.cjmj*a.cjdj),2) as ljcje from Opportunity a where  a.is_deleted = '0' and a.xmmc='"+xm+"' and a.createdate >= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s') AND a.createdate <= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s') and a.jieduan='成交' and a.spzt='审批通过'";
+    String sql3="select count(*) as cjnum ,round(sum(a.cjmj),2) as ljcjmj,round(sum(a.cjmj*a.cjdj),2) as ljcje from Opportunity a where  a.is_deleted = '0' and a.xmmc='"+xm+"' and a.createdate >= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s') AND a.createdate <= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s') and a.jieduan='成交' and a.spzt='审批通过'";
     List<CCObject> cjlist1 = cs.cqlQuery("Opportunity",sql3);
     cjnum = cjlist1.get(0).get("cjnum")==null?"":cjlist1.get(0).get("cjnum")+ ""; //成交手数
     //String ljcjmj = cjlist1.get(0).get("ljcjmj")==null?"":cjlist1.get(0).get("ljcjmj")+ ""; //累计成交面积
@@ -245,13 +248,13 @@ if("all".equals(xm)){
     
     
     //结算单情况,取待确认以上
-    String sql4 = "select count(*) as jsnum,sum(if((jyzt in ('部分开票','全部开票')),1,0)) as jsykpnum from dljsmxb where is_deleted ='0' and xmmc='"+xm+"' and jyzt<>'待确认' and qysj>= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s') and qysj<= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
+    String sql4 = "select count(*) as jsnum,sum(if((jyzt in ('部分开票','全部开票')),1,0)) as jsykpnum from dljsmxb where is_deleted ='0' and xmmc='"+xm+"' and jyzt<>'待确认' and qysj>= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s') and qysj<= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s')";
     List<CCObject> jsdlist1 = cs.cqlQuery("dljsmxb",sql4);
     jsnum = jsdlist1.get(0).get("jsnum")==null?"0":jsdlist1.get(0).get("jsnum")+ ""; //结算单数量
     jsykpnum = jsdlist1.get(0).get("jsykpnum")==null?"0":jsdlist1.get(0).get("jsykpnum")+ ""; //已开票数量
     
     //开票情况
-    String sql5 = "select count(*) as kpnum,round(sum(fpje),2) as ljkpje from kpsq where is_deleted ='0' and xmmc='"+xm+"' and spzt='审批通过' and createdate>= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s') and createdate<= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
+    String sql5 = "select count(*) as kpnum,round(sum(fpje),2) as ljkpje from kpsq where is_deleted ='0' and xmmc='"+xm+"' and spzt='审批通过' and createdate>= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s') and createdate<= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s')";
     List<CCObject> kpsqlist1 = cs.cqlQuery("kpsq",sql5);
     //String jsnum = jsdlist1.get(0).get("jsnum")==null?"":jsdlist1.get(0).get("jsnum")+ ""; //结算单数量
     //int kpsqnum = kpsqlist1.size();
@@ -259,7 +262,7 @@ if("all".equals(xm)){
     ljkpje = kpsqlist1.get(0).get("ljkpje")==null?"0":kpsqlist1.get(0).get("ljkpje")+ ""; //累计开票金额
     
     //回款
-    String sql6 = "select round(sum(h.hkje),2) as ljhkje,round(sum(h.sjsy),2) as ljsjsy from hkjl h left join cloudccskjh c on h.skjhmc=c.id where c.xmmc='"+xm+"' and h.hkqrzt='已确认' and c.is_deleted='0' and h.is_deleted='0' and h.khrq>= str_to_date('2019-01-01', '%Y-%m-%d %H:%i:%s') and h.khrq<= str_to_date('2019-12-31', '%Y-%m-%d %H:%i:%s')";
+    String sql6 = "select round(sum(h.hkje),2) as ljhkje,round(sum(h.sjsy),2) as ljsjsy from hkjl h left join cloudccskjh c on h.skjhmc=c.id where c.xmmc='"+xm+"' and h.hkqrzt='已确认' and c.is_deleted='0' and h.is_deleted='0' and h.khrq>= str_to_date('"+nd+"-01-01', '%Y-%m-%d %H:%i:%s') and h.khrq<= str_to_date('"+nd+"-12-31', '%Y-%m-%d %H:%i:%s')";
     List<CCObject> hklist1 = cs.cqlQuery("hkjl",sql6);
     //String jsnum = jsdlist1.get(0).get("jsnum")==null?"":jsdlist1.get(0).get("jsnum")+ ""; //结算单数量
     //int kpsqnum = kpsqlist1.size();
@@ -296,6 +299,9 @@ if("all".equals(xm)){
                       <cc>}else{</cc>
                       <option value='<cc:outprint>list2.get("id")</cc:outprint>'><cc:outprint>list2.get("name")</cc:outprint></option>
                    <cc>}}</cc>
+            </select>
+            <select name="nd" v-model="ndSelected">                                        
+                <option :value="nd.value" v-for="nd in ndList" >{{nd.name}}</option>                                    
             </select>
             <input type="submit"  class="input01" value=" 查 询 "/>
         </form>
@@ -424,6 +430,20 @@ var Main = {
                 },
             ],
             data1:<cc:outprint>projs</cc:outprint>,
+            ndList:[{
+                    name:'2019',
+                    value:'2019'
+                },
+                {
+                    name:'2020',
+                    value:'2020'
+                },{
+                    name:'2021',
+                    value:'2021'
+                }
+
+            ],
+            ndSelected:'<cc:outprint>nd</cc:outprint>',
         }
     },
     created: function() {

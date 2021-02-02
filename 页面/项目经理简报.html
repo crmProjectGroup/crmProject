@@ -12,6 +12,8 @@ log:
 4.20200820 a.添加链接跳转到客户详情;b.在客户界面隐藏手机号码显示;c.权限控制;
 5.20200907 进线判断修改
 6.20200920 增加预期创收字段
+7.20201211 给策划权限去看项目经理简报
+8.20200114 增加 瑞信行联动转介判断-- 内部转介
 */
 
 /** * 将ISO-8859-1编码格式的字符串转码为UTF-8 
@@ -38,7 +40,8 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 	
 	//String uid = "0052018470A714CaerX7"; //李荣武id 测试用 
 	String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id 
-	//String userName = userInfo.getUserName();//getUserName 
+    //String userName = userInfo.getUserName();//getUserName 
+    String roleid = userInfo.getRoleId();
 	
 	//获取binding
 	 
@@ -69,8 +72,10 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 //   } 
   else if("aaa2018A38306ED9syVe".equals(profid)){
   	projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'"); 
+  } else if("aaa2018A38306ED9syVe".equals(profid)){
+    projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'"); 
   } else{
-    projectlist = null;
+    projectlist = cs.cqlQuery("Project","select id,name from project where xmjl in (select id from ccuser where profile='aaa2018A38306ED9syVe' and role in (select roleid from role where parentrole_id='"+ roleid +"' and gap > 0)) and xmzt='代理中'"); 
   }
   
 	//out.print(String.valueOf(projectlist.size()));
@@ -211,10 +216,11 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 
 		<head>
 		<!--<meta http-equiv="refresh" content="5">-->
-		<script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script>
-
+		<!-- <script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script> -->
+		<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> <!--引入内部vue -->
 		<script src="https://unpkg.com/muse-ui/dist/muse-ui.js"></script>
-		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610359371060HP6AYHCZ"></script> <!--引入内部axios -->
+		<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
 		<link rel="stylesheet" href="https://unpkg.com/muse-ui/dist/muse-ui.css">
 		<link rel="stylesheet" href="https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css">
 		</head>
@@ -251,8 +257,8 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 				<!-- <td>{{scope.row.lxrdh}}</td> -->
 				<td>{{scope.row.recordtype=='2020F8FFFACC18DmPXQ1' ? scope.row.xqmj_gy:scope.row.xqmj}}</td> <!-- 增加判断公寓 -->
 				<td>{{scope.row.yjcs}}</td>
-				<td>{{scope.row.khdj}}</td>
-				<td>{{scope.row.recordtype=='20186166515AE4A8ZfOc' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ? '渠道客户':'自然上门' ): scope.row.recordtype=='2018496272C934EtLhWs' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ? '渠道客户':'自然上门') : scope.row.recordtype=='2020F8FFFACC18DmPXQ1' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ? '渠道客户':'自然上门') : '进线'}}</td>
+				<td>{{scope.row.khdj}}</td>                                              
+				<td>{{scope.row.recordtype=='20186166515AE4A8ZfOc' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ? '渠道客户':scope.row.rztj2=='瑞信行联动转介' ? '内部转介':'自然上门' ): scope.row.recordtype=='2018496272C934EtLhWs' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ? '渠道客户':scope.row.rztj2=='瑞信行联动转介' ? '内部转介':'自然上门') : scope.row.recordtype=='2020F8FFFACC18DmPXQ1' ? ((scope.row.rztj2=='瑞信行渠道转介' || scope.row.rztj2=='甲方渠道转介') ? '渠道客户':scope.row.rztj2=='瑞信行联动转介' ? '内部转介':'自然上门') : '进线'}}</td>
         		<td><mu-button color="primary" @click="getFollws(scope.row.id)">跟进详情</mu-button></td>
       		</template>
     	</mu-data-table>

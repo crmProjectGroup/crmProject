@@ -1,0 +1,561 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+/*
+description:代理排行榜页面
+version: 2.0
+date:20200901
+
+*/
+
+/**
+* 将ISO-8859-1编码格式的字符串转码为UTF-8
+*
+* @param parameterValue
+* @return
+* @throws UnsupportedEncodingException
+*/
+private static String encodeParameters(String parameterValue)
+throws UnsupportedEncodingException {
+	if (parameterValue != null && parameterValue.length() > 0) {
+		byte[] iso = parameterValue.getBytes("ISO-8859-1");
+		if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+			parameterValue = new String(iso, "UTF-8");
+			return parameterValue;
+		}
+	}
+	return parameterValue;
+}
+</cc>
+
+<cc>
+	CCService cs = new CCService((UserInfo)userInfo);
+    //日期的处理
+    Calendar cal = Calendar.getInstance();
+    int year = cal.get(Calendar.YEAR);//当前年份
+    int month = cal.get(Calendar.MONTH) ;//上月
+    if(month==0){
+    year=year-1;
+        month=12; 
+    }
+    java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
+
+    String begin_day=year+"-"+month+"-01";
+    cal.set(Calendar.DATE, cal.get(Calendar.DATE) - 7);
+    String last7dt = df.format(cal.getTime());
+    //if(true) {trigger.addErrorMessage(last7dt);}
+
+
+    //获取上月最后一天
+    cal.set(Calendar.DAY_OF_MONTH, 1); 
+    cal.add(Calendar.DATE, -1);
+    String nowday = df.format(cal.getTime());
+	
+	
+</cc>
+
+<html>
+  
+  <!-- <script src="//cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.js"></script> -->
+  <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> <!--引入内部vue -->
+  <!-- <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script> -->
+  <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script> -->
+  <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610359371060HP6AYHCZ"></script> <!--引入内部axios -->
+  <style type="text/css">
+    .el-dropdown-link {
+      cursor: pointer;
+      color: #409eff;
+    }
+    .el-icon-arrow-down {
+    if  font-size: 12px;
+    }
+    .el-row {
+    margin-bottom: 20px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  .el-col {
+    border-radius: 4px;
+  }
+  .bg-purple-dark {
+    background: #99a9bf;
+  }
+  .bg-purple {
+    background: #d3dce6;
+  }
+  .bg-purple-light {
+    background: #e5e9f2;
+  }
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+  }
+  .row-bg {
+    padding: 10px 0;
+    background-color: #f9fafc;
+  }
+  .el-table .caret-wrapper{
+    width: auto;
+  }
+  </style>
+
+  <div id="app">
+    <br />
+    <el-container>
+     
+        <el-main>
+            <br />
+            <el-row>
+                开始时间: <el-date-picker type="date" placeholder="开始时间" v-model="starttime" style="height: 40px;" value-format="yyyy-MM-dd"></el-date-picker>
+                结束时间: <el-date-picker type="date" placeholder="结束时间" v-model="endtime" style="height: 40px;" value-format="yyyy-MM-dd"></el-date-picker>
+                <el-button  @click="getcjfedata()">查询</el-button>
+              </el-row>
+        </br>
+        </br>
+            <el-tabs v-model="activeName" type="card" @tab-click="handleClickTab">
+                <el-tab-pane label="成交分成" name="monthkh">
+                    <template>
+                        <el-table
+                          :data="tableData1"
+                          style="width: 100%"
+                          max-height="700">
+                          <el-table-column
+                            prop="pname"
+                            label="项目名称"
+                            width="100"
+                          >
+                          </el-table-column>
+                          <el-table-column
+                            prop="cname"
+                            label="所有人"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="xname"
+                            label="项目经理"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="khname"
+                            label="客户名称"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="cjdw"
+                            label="成交单位"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="cjmj"
+                            label="成交面积"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="cjdj"
+                            label="成交单价"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="zongjia"
+                            label="价格总价"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="cjsj"
+                            label="成交时间"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="spzt"
+                            label="审批状态"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="szxm"
+                            label="所属项目1"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="fcyh1"
+                            label="分成用户1"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="fcbl1"
+                            label="分成比例1"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="szxm2"
+                            label="所属项目2"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="fcyh2"
+                            label="分成用户2"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="fcbl2"
+                            label="分成比例2"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="szxm3"
+                            label="所属项目3"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="fcyh3"
+                            label="分成用户3"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="fcbl3"
+                            label="分成比例3"
+                            width="100">
+                          </el-table-column>
+                        </el-table>
+                    </template>
+                </el-tab-pane>
+                <el-tab-pane label="成交数据汇总" name="seasonkh">
+                    <template>
+                        <el-table
+                          :data="tableData2"
+                          v-loading="loading_jd"
+                          @cell-dblclick="tableDbEdit"
+                          style="width: 100%"
+                          max-height="700">
+                          <el-table-column
+                          v-if="show"
+                          prop="oid"
+                          width="100">
+                        </el-table-column>
+                          <el-table-column
+                            prop="cname"
+                            label="所有人"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="khname"
+                            label="客户名称"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="cjdw"
+                            label="成交单位"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="cjmj"
+                            label="成交面积"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="cjdj"
+                            label="成交单价"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="zongjia"
+                            label="价格总价"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="cjsj"
+                            label="成交时间"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="jsbl"
+                            label="结佣比例"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="jsyj"
+                            label="佣金"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="fcyh1"
+                            label="分成用户1"
+                            sortable
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="fcbl1"
+                            label="分成比例1"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="jsmj"
+                            label="面积"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="chuangyong"
+                            label="创佣"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="kaipiao"
+                            label="是否开票"
+                            width="100">
+                          </el-table-column>
+                        </el-table>
+                    </template>
+                </el-tab-pane>
+                <el-tab-pane label="排行榜" name="ranking">
+                  <template>
+                    <el-row>
+                        <el-col :span="12">  
+                          <el-table
+                                :data="tableData3"
+                                style="width: 100%"
+                                :default-sort = "{prop: 'pmjall', order: 'descending'}"
+                                max-height="700">
+                                <el-table-column
+                                  label="名次"
+                                  type="index"
+                                  width="50">
+                                </el-table-column>
+                                <el-table-column
+                                  prop="painame"
+                                  label="用户名"
+                                  width="60">
+                                </el-table-column>
+                                <el-table-column
+                                  prop="pmjall"
+                                  label="求和项:面积(平方)"
+                                  sortable
+                                  width="100px">
+                                </el-table-column>
+                          </el-table>
+                        </el-col>
+                      <el-col :span="12">  
+                        <el-table
+                            :data="tableData4"
+                            style="width: 100%"
+                            :default-sort = "{prop: 'pchuanall', order: 'descending'}"
+                            max-height="700">
+                            <el-table-column
+                            label="名次"
+                            type="index"
+                            width="50">
+                          </el-table-column>
+                          <el-table-column
+                            prop="painame"
+                            label="用户名"
+                            width="60">
+                          </el-table-column>
+                          <el-table-column
+                            prop="pchuanall"
+                            label="求和项:创佣(元)"
+                            sortable
+                            width="100">
+                          </el-table-column>
+                        </el-table>
+                    </el-col>
+                </el-row>
+                  </template>
+              </el-tab-pane>
+            <el-tabs>
+        </el-main>
+      </el-container>
+      <br />
+  </div>
+
+
+  <script>
+    var VM = new Vue({
+      el: "#app",
+      data: {
+        show:false,
+        value: '',
+        starttime: '<cc:outprint>begin_day</cc:outprint>', // 开始时间
+        endtime: '<cc:outprint>nowday</cc:outprint>',  // 结束时间
+        tableData1: [],
+        tableData2:  [],
+        tableData3:[],
+        tableData4:[],
+        activeName:'monthkh',
+        loading_jd:true,
+
+      },
+      watch: {
+      },
+      created: function () {
+          
+          this.getcjfedata();
+      },
+      methods: {
+        getcjfedata:function() {  //成交分成方法
+            
+            var that = this;
+            // 页面获取数据 loading 
+            const loading = this.$loading({
+                            lock: true,
+                            text: '拼命加载中',// 修改显示文字
+                            spinner: 'el-icon-loading',//可以设置图标
+                            background: 'rgba(255, 255, 255, 0.9)'
+                        });
+            axios.get('/controller.action', { 
+                params: {
+                    name: 'dlphbapi',
+                    type: 'selcjfc',
+                    starttime: this.starttime, // 开始时间
+                    endtime: this.endtime,  // 结束时间
+                }
+            })
+            .then(function (response) { 
+                 // 获取到了数据, 关闭 loading
+                 setTimeout(() => {
+                                loading.close();
+                            }, 0);
+                            debugger
+                Vue.set(that,'tableData1', response.data.data);
+                that.$forceUpdate();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+
+        },
+        gethuizong:function() { // 季度数据汇总方法
+            var that = this;
+				// 页面获取数据 loading 
+                const loading = this.$loading({
+                            lock: true,
+                            text: '拼命加载中',// 修改显示文字
+                            spinner: 'el-icon-loading',//可以设置图标
+                            background: 'rgba(255, 255, 255, 0.9)'
+                        });
+				axios.get('/controller.action', {
+					params: {
+						name:'dlphbapi',
+                        type:'selfchz',
+                        starttime: this.starttime, // 开始时间
+                        endtime: this.endtime,  // 结束时间
+					}
+				})
+				.then(function (response) {
+					 // 获取到了数据, 关闭 loading
+                     setTimeout(() => {
+                                loading.close();
+                            }, 0);
+					that.tableData2=response.data.data;
+					that.loading_jd=false;
+					//console.log(this.bindingcode);
+					
+					
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+
+        },
+
+        handleClickTab(tab, event) { // 切换表格 方法, 获取对应的数据
+            console.log(tab, event);
+            console.log(tab.label);
+            if(tab.label=='成交数据汇总'&&this.loading_jd){
+				//alert(this.jsrq_bd);
+				var that = this;
+				// 页面获取数据 loading 
+        const loading = this.$loading({
+                    lock: true,
+                    text: '拼命加载中',// 修改显示文字
+                    spinner: 'el-icon-loading',//可以设置图标
+                    background: 'rgba(255, 255, 255, 0.9)'
+                });
+				axios.get('/controller.action', {
+					params: {
+						name:'dlphbapi',
+            type:'selfchz',
+            starttime: this.starttime, // 开始时间
+            endtime: this.endtime,  // 结束时间
+					}
+				})
+				.then(function (response) {
+          debugger
+					 // 获取到了数据, 关闭 loading
+                     setTimeout(() => {
+                                loading.close();
+                            }, 0);
+					that.tableData2=response.data.data;
+          that.loading_jd=false;
+          that.tableData3=response.data.table1;
+          that.tableData4=response.data.table2;
+					//console.log(this.bindingcode);
+					
+					
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+				//alert("end1!");
+			} else {
+        this.loading_jd=true;
+      }
+        },
+ 
+    tableDbEdit(row, column, cell, event) {//编辑单元格数据
+        debugger
+      //当鼠标双击单元格里面具体单元格的时候，即可对数据进行编辑操作，其实就是添加了一个输入框，最终将输入框中的数据保存下来就行了。
+      var jsbl = row.jsbl;
+      if (column.property != "jsbl"){
+        return;
+      }
+      if (typeof(jsbl) == "undefined") {
+        jsbl = "0";
+      }
+      if (row.kaipiao == "是") {
+        return;
+      }
+      let cellInput = document.createElement("input");
+      event.target.innerHTML = "";
+      cellInput.value = jsbl;
+      cellInput.setAttribute("type", "text");
+      cellInput.style.width = "60%";
+      cell.appendChild(cellInput);
+      cellInput.onblur = function() {
+        debugger
+        cell.removeChild(cellInput);
+        event.target.innerHTML = cellInput.value;
+        if(row.jsbl == cellInput.value) {
+          return;
+        }
+        // 修改的单元格的表头名称
+        var name = column.property;
+        row[name] = cellInput.value;
+        var that = this; // 开始 通过修改比例, 请求数据
+				axios.get('/controller.action', {
+					params: {
+						name:'dlphbapi',
+            type:'setxfcblje',
+            oid:row.oid,
+            jyblvalue:cellInput.value,
+					}
+				})
+				.then(function (response) {
+          debugger
+          if (response.data.success) {
+            debugger
+            that.tableData3=response.data.table1;
+            that.tableData4=response.data.table2;
+             alert("修改成功,请重新切换表格,获取最新计算数据!");
+          } else {
+            alert("错误返回,请联系客服!")
+          }
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+      };
+    },
+},
+});
+  </script>
+</html>

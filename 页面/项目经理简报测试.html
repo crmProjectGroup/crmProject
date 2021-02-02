@@ -1,9 +1,9 @@
 <cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
 <cc!>
 /*
-description:月度考核表
+description:新预算系统
 version: 1.0
-date:20190901
+date:20201217
 author:tom
 log:
 */
@@ -33,205 +33,9 @@ throws UnsupportedEncodingException {
 	String uid = userInfo.getUserId();//当前登录用户id 
 	List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'"); //登录人的账号
 	String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; 
-	
-	//String uid = "0052018470A714CaerX7"; //李荣武id 测试用 
-	String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id 
-	//String userName = userInfo.getUserName();//getUserName 
-	
-	//获取binding
-	 
-	//进入页面的用户控制
-    List<CCObject> projectlist = new ArrayList();
-    //out.print(profid);
-    String sqljl="";
-    if("aaa2018E46BFCF90SnzU".equals(profid) || "aaa201854696184hq4oN".equals(profid) || "aaa000001".equals(profid) || "aaa20188BF02AA11vijc".equals(profid) || "aaa20180681351FmekUG".equals(profid) ){ //代理部boss(aaa2018E46BFCF90SnzU),老大/董事(aaa201854696184hq4oN),管理员aaa000001,财务aaa20188BF02AA11vijc,许畅总aaa20180681351FmekUG
-        sqljl="select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdhkmb,ROUND(r.tdhkwcz,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5' order by yf desc";
-        sqljl_fxm = "select distinct r.xmmc,p.name as text,p.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5'";
-        sqlgw = "select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.khjslr,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5' order by yf desc";
-        sqlgw_fnm = "select distinct c.id,c.name as text,c.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5'";
-    } else if("aaa2018A38306ED9syVe".equals(profid)){  //项目经理
-		//projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'");
-		projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and (xmzt='代理中' or (xmzt='已结束' and xmyxrq>= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s'))) and is_deleted='0'");
-    }
+
     
-
-	//日期的处理
-	java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("yyyy-MM-dd");
-        String nowday = df.format(new Date());
-        //out.print(nowday);
-        String ksrq = request.getParameter("startTime")==null?nowday:request.getParameter("startTime")+"";//开始日期
-        //out.print(ksrq);
-        //out.print(ksrq);
-        String jsrq = request.getParameter("endTime")==null?nowday:request.getParameter("endTime")+"";//结束日期
-        //out.print(jsrq);
-        String datetime = " and a.createdate >= str_to_date('"+ksrq+" 00:00:00', '%Y-%m-%d %H:%i:%s')  AND a.createdate <= str_to_date('"+jsrq+" 23:59:59', '%Y-%m-%d %H:%i:%s') ";
-  
-  List<CCObject> jlryjxlist = new ArrayList();
-  List<CCObject> jlryjxlist_fxm = new ArrayList();
-  List<CCObject> gwryjxlist = new ArrayList();
-  List<CCObject> gwryjxlist_fnm = new ArrayList();
-  //out.print(profid);
-
-    jlryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.tdcymb,r.grcymb,ROUND(r.tdcywcz,2) as tdcywcz,r.tdhkmb,ROUND(r.tdhkwcz,2) as tdhkwcz,r.xmda,r.xcgzgl,r.khzblr,r.rz,r.scsj,r.zwlh,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5' order by yf desc"); //2020年5月后才改为计算创佣值 
-    jlryjxlist_fxm = cs.cqlQuery("ryjx","select distinct r.xmmc,p.name as text,p.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='2018ED6B4DF92033DeWs' and r.nd>='2020' and r.yf>'5'"); //筛选项目
-
-    JSONArray jsonArray_fxm = JSONArray.fromObject(jlryjxlist_fxm); 
-    String jlryjxlist_fxm_1=jsonArray_fxm.toString();
-
-    gwryjxlist = cs.cqlQuery("ryjx","select r.xmmc,p.name as pjnm,r.name as jxbh,c.name as name,r.nd,r.yf,ROUND(r.khfz,2) as khfz,r.grcymb,ROUND(r.grcywcz,2) as grcywcz,r.yryb,r.khzblr,r.phgl,r.hs,r.rz,r.scsj,r.khjslr,ROUND(r.khmyd,2) as khmyd from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5' order by yf desc"); //2020年5月后才改为计算创佣值 
-    gwryjxlist_fnm = cs.cqlQuery("ryjx","select distinct c.id,c.name as text,c.name as value from ryjx r left join project p on r.xmmc=p.id left join ccuser c on r.bkhr = c.id where r.nd='2020' and r.is_deleted ='0' and r.recordtype='201884204B9C199odbgA' and r.nd>='2020' and r.yf>'5'"); //筛选项目
-
-    JSONArray jsonArray_fnm = JSONArray.fromObject(gwryjxlist_fnm); 
-    String gwryjxlist_fnm_1=jsonArray_fnm.toString();
-
-    //out.print(String.valueOf(projectlist.size()));
-	//List<CCObject> projectlist = cs.cqlQuery("Project","SELECT id, name FROM Project WHERE xmjl = '"+uid+"' and xmzt='代理中' and is_deleted='0'"); //该经理管理的代理中的项目 
-	//[{"CCObjectAPI":"Project","name":"广州海珠同创汇","id":"a05201825B086F3UiZWa"},{"CCObjectAPI":"Project","name":"广州誉城同创汇","id":"a05201835C43A40C4KAS"}]
-	//List<CCObject> Accountlist = cs.cqlQuery("Account","SELECT a.id as id, a.name as name, a.xylx as industry, CASE a.recordtype when '20186166515AE4A8ZfOc' then '租赁客户' when '2018525F215221DtlTXV' then '进线客户' else '销售客户' end as type, a.khdj as level , a.khlyqy as area FROM Account a inner join ccuser b on a.ownerid = b.id WHERE a.createbyid <> a.ownerid and a.ghkh = '是' and a.ownerid <> '005201852146611JQCTr' and b.profile = 'aaa2018A38306ED9syVe' and a.lxrdh not like '%0000%' and a.is_deleted = '0' ");
-	String xmmc =""; //项目id
-	String pjnm =""; //项目名称 
-	String jxbh = ""; //绩效编号 
-    String name =""; //被考核人姓名
-    String nd =""; //年度
-    int yf =0; //月份
-    double khfz = 0.0; //考核分值
-    double tdcymb = 0.0;//团队创佣目标
-    double grcymb = 0.0;//个人创佣目标
-    double tdcywcz = 0.0;//团队创佣完成值
-    double tdhkmb = 0.0;//团队回款目标
-    double tdhkwcz = 0.0; //团队回款完成值
-
-    String xmda = "";//项目档案
-    String xcgzgl = "";//现场工作管理及公司文化建设
-    String khzblr = "";//客户指标录入
-    String rz = "";//日志
-    String scsj = "";//市场数据
-    String zwlh = "";//早晚例会
-    double khmyd = 0.0;//客户满意度
-
-    //企业顾问用的字段
-    double grcywcz = 0.0;//个人创佣完成值
-    String yryb =""; //yryb 仪容仪表
-    String phgl ="";//phgl 配合管理
-    String hs ="";//hs 话术
-    String khjslr ="";//khjslr 客户及时录入
-
-	//Map ywymap = new HashMap(); 
-	JSONObject ryjxjson = new JSONObject();
-	JSONArray ryjxjsonarr = new JSONArray(); 
-    String jsa =""; 
-    JSONObject gwryjxjson = new JSONObject();
-	JSONArray gwryjxjsonarr = new JSONArray(); 
-    String jsb =""; 
-    
-    //项目经理
-	for(CCObject item:jlryjxlist){ 
-		khfz = 0.0; 
-        tdcymb = 0.0;
-        grcymb = 0.0;
-        tdcywcz = 0.0;
-        tdhkmb = 0.0;
-        tdhkwcz = 0.0;
-        khmyd = 0.0;//客户满意度
-		
-        xmmc = item.get("xmmc")==null?"":item.get("xmmc") + ""; 
-        pjnm = item.get("pjnm")==null?"":item.get("pjnm") + ""; 
-        jxbh = item.get("jxbh")==null?"":item.get("jxbh") + ""; 
-        name = item.get("name")==null?"":item.get("name") + ""; 
-        nd = item.get("nd")==null?"":item.get("nd") + ""; 
-        yf = item.get("yf")==null?0:Integer.parseInt(item.get("yf")+""); 
-
-        khfz = item.get("khfz")==null?0.0:Double.valueOf(item.get("khfz")+""); 
-        tdcymb = item.get("tdcymb")==null?0.0:Double.valueOf(item.get("tdcymb")+""); 
-        grcymb = item.get("grcymb")==null?0.0:Double.valueOf(item.get("grcymb")+"");
-        tdcywcz = item.get("tdcywcz")==null?0.0:Double.valueOf(item.get("tdcywcz")+"");
-        tdhkmb = item.get("tdhkmb")==null?0.0:Double.valueOf(item.get("tdhkmb")+"");
-        tdhkwcz = item.get("tdhkwcz")==null?0.0:Double.valueOf(item.get("tdhkwcz")+"");
-
-        xmda = item.get("xmda")==null?"":item.get("xmda") + ""; 
-        xcgzgl = item.get("xcgzgl")==null?"":item.get("xcgzgl") + ""; 
-        khzblr = item.get("khzblr")==null?"":item.get("khzblr") + ""; 
-        rz  = item.get("rz")==null?"":item.get("rz") + ""; 
-        scsj = item.get("scsj")==null?"":item.get("scsj") + ""; 
-        zwlh = item.get("zwlh")==null?"":item.get("zwlh") + ""; 
-        khmyd = item.get("khmyd")==null?0.0:Double.valueOf(item.get("khmyd")+"");
-		
-        ryjxjson.put("xmmc",xmmc); 
-        ryjxjson.put("pjnm",pjnm); 
-        ryjxjson.put("jxbh",jxbh); 
-        ryjxjson.put("name",name); 
-        ryjxjson.put("nd",nd); 
-        ryjxjson.put("yf",yf); 
-        
-        ryjxjson.put("khfz",khfz); 
-        ryjxjson.put("tdcymb",tdcymb); 
-        ryjxjson.put("grcymb",grcymb); 
-        ryjxjson.put("tdcywcz",tdcywcz); 
-        ryjxjson.put("tdhkmb",tdhkmb); 
-        ryjxjson.put("tdhkwcz",tdhkwcz); 
-
-        ryjxjson.put("xmda",xmda); 
-        ryjxjson.put("xcgzgl",xcgzgl); 
-        ryjxjson.put("khzblr",khzblr); 
-        ryjxjson.put("rz",rz); 
-        ryjxjson.put("scsj",scsj); 
-        ryjxjson.put("zwlh",zwlh); 
-        ryjxjson.put("khmyd",khmyd); 
-		
-		ryjxjsonarr.add(ryjxjson); 
-	} 
-    jsa=ryjxjsonarr.toString(); 
-
-    //企业顾问
-    for(CCObject item:gwryjxlist){ 
-		khfz = 0.0; 
-        grcymb = 0.0;
-        grcywcz = 0.0;
-        khmyd = 0.0;//客户满意度
-		
-        xmmc = item.get("xmmc")==null?"":item.get("xmmc") + ""; 
-        pjnm = item.get("pjnm")==null?"":item.get("pjnm") + ""; 
-        jxbh = item.get("jxbh")==null?"":item.get("jxbh") + ""; 
-        name = item.get("name")==null?"":item.get("name") + ""; 
-        nd = item.get("nd")==null?"":item.get("nd") + ""; 
-        yf = item.get("yf")==null?0:Integer.parseInt(item.get("yf")+""); 
-
-        khfz = item.get("khfz")==null?0.0:Double.valueOf(item.get("khfz")+""); 
-        grcymb = item.get("grcymb")==null?0.0:Double.valueOf(item.get("grcymb")+"");
-        grcywcz = item.get("grcywcz")==null?0.0:Double.valueOf(item.get("grcywcz")+"");
-
-        yryb = item.get("yryb")==null?"":item.get("yryb") + ""; 
-        khzblr = item.get("khzblr")==null?"":item.get("khzblr") + ""; 
-        phgl = item.get("phgl")==null?"":item.get("phgl") + ""; 
-        hs = item.get("hs")==null?"":item.get("hs") + ""; 
-        rz  = item.get("rz")==null?"":item.get("rz") + ""; 
-        scsj = item.get("scsj")==null?"":item.get("scsj") + ""; 
-        khjslr = item.get("khjslr")==null?"":item.get("khjslr") + ""; 
-        khmyd = item.get("khmyd")==null?0.0:Double.valueOf(item.get("khmyd")+"");
-		
-        gwryjxjson.put("xmmc",xmmc); 
-        gwryjxjson.put("pjnm",pjnm); 
-        gwryjxjson.put("jxbh",jxbh); 
-        gwryjxjson.put("name",name); 
-        gwryjxjson.put("nd",nd); 
-        gwryjxjson.put("yf",yf); 
-        
-        gwryjxjson.put("khfz",khfz);  
-        gwryjxjson.put("grcymb",grcymb); 
-        gwryjxjson.put("grcywcz",grcywcz); 
-
-        gwryjxjson.put("yryb",yryb); 
-        gwryjxjson.put("khzblr",khzblr); 
-        gwryjxjson.put("phgl",phgl); 
-        gwryjxjson.put("hs",hs); 
-        gwryjxjson.put("rz",rz); 
-        gwryjxjson.put("scsj",scsj); 
-        gwryjxjson.put("khjslr",khjslr); 
-        gwryjxjson.put("khmyd",khmyd); 
-		
-		gwryjxjsonarr.add(gwryjxjson); 
-	} 
-    jsb=gwryjxjsonarr.toString(); 
+	
 </cc>
 
 <html>
@@ -239,276 +43,1345 @@ throws UnsupportedEncodingException {
   <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
   <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script>
   <style type="text/css">
-    .el-dropdown-link {
-      cursor: pointer;
-      color: #409eff;
-    }
-    .el-icon-arrow-down {
-      font-size: 12px;
-    }
+    
   </style>
 
   <div id="app">
-    <br />
     <el-container>
         <el-header>
-        </el-header>
+        </el-header> 
         <el-main>
-            <template>
-                <!-- <el-button @click="resetDateFilter">清除项目过滤器</el-button>
-                <el-button @click="resetDateFilter">清除月份过滤器</el-button> -->
-                <el-button @click="clearFilter">清除所有过滤器</el-button>
-                <el-table
-                  ref="filterTable"
-                  :data="tableData1"
-                  style="width: 100%">
-                  <el-table-column
-                    prop="pjnm"
-                    label="项目"
-                    sortable
-                    width="100"
-                    column-key="date"
-                    :filters="fildata1"
-                    :filter-method="filterHandler"
-                  >
-                  </el-table-column>
-                  <el-table-column
-                    prop="name"
-                    label="姓名"
-                    width="100"
-                    fixed>
-                  </el-table-column>
-                  <el-table-column
-                    prop="nd"
-                    label="年度"
-                    width="60"></el-table-column>>
-                  </el-table-column>
-                  <el-table-column
-                    prop="yf"
-                    label="月份"
-                    width="60"
-                    :filters="[{ text: '6', value: 6 }, { text: '7', value: 7 }, { text: '8', value: 8 }]"
-                    :filter-method="filterHandler">
-                    <!-- <template slot-scope="scope">
-                      <el-tag
-                        :type="scope.row.tag === '家' ? 'primary' : 'success'"
-                        disable-transitions>{{scope.row.tag}}</el-tag>
-                    </template> -->
-                  </el-table-column>
-                  <el-table-column
-                    prop="khfz"
-                    label="考核分值"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="tdcymb"
-                    label="团队创佣目标"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="grcymb"
-                    label="个人创佣目标"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="tdcywcz"
-                    label="团队创佣完成值"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="tdhkmb"
-                    label="团队回款目标"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="tdhkwcz"
-                    label="团队回款完成值"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="xmda"
-                    label="项目档案"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="xcgzgl"
-                    label="现场工作管理及公司文化建设"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khzblr"
-                    label="客户指标录入"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="rz"
-                    label="日志"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="scsj"
-                    label="市场数据"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="zwlh"
-                    label="早晚例会"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khmyd"
-                    label="客户满意度"
-                    width="100">
-                  </el-table-column>
-                </el-table>
-            </template>
-            <template>
-                <!-- <el-button @click="resetDateFilter">清除项目过滤器</el-button>
-                <el-button @click="resetDateFilter">清除月份过滤器</el-button> -->
-                <el-button @click="clearFiltergw">清除所有过滤器</el-button>
-                <el-table
-                  ref="filterTable_gw"
-                  :data="tableData2"
-                  style="width: 100%">
-                  <el-table-column
-                    prop="pjnm"
-                    label="项目"
-                    sortable
-                    width="100"
-                    column-key="date"
-                    :filters="fildata1"
-                    :filter-method="filterHandler"
-                  >
-                  </el-table-column>
-                  <el-table-column
-                    prop="name"
-                    label="姓名"
-                    width="100"
-                    fixed
-                    :filters="fildata2"
-                    :filter-method="filterHandler">
-                  </el-table-column>
-                  <el-table-column
-                    prop="nd"
-                    label="年度"
-                    width="60"></el-table-column>>
-                  </el-table-column>
-                  <el-table-column
-                    prop="yf"
-                    label="月份"
-                    width="60"
-                    :filters="[{ text: '6', value: 6 }, { text: '7', value: 7 }, { text: '8', value: 8 }]"
-                    :filter-method="filterHandler">
-                    <!-- <template slot-scope="scope">
-                      <el-tag
-                        :type="scope.row.tag === '家' ? 'primary' : 'success'"
-                        disable-transitions>{{scope.row.tag}}</el-tag>
-                    </template> -->
-                  </el-table-column>
-                  <el-table-column
-                    prop="khfz"
-                    label="考核分值"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="grcymb"
-                    label="个人创佣目标"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="grcywcz"
-                    label="个人创佣完成值"
-                    width="100">
-                  </el-table-column>
-                  
-                  <el-table-column
-                    prop="yryb"
-                    label="仪容仪表"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khzblr"
-                    label="客户指标录入"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="phgl"
-                    label="配合管理"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="hs"
-                    label="话术"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="rz"
-                    label="日志"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="scsj"
-                    label="市场数据"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khjslr"
-                    label="客户及时录入"
-                    width="100">
-                  </el-table-column>
-                  <el-table-column
-                    prop="khmyd"
-                    label="客户满意度"
-                    width="100">
-                  </el-table-column>
-                </el-table>
-            </template>
+            <el-select v-model="selvalue" placeholder="请选择">
+                <el-option
+                  v-for="item in options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value">
+                </el-option>
+            </el-select>
+
+            <el-tabs v-model="activeName" type="card" @tab-click="handleClickTab">
+                <el-tab-pane label="项目预算" name="monthkh">
+                    <h1>项目整体预算表</h1>
+                    <el-button type="primary"  @click="addxmys()">新增</el-button>
+                    <!-- <el-alert
+                        :title="alerttxt"
+                        type="error"
+                        :v-show="alertshow">
+                    </el-alert> -->
+                    <template v-if="showJl">
+                        <el-table
+                            ref="filterTable"
+                            :data="tableData1"
+                            style="width: 100%"
+                            height="700"
+                            v-loading="loading_t1"
+                            :span-method="arraySpanMethod"
+                            border>
+                            <el-table-column
+                                prop="pjnm"
+                                label="项目"
+                                width="100">
+                            </el-table-column>
+                            <el-table-column
+                                prop="type"
+                                label="项目类型"
+                                width="100">
+                            </el-table-column>
+                            <el-table-column
+                                prop="syhl"
+                                label="剩余货值"
+                                width="80">
+                            </el-table-column>
+                            <el-table-column
+                                prop="valuetype"
+                                label="类型"
+                                width="80">
+                            </el-table-column>
+                                <el-table-column
+                                prop="ly"
+                                label="来源"
+                                width="80">
+                            </el-table-column>
+                            <el-table-column
+                                prop="cjzmj"
+                                label="成交总面积"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="cjbl"
+                                label="成交比例"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="cjmj"
+                                label="成交面积"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="dj"
+                                label="单价"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="fl"
+                                label="费率"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="cs"
+                                label="创收"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="hj"
+                                label="合计"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="bz"
+                                label="备注"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                              label="操作"
+                              width="100">
+                              <template slot-scope="scope">
+                                <el-button type="text" size="small" @click="editys(scope.row)">编辑</el-button>
+                              </template>
+                            </el-table-column>
+                        </el-table>
+                    </template>
+                    <el-dialog title="新增项目预算" :visible.sync="dialogFormVisible_addys">
+                        <el-form :model="form_ztys">
+                            <el-form-item label="项目名称">
+                                <el-select v-model="form_addys.pjid" placeholder="请选择项目">
+                                    <el-option 
+                                        v-for="item in pjlist"
+                                        :key="item.id"
+                                        :label="item.name"
+                                        :value="item.id">
+                                    </el-option>
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item label="剩余货量">
+                                <el-input v-model="form_addys.syhl"></el-input>
+                            </el-form-item>
+                            <el-form-item label="均价">
+                                <el-input v-model="form_addys.jj"></el-input>
+                            </el-form-item>
+                            <el-form-item label="正常费率">
+                                <el-input v-model="form_addys.smfl"></el-input>
+                            </el-form-item>
+                            <el-form-item label="渠道费率">
+                                <el-input v-model="form_addys.qdfl"></el-input>
+                            </el-form-item>
+                        </el-form>
+                        <div slot="footer" class="dialog-footer">
+                          <el-button @click="dialogFormVisible_addys = false">取 消</el-button>
+                          <el-button type="primary" @click="addxmztys_close()">确 定</el-button>
+                        </div>
+                    </el-dialog>
+                    <el-dialog title="项目预算整体编辑" :visible.sync="dialogFormVisible_ztys">
+                        <el-form :model="form_ztys">
+                            <el-form-item>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">项目名称</div>
+                                    <el-input v-model="form_ztys.pjnm" autocomplete="off" disabled></el-input>
+                                </el-col>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">剩余货量</div>
+                                    <el-input v-model="form_ztys.syhl" autocomplete="off" disabled></el-input>
+                                </el-col>
+                            </el-form-item>
+                            <span>理想值</span>
+                            <el-form-item>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">成交总面积</div>
+                                    <el-input v-model="form_ztys.cjzmj_lx" autocomplete="off" ><template slot="append">m²</template></el-input>
+                                    <div class="sub-title">渠道比例</div>
+                                    <el-input v-model="form_ztys.cjbl_lxqd" autocomplete="off" ><template slot="append">%</template></el-input>
+                                    <div class="sub-title">渠道成交面积</div>
+                                    <el-input v-model="form_ztys.cjmj_lxqd" autocomplete="off" disabled><template slot="append">m²</template></el-input>
+                                    <div class="sub-title">渠道创收</div>
+                                    <el-input v-model="form_ztys.cs_lxqd" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                </el-col>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">创收合计</div>
+                                    <el-input v-model="form_ztys.cs_lxhj" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <div class="sub-title">自然上门比例</div>
+                                    <el-input v-model="form_ztys.cjbl_lxsm" autocomplete="off" disabled><template slot="append">%</template></el-input>
+                                    <div class="sub-title">自然上门成交面积</div>
+                                    <el-input v-model="form_ztys.cjmj_lxsm" autocomplete="off" disabled><template slot="append">m²</template></el-input>
+                                    <div class="sub-title">上门创收</div>
+                                    <el-input v-model="form_ztys.cs_lxsm" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                </el-col>
+                            </el-form-item>
+                            
+                            <el-divider></el-divider>
+
+                            <span>正常值</span>
+                            <el-form-item>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">成交总面积</div>
+                                    <el-input v-model="form_ztys.cjzmj_zc" autocomplete="off" ><template slot="append">m²</template></el-input>
+                                    <div class="sub-title">渠道比例</div>
+                                    <el-input v-model="form_ztys.cjbl_zcqd" autocomplete="off" ><template slot="append">%</template></el-input>
+                                    <div class="sub-title">渠道成交面积</div>
+                                    <el-input v-model="form_ztys.cjmj_zcqd" autocomplete="off" disabled><template slot="append">m²</template></el-input>
+                                    <div class="sub-title">渠道创收</div>
+                                    <el-input v-model="form_ztys.cs_zcqd" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                </el-col>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">创收合计</div>
+                                    <el-input v-model="form_ztys.cs_zchj" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <div class="sub-title">自然上门比例</div>
+                                    <el-input v-model="form_ztys.cjbl_zcsm" autocomplete="off" disabled><template slot="append">%</template></el-input>
+                                    <div class="sub-title">自然上门成交面积</div>
+                                    <el-input v-model="form_ztys.cjmj_zcsm" autocomplete="off" disabled><template slot="append">m²</template></el-input>
+                                    <div class="sub-title">上门创收</div>
+                                    <el-input v-model="form_ztys.cs_zcsm" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                </el-col>
+                            </el-form-item>
+
+                            <el-divider></el-divider>
+
+                            <span>保守值</span>
+                            <el-form-item>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">成交总面积</div>
+                                    <el-input v-model="form_ztys.cjzmj_bs" autocomplete="off" ><template slot="append">m²</template></el-input>
+                                    <div class="sub-title">渠道比例</div>
+                                    <el-input v-model="form_ztys.cjbl_bsqd" autocomplete="off" ><template slot="append">%</template></el-input>
+                                    <div class="sub-title">渠道成交面积</div>
+                                    <el-input v-model="form_ztys.cjmj_bsqd" autocomplete="off" disabled><template slot="append">m²</template></el-input>
+                                    <div class="sub-title">渠道创收</div>
+                                    <el-input v-model="form_ztys.cs_bsqd" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                </el-col>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">创收合计</div>
+                                    <el-input v-model="form_ztys.cs_bshj" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <div class="sub-title">自然上门比例</div>
+                                    <el-input v-model="form_ztys.cjbl_bssm" autocomplete="off" disabled><template slot="append">%</template></el-input>
+                                    <div class="sub-title">自然上门成交面积</div>
+                                    <el-input v-model="form_ztys.cjmj_bssm" autocomplete="off" disabled><template slot="append">m²</template></el-input>
+                                    <div class="sub-title">上门创收</div>
+                                    <el-input v-model="form_ztys.cs_bssm" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                </el-col>
+                            </el-form-item>
+                        </el-form>
+                        <div slot="footer" class="dialog-footer">
+                          <el-button @click="dialogFormVisible_ztys = false">取 消</el-button>
+                          <el-button type="primary" @click="updxmztys()">确 定</el-button>
+                        </div>
+                    </el-dialog>
+                    <el-divider></el-divider>
+                    <h1>团队创收目标（理想值）---团队考核值</h1>
+                    <template v-if="showJl">
+                        <el-table
+                            ref="monthsysTable"
+                            :data="tableData2"
+                            style="width: 100%"
+                            height="700"
+                            :span-method="arraySpanMethod2"
+                            border>
+                            <el-table-column
+                                prop="pjnm"
+                                label="项目"
+                                width="100">
+                            </el-table-column>
+                            <el-table-column
+                                prop="type"
+                                label="类型"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value1"
+                                label="1月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value2"
+                                label="2月"
+                                width="60">
+                            </el-table-column>
+                                <el-table-column
+                                prop="value3"
+                                label="3月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value4"
+                                label="4月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value5"
+                                label="5月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value6"
+                                label="6月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value7"
+                                label="7月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value8"
+                                label="8月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value9"
+                                label="9月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value10"
+                                label="10月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value11"
+                                label="11月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value12"
+                                label="12月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="valuetot"
+                                label="合计"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                              label="操作"
+                              width="100">
+                              <template slot-scope="scope">
+                                <el-button type="text" size="small" @click="ins_edtyfys(scope.row,'lx')">编辑</el-button>
+                              </template>
+                            </el-table-column>
+                        </el-table>
+                    </template>
+                    <el-dialog title="项目每月预算编辑" :visible.sync="dialogFormVisible_yfys">
+                        <el-form :model="form_yfys">
+                            <el-form-item>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">项目名称</div>
+                                    <el-input v-model="form_yfys.pjnm" autocomplete="off" disabled></el-input>
+                                </el-col>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">成交总面积</div>
+                                    <el-input v-model="form_yfys.cjzmj" autocomplete="off" disabled></el-input>
+                                </el-col>
+                            </el-form-item>
+                            <!-- <span>理想值</span> -->
+                            <el-form-item>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">面积</div>
+                                    
+                                    <el-input v-model="form_yfys.mj1" autocomplete="off" ><template slot="prepend">1月</template><template slot="append">m²</template></el-input>
+                                    
+                                    <el-input v-model="form_yfys.mj2" autocomplete="off" ><template slot="prepend">2月</template><template slot="append">m²</template></el-input>
+                                    
+                                    <el-input v-model="form_yfys.mj3" autocomplete="off" ><template slot="prepend">3月</template><template slot="append">m²</template></el-input>
+                                    
+                                    <el-input v-model="form_yfys.mj4" autocomplete="off" ><template slot="prepend">4月</template><template slot="append">m²</template></el-input>
+                                    <el-input v-model="form_yfys.mj5" autocomplete="off" ><template slot="prepend">5月</template><template slot="append">m²</template></el-input>
+                                    <el-input v-model="form_yfys.mj6" autocomplete="off" ><template slot="prepend">6月</template><template slot="append">m²</template></el-input>
+                                    <el-input v-model="form_yfys.mj7" autocomplete="off" ><template slot="prepend">7月</template><template slot="append">m²</template></el-input>
+                                    <el-input v-model="form_yfys.mj8" autocomplete="off" ><template slot="prepend">8月</template><template slot="append">m²</template></el-input>
+                                    <el-input v-model="form_yfys.mj9" autocomplete="off" ><template slot="prepend">9月</template><template slot="append">m²</template></el-input>
+                                    <el-input v-model="form_yfys.mj10" autocomplete="off" ><template slot="prepend">10月</template><template slot="append">m²</template></el-input>
+                                    <el-input v-model="form_yfys.mj11" autocomplete="off" ><template slot="prepend">11月</template><template slot="append">m²</template></el-input>
+                                    <el-input v-model="form_yfys.mj12" autocomplete="off" ><template slot="prepend">12月</template><template slot="append">m²</template></el-input>
+                                    <el-input v-model="form_yfys.mjhj" autocomplete="off" disabled><template slot="prepend">合计</template><template slot="append">m²</template></el-input>
+
+                                </el-col>
+                                <el-col :span="12" :gutter="20">
+                                    <div class="sub-title">创收</div>
+                                    <el-input v-model="form_yfys.cs1" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    
+                                    <el-input v-model="form_yfys.cs2" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    
+                                    <el-input v-model="form_yfys.cs3" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    
+                                    <el-input v-model="form_yfys.cs4" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <el-input v-model="form_yfys.cs5" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <el-input v-model="form_yfys.cs6" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <el-input v-model="form_yfys.cs7" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <el-input v-model="form_yfys.cs8" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <el-input v-model="form_yfys.cs9" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <el-input v-model="form_yfys.cs10" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <el-input v-model="form_yfys.cs11" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <el-input v-model="form_yfys.cs12" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                    <el-input v-model="form_yfys.cshj" autocomplete="off" disabled><template slot="append">元</template></el-input>
+                                </el-col>
+                            </el-form-item>
+                            
+                            <el-divider></el-divider>
+
+                            
+                        </el-form>
+                        <div slot="footer" class="dialog-footer">
+                          <el-button @click="dialogFormVisible_yfys = false">取 消</el-button>
+                          <el-button type="primary" @click="updxmyfys()">确 定</el-button>
+                        </div>
+                    </el-dialog>
+                    <el-divider></el-divider>
+                    <h1>公司创收目标（正常值）/公司回款值---项目经理考核值</h1>
+                    <template v-if="showJl">
+                        <el-table
+                            ref="monthsysTable"
+                            :data="tableData3"
+                            style="width: 100%"
+                            height="700"
+                            :span-method="arraySpanMethod2"
+                            border>
+                            <el-table-column
+                                prop="pjnm"
+                                label="项目"
+                                width="100">
+                            </el-table-column>
+                            <el-table-column
+                                prop="type"
+                                label="类型"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value1"
+                                label="1月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value2"
+                                label="2月"
+                                width="60">
+                            </el-table-column>
+                                <el-table-column
+                                prop="value3"
+                                label="3月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value4"
+                                label="4月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value5"
+                                label="5月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value6"
+                                label="6月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value7"
+                                label="7月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value8"
+                                label="8月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value9"
+                                label="9月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value10"
+                                label="10月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value11"
+                                label="11月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="value12"
+                                label="12月"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                                prop="valuetot"
+                                label="合计"
+                                width="60">
+                            </el-table-column>
+                            <el-table-column
+                              label="操作"
+                              width="100">
+                              <template slot-scope="scope">
+                                <el-button type="text" size="small" @click="ins_edtyfys(scope.row,'zc')">编辑</el-button>
+                              </template>
+                            </el-table-column>
+                        </el-table>
+                    </template>
+
+                </el-tab-pane>
+                <el-tab-pane label="代理部回款表" name="dlbhkb">
+                    <template v-if="showJl">
+                        <el-table
+                            ref="dlbhkTable"
+                            :data="tableData4"
+                            style="width: 100%"
+                            height="700"
+                            show-summary=true
+                            border>
+                            <el-table-column
+                                prop="pjnm"
+                                label="项目"
+                                width="100">
+                            </el-table-column>
+                            <el-table-column label="汇总">
+                                <el-table-column
+                                    prop="yshj"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sjhj"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <!-- <el-table-column
+                                prop="nkhe"
+                                label="年回款总额"
+                                width="100">
+                            </el-table-column> -->
+                            <el-table-column label="一月">
+                                <el-table-column
+                                    prop="ys1"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj1"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="二月">
+                                <el-table-column
+                                    prop="ys2"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj2"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="三月">
+                                <el-table-column
+                                    prop="ys3"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj3"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="四月">
+                                <el-table-column
+                                    prop="ys4"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj4"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="五月">
+                                <el-table-column
+                                    prop="ys5"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj5"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="六月">
+                                <el-table-column
+                                    prop="ys6"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj6"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="七月">
+                                <el-table-column
+                                    prop="ys7"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj7"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="八月">
+                                <el-table-column
+                                    prop="ys8"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj8"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="九月">
+                                <el-table-column
+                                    prop="ys9"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj9"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="十月">
+                                <el-table-column
+                                    prop="ys10"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj10"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="十一月">
+                                <el-table-column
+                                    prop="ys11"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj11"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            <el-table-column label="十二月">
+                                <el-table-column
+                                    prop="ys12"
+                                    label="预算"
+                                    width="80">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="sj12"
+                                    label="实际"
+                                    width="80">
+                                </el-table-column>
+                            </el-table-column>
+                            
+                            
+                            
+                        </el-table>
+                    </template>
+                </el-tab-pane>
+                
+            <el-tabs>
         </el-main>
       </el-container>
       <br />
   </div>
 
 
-  <script>
-    var VM = new Vue({
-      el: "#app",
-      data: {
-        value: '',
-        tableData1: <cc:outprint>jsa</cc:outprint>,
-        fildata1: <cc:outprint>jlryjxlist_fxm_1</cc:outprint>,
-        tableData2:  <cc:outprint>jsb</cc:outprint>,
-        fildata2: <cc:outprint>gwryjxlist_fnm_1</cc:outprint>,
+    <script>
+        var VM = new Vue({
+            el: "#app",
+                data: {
+                    options: [{
+                      value: '2020',
+                      label: '2020'
+                    }, {
+                      value: '2021',
+                      label: '2021'
+                    }],
+                    selvalue: '',
+                    tableData1: null,
+                    loading_t1:true,
+                    showJl:true,
+                    activeName:'monthkh',
+                    loading_jd:true,
+                    tableData_jd:null,
+                    dialogFormVisible_addys: false, 
+                    form_addys:{
+                        pjid:'',
+                        pjnm:'',
+                        syhl:0,
+                        jj:0, 
+                        qdfl:0, 
+                        smfl:0,
+                    },
+                    dialogFormVisible_ztys: false, 
+                    form_ztys:{
+                        pjnm:'',
+                        syhl:'',
+                        jj:0, 
+                        qdfl:0, 
+                        smfl:0,
+                        cjzmj_lx:'',
+                        cjbl_lxqd:'',
+                        cjbl_lxsm:'',
+                        cjmj_lxqd:'',
+                        cjmj_lxsm:'',
+                        cs_lxqd:'',
+                        cs_lxsm:'',
+                        cs_lxhj:'', 
+                        cjzmj_zc:'',
+                        cjbl_zcqd:'',
+                        cjbl_zcsm:'',
+                        cjmj_zcqd:'',
+                        cjmj_zcsm:'',
+                        cs_zcqd:'',
+                        cs_zcsm:'',
+                        cs_zchj:'',
+                        cjzmj_bs:'',
+                        cjbl_bsqd:'',
+                        cjbl_bssm:'',
+                        cjmj_bsqd:'',
+                        cjmj_bssm:'',
+                        cs_bsqd:'',
+                        cs_bssm:'',
+                        cs_bshj:'',
+                    },
+                    formLabelWidth: '120px',
+                    pjlist:null,
+                    bmysid:'',
+                    tableData2:null,
+                    loading_t2:true,
+                    tableData3:null,
+                    loading_t2:true,
+                    dialogFormVisible_yfys:false,
+                    form_yfys:{
+                        xmysid:'',
+                        pjnm:'',
+                        cjzmj:0,
+                        cjbl_qd:0,
+                        cjbl_sm:0,
+                        smfl:0,
+                        qdfl:0,
+                        jj:0,
+                        mj1:0,
+                        mj2:0,
+                        mj3:0,
+                        mj4:0,
+                        mj5:0,
+                        mj6:0,
+                        mj7:0,
+                        mj8:0,
+                        mj9:0,
+                        mj10:0,
+                        mj11:0,
+                        mj12:0,
+                        mjhj:0,
+                        cs1:0,
+                        cs2:0,
+                        cs3:0,
+                        cs4:0,
+                        cs5:0,
+                        cs6:0,
+                        cs7:0,
+                        cs8:0,
+                        cs9:0,
+                        cs10:0,
+                        cs11:0,
+                        cs12:0,
+                        cshj:0,
+                    },
+                    valtype:'',
+                    tableData4:null,
+                    loading_t4:false,
+                 },
+                watch: {
+                    cjbl_lxqd(newValue, oldValue) {
+                        //校验必须是数字
+                        //var reg = new RegExp("^[0-9]*$");
 
-      },
-      watch: {
-      },
-      created: function () {
-      },
-      methods: {
-        resetDateFilter() {
-          this.$refs.filterTable.clearFilter('date');
-        },
-        clearFilter() {
-          this.$refs.filterTable.clearFilter();
-        },
-        clearFiltergw() {
-          this.$refs.filterTable_gw.clearFilter();
-        },
-        // formatter(row, column) {
-        //   return row.address;
-        // },
-        // filterYf(value, row, column) {
-        //     const property = column['property'];
-        //   console.log(property);
-        //   return row[property] === value;
-        // },
-        filterHandler(value, row, column) {
-          const property = column['property'];
-          //console.log(property);
-          return row[property] === value;
-        }
-      },
-    });
-  </script>
+                        this.form_ztys.cjbl_lxqd = newValue;
+                        this.form_ztys.cjbl_lxsm = 100 - newValue;
+                        this.form_ztys.cjmj_lxqd = this.form_ztys.cjzmj_lx * this.form_ztys.cjbl_lxqd / 100;
+                        this.form_ztys.cjmj_lxsm = this.form_ztys.cjzmj_lx - this.form_ztys.cjmj_lxqd;
+                        this.form_ztys.cs_lxqd = this.form_ztys.cjmj_lxqd * this.form_ztys.jj * this.form_ztys.qdfl;
+                        this.form_ztys.cs_lxsm = this.form_ztys.cjmj_lxsm * this.form_ztys.jj * this.form_ztys.smfl;
+                        this.form_ztys.cs_lxhj = this.form_ztys.cs_lxqd + this.form_ztys.cs_lxsm;
+　　                 },
+                    cjzmj_lx(newValue, oldValue) {
+                        this.form_ztys.cjzmj_lx = newValue;
+                        this.form_ztys.cjmj_lxqd = this.form_ztys.cjzmj_lx * this.form_ztys.cjbl_lxqd / 100;
+                        this.form_ztys.cjmj_lxsm = this.form_ztys.cjzmj_lx - this.form_ztys.cjmj_lxqd;
+                        this.form_ztys.cs_lxqd = this.form_ztys.cjmj_lxqd * this.form_ztys.jj * this.form_ztys.qdfl;
+                        this.form_ztys.cs_lxsm = this.form_ztys.cjmj_lxsm * this.form_ztys.jj * this.form_ztys.smfl;
+                        this.form_ztys.cs_lxhj = this.form_ztys.cs_lxqd + this.form_ztys.cs_lxsm;
+　　                 },
+                    cjbl_zcqd(newValue, oldValue) {
+                        this.form_ztys.cjbl_zcqd = newValue;
+                        this.form_ztys.cjbl_zcsm = 100 - newValue;
+                        this.form_ztys.cjmj_zcqd = this.form_ztys.cjzmj_zc * this.form_ztys.cjbl_zcqd / 100;
+                        this.form_ztys.cjmj_zcsm = this.form_ztys.cjzmj_zc - this.form_ztys.cjmj_zcqd;
+                        this.form_ztys.cs_zcqd = this.form_ztys.cjmj_zcqd * this.form_ztys.jj * this.form_ztys.qdfl;
+                        this.form_ztys.cs_zcsm = this.form_ztys.cjmj_zcsm * this.form_ztys.jj * this.form_ztys.smfl;
+                        this.form_ztys.cs_zchj = this.form_ztys.cs_zcqd + this.form_ztys.cs_zcsm;
+　　                 },
+                    cjzmj_zc(newValue, oldValue) {
+                        this.form_ztys.cjzmj_zc = newValue;
+                        this.form_ztys.cjmj_zcqd = this.form_ztys.cjzmj_zc * this.form_ztys.cjbl_zcqd / 100;
+                        this.form_ztys.cjmj_zcsm = this.form_ztys.cjzmj_zc - this.form_ztys.cjmj_zcqd;
+                        this.form_ztys.cs_zcqd = this.form_ztys.cjmj_zcqd * this.form_ztys.jj * this.form_ztys.qdfl;
+                        this.form_ztys.cs_zcsm = this.form_ztys.cjmj_zcsm * this.form_ztys.jj * this.form_ztys.smfl;
+                        this.form_ztys.cs_zchj = this.form_ztys.cs_zcqd + this.form_ztys.cs_zcsm;
+　　                 },
+                    cjbl_bsqd(newValue, oldValue) {
+                        this.form_ztys.cjbl_bsqd = newValue;
+                        this.form_ztys.cjbl_bssm = 100 - newValue;
+                        this.form_ztys.cjmj_bsqd = this.form_ztys.cjzmj_bs * this.form_ztys.cjbl_bsqd / 100;
+                        this.form_ztys.cjmj_bssm = this.form_ztys.cjzmj_bs - this.form_ztys.cjmj_bsqd;
+                        this.form_ztys.cs_bsqd = this.form_ztys.cjmj_bsqd * this.form_ztys.jj * this.form_ztys.qdfl;
+                        this.form_ztys.cs_bssm = this.form_ztys.cjmj_bssm * this.form_ztys.jj * this.form_ztys.smfl;
+                        this.form_ztys.cs_bshj = this.form_ztys.cs_bsqd + this.form_ztys.cs_bssm; // 等式右边字段没有定义
+　　                 },
+                    cjzmj_bs(newValue, oldValue) {
+                        this.form_ztys.cjzmj_bs = newValue;
+                        this.form_ztys.cjmj_bsqd = this.form_ztys.cjzmj_bs * this.form_ztys.cjbl_bsqd / 100;
+                        this.form_ztys.cjmj_bssm = this.form_ztys.cjzmj_bs - this.form_ztys.cjmj_bsqd;
+                        this.form_ztys.cs_bsqd = this.form_ztys.cjmj_bsqd * this.form_ztys.jj * this.form_ztys.qdfl;
+                        this.form_ztys.cs_bssm = this.form_ztys.cjmj_bssm * this.form_ztys.jj * this.form_ztys.smfl;
+                        this.form_ztys.cs_bshj = this.form_ztys.cs_bsqd + this.form_ztys.cs_bssm;
+　　                 },
+
+                    mj1(newValue, oldValue) {
+                        this.form_yfys.mj1 = Number(newValue);
+                        console.log(oldValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs1 = this.form_yfys.mj1*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj1*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+
+                    mj2(newValue, oldValue) {
+                        this.form_yfys.mj2 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs2 = this.form_yfys.mj2*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj2*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    mj3(newValue, oldValue) {
+                        this.form_yfys.mj3 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs3 = this.form_yfys.mj3*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj3*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    mj4(newValue, oldValue) {
+                        this.form_yfys.mj4 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs4 = this.form_yfys.mj4*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj4*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    mj5(newValue, oldValue) {
+                        this.form_yfys.mj5 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs5 = this.form_yfys.mj5*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj5*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    mj6(newValue, oldValue) {
+                        this.form_yfys.mj6 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs6 = this.form_yfys.mj6*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj6*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    mj7(newValue, oldValue) {
+                        this.form_yfys.mj7 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs7 = this.form_yfys.mj7*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj7*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    mj8(newValue, oldValue) {
+                        this.form_yfys.mj8 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs8 = this.form_yfys.mj8*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj8*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    mj9(newValue, oldValue) {
+                        this.form_yfys.mj9 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs9 = this.form_yfys.mj9*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj9*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    mj10(newValue, oldValue) {
+                        this.form_yfys.mj10 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs10 = this.form_yfys.mj10*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj10*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    mj11(newValue, oldValue) {
+                        this.form_yfys.mj11 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs11 = this.form_yfys.mj11*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj11*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    mj12(newValue, oldValue) {
+                        this.form_yfys.mj12 = Number(newValue);
+                        this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                        this.form_yfys.cs12 = this.form_yfys.mj12*this.form_yfys.qdfl*this.form_yfys.jj*this.form_yfys.cjbl_qd/100 + this.form_yfys.mj12*this.form_yfys.smfl*this.form_yfys.jj*this.form_yfys.cjbl_sm/100;
+                        this.form_yfys.cshj=this.form_yfys.cs1+this.form_yfys.cs2+this.form_yfys.cs3+this.form_yfys.cs4+this.form_yfys.cs5+this.form_yfys.cs6+this.form_yfys.cs7+this.form_yfys.cs8+this.form_yfys.cs9+this.form_yfys.cs10+this.form_yfys.cs11+this.form_yfys.cs12;
+　　                 },
+                    // form_yfys:{
+                    //   handler:function(val,oldval){
+                    //     console.log(val.mjhj)
+                    //     this.form_yfys.mjhj=this.form_yfys.mj1+this.form_yfys.mj2+this.form_yfys.mj3+this.form_yfys.mj4+this.form_yfys.mj5+this.form_yfys.mj6+this.form_yfys.mj7+this.form_yfys.mj8+this.form_yfys.mj9+this.form_yfys.mj10+this.form_yfys.mj11+this.form_yfys.mj12;
+                    //   },
+                    //   deep:true//对象内部的属性监听，也叫深度监听
+                    // },
+
+                },
+                created: function () {
+                    this.ins_zttable();
+                    this.ins_yftablelx();
+                    this.ins_yftablezc();
+                    this.ins_hktable();
+                },
+                methods: {
+                    //表格单元格合并的方法
+                    arraySpanMethod({ row, column, rowIndex, columnIndex }) {
+                    
+                        // if (rowIndex % 6 === 0) {
+                        //     if (columnIndex === 0) {
+                        //         return [6, 1];
+                        //     } 
+                        // } else {
+                        //     if (columnIndex === 0) {
+                        //         return [0, 0];
+                        //     } 
+                        // }
+                        if (columnIndex === 0 || columnIndex === 1 || columnIndex === 2 || columnIndex === 8 || columnIndex === 12 || columnIndex === 13) {
+                            if (rowIndex % 6 === 0) {
+                                return [6, 1];
+                            } else{
+                                return [0, 0];
+                            }
+                        }
+                        if (columnIndex === 3 || columnIndex === 5 || columnIndex === 11) {
+                            if (rowIndex % 2 === 0) {
+                                return [2, 1];
+                            } else{
+                                return [0, 0];
+                            }
+                        }
+                    
+                    },
+                    //月份预算表格单元格合并的方法
+                    arraySpanMethod2({ row, column, rowIndex, columnIndex }) {
+
+                        if (columnIndex === 0) {
+                            if (rowIndex % 2 === 0) {
+                                return [2, 1];
+                            } else{
+                                return [0, 0];
+                            }
+                        }
+
+                        if (columnIndex === 15) {
+                            if (rowIndex % 2 === 0) {
+                                return [2, 1];
+                            } else{
+                                return [0, 0];
+                            }
+                        }
+                        
+                    },
+                    //实时获取项目list选项
+                    getPjlist: function(){
+                        var that = this;
+                        axios.get('/controller.action', {
+				        	params: {
+				        		name: 'yssysapi',
+				        		type: 'ins_pjlist',
+				        	}
+				        })
+				        .then(function (response) {
+				        	//that.bindingcode = response.data.binding;
+				        	that.pjlist=response.data.data;
+				        	//console.log(this.bindingcode);
+				        })
+				        .catch(function (error) {
+				        	console.log(error);
+				        });
+                    },
+                    //新增项目预算
+                    addxmys: function(){
+                        console.log("addxmys");
+                        this.getPjlist();
+                        this.dialogFormVisible_addys = true;
+                    },
+                    addxmztys_close: function(){
+                        var that= this;
+                        //检查输入是否合法:1.项目是否已经已经存在预算;2.输入数字类型;
+                        //1
+                        // that.tableData1.forEach(function(item,index){
+						//     if(item.pjid==that.form_addys.pjid){
+                        //         // that.alerttxt = '项目已经存在预算!';
+                        //         // that.alertshow = true;
+                        //         that.$message.error('项目已经存在预算!');
+						// 	    return;
+						//     }
+                        // });
+                        //foreach循环return还是会继续完成循环,造成弹窗多次, 改用for循环
+                        for (let i = 0;i < that.tableData1.length;i++){
+                            if(that.tableData1[i].pjid==that.form_addys.pjid){
+                                that.$message.error('项目已经存在预算!');
+							    return;
+						    }
+                        }
+                        //console.log("还在方法里!");
+
+                        //2
+				        var reg = new RegExp("^[0-9]+\\.{0,1}[0-9]*$");
+
+				        
+				        if(!reg.test(this.form_addys.syhl))
+        		        {
+                            that.$message.error('剩余货量必须是数字!');
+							return;
+                        }
+                        
+                        if(!reg.test(this.form_addys.jj))
+        		        {
+                            that.$message.error('均价必须是数字!');
+							return;
+                        }
+                        
+                        if(!reg.test(this.form_addys.qdfl))
+        		        {
+                            that.$message.error('渠道费率必须是数字!');
+							return;
+                        }
+                        
+                        if(!reg.test(this.form_addys.smfl))
+        		        {
+                            that.$message.error('自然上门费率必须是数字!');
+							return;
+				        }
+                        
+                        axios.get('/controller.action', {
+				        	params: {
+				        		name: 'yssysapi',
+				        		type: 'add_xmys',
+                                parms: that.form_addys,
+                                bmysid: that.bmysid,
+				        	}
+				        })
+				        .then(function (response) {
+                            that.$message({
+                              message: '新增成功,注意编辑补充!',
+                              type: 'success'
+                            });
+                            that.ins_zttable();
+                            that.dialogFormVisible_addys = false;
+				        })
+				        .catch(function (error) {
+				        	console.log(error);
+                        });
+                        
+                    },
+                    editys: function(row) { //传入scope.row
+                        var that = this;
+                        this.dialogFormVisible_ztys = true; //弹出对话框
+                        //显示加载中,
+                        console.log(row.id); //获取id, 根据id去接口调用数据,数据调取完移除加载中
+                        // this.form_jsed.jsid = val1;
+                        axios.get('/controller.action', {
+				        	params: {
+				        		name: 'yssysapi',
+				        		type: 'ins_edt',
+				        		id: row.id,
+				        	}
+				        })
+				        .then(function (response) {
+				        	//that.bindingcode = response.data.binding;
+				        	that.form_ztys=response.data.data[0];
+				        	//console.log(this.bindingcode);
+				        })
+				        .catch(function (error) {
+				        	console.log(error);
+				        });
+                    
+                    },
+
+                    ins_zttable: function() { 
+                        console.log("ins_zttable");
+                        var that = this;
+                        axios.get('/controller.action', {
+				        	params: {
+				        		name: 'yssysapi',
+				        		type: 'ins_tb',
+				        		nd: '2020',
+				        	}
+				        })
+				        .then(function (response) {
+				        	//that.bindingcode = response.data.binding;
+                            that.tableData1=response.data.data;
+                            that.bmysid=response.data.message;
+                            //console.log(this.bindingcode);
+                            that.loading_t1 = false;
+				        })
+				        .catch(function (error) {
+				        	console.log(error);
+				        });
+                    
+                    },
+
+                    ins_yftablelx: function() { 
+                        console.log("ins_yftablelx");
+                        var that = this;
+                        axios.get('/controller.action', {
+				        	params: {
+				        		name: 'yssysapi',
+				        		type: 'ins_yftablelx',
+				        		nd: '2020',
+				        	}
+				        })
+				        .then(function (response) {
+				        	//that.bindingcode = response.data.binding;
+                            that.tableData2=response.data.data;
+                            that.bmysid=response.data.message;
+                            //console.log(this.bindingcode);
+                            that.loading_t2 = false;
+				        })
+				        .catch(function (error) {
+				        	console.log(error);
+				        });
+                    
+                    },
+
+                    ins_yftablezc: function() { 
+                        console.log("ins_yftablezc");
+                        var that = this;
+                        axios.get('/controller.action', {
+				        	params: {
+				        		name: 'yssysapi',
+				        		type: 'ins_yftablezc',
+				        		nd: '2020',
+				        	}
+				        })
+				        .then(function (response) {
+				        	//that.bindingcode = response.data.binding;
+                            that.tableData3=response.data.data;
+                            that.bmysid=response.data.message;
+                            //console.log(this.bindingcode);
+                            that.loading_t3 = false;
+				        })
+				        .catch(function (error) {
+				        	console.log(error);
+				        });
+                    
+                    },
+                    
+                    updxmztys: function(){
+                        var that= this;
+                        dialogFormVisible_ztys = false;
+                        var str0 =JSON.stringify(this.form_ztys);
+                        var params = new URLSearchParams();
+                        params.append('ztys', encodeURI(str0));
+                        axios({
+                            url:'/customize/page/9291p1140/yssysapi.jsp?name=yssysapi&type=upd_ztxmys',
+                            method: 'post',
+                            data: params,
+                            headers: {
+                                'Content-type': 'application/x-www-form-urlencoded'
+                            }
+                        })
+                        .then(function (response) {
+                            that.$message({
+                              message: '更新成功!',
+                              type: 'success'
+                            });
+                            that.ins_zttable();
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                    },
+                
+                    handleClickTab(tab, event) {
+                        console.log(tab, event);
+                        console.log(tab.label);
+                        if(tab.label=='季度考核'&&this.loading_jd){
+		            		//alert(this.jsrq_bd);
+		            		var that = this;
+                        
+		            	}
+                    },
+
+                    ins_edtyfys: function(row,valtype) { //传入scope.row
+                        var that = this;
+                        that.valtype=valtype;
+                        console.log(valtype);
+                        this.dialogFormVisible_yfys = true; //弹出对话框
+                        //显示加载中,
+                        console.log(row.id); //获取id, 根据id去接口调用数据,数据调取完移除加载中
+                        // this.form_jsed.jsid = val1;
+                        axios.get('/controller.action', {
+				        	params: {
+				        		name: 'yssysapi',
+                                type: 'ins_edtyfys',
+                                valtype: valtype,
+				        		id: row.id,
+				        	}
+				        })
+				        .then(function (response) {
+				        	//that.bindingcode = response.data.binding;
+				        	that.form_yfys=response.data.data;
+				        	//console.log(that.form_yfys.pjnm);
+				        })
+				        .catch(function (error) {
+				        	console.log(error);
+				        });
+                    
+                    },
+
+                    updxmyfys: function(){
+                        var that = this;
+                        that.dialogFormVisible_yfys = false;
+                        var str0 =JSON.stringify(this.form_yfys);
+                        var params = new URLSearchParams();
+                        params.append('yfys', encodeURI(str0));
+                        params.append('valtype', that.valtype);
+                        axios({
+                            url:'/customize/page/9291p1140/yssysapi.jsp?name=yssysapi&type=upd_yfxmys',
+                            method: 'post',
+                            data: params,
+                            headers: {
+                                'Content-type': 'application/x-www-form-urlencoded'
+                            }
+                        })
+                        .then(function (response) {
+                            that.$message({
+                              message: '更新成功!',
+                              type: 'success'
+                            });
+                            if(that.valtype=='lx'){
+                                that.ins_yftablelx();
+                            }else if(that.valtype=='zc'){
+                                that.ins_yftablezc();
+                            }
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                    },
+
+                    ins_hktable: function() { 
+                        console.log("ins_hktable");
+                        var that = this;
+                        axios.get('/controller.action', {
+				        	params: {
+				        		name: 'yssysapi',
+				        		type: 'ins_hktable',
+				        		nd: 2020,
+				        	}
+				        })
+				        .then(function (response) {
+				        	//that.bindingcode = response.data.binding;
+                            that.tableData4=response.data.data;
+                            that.bmysid=response.data.message;
+                            //console.log(this.bindingcode);
+                            that.loading_t4 = false;
+				        })
+				        .catch(function (error) {
+				        	console.log(error);
+				        });
+                    
+                    },
+                },
+                computed:{
+                    cjzmj_lx() {
+                        return this.form_ztys.cjzmj_lx
+                    },
+                    cjbl_lxqd() {
+　　            　      return this.form_ztys.cjbl_lxqd
+　　                },
+                    cjzmj_zc() {
+                        return this.form_ztys.cjzmj_zc
+                    },
+                    cjbl_zcqd() {
+　　            　      return this.form_ztys.cjbl_zcqd
+　　                },
+                    cjzmj_bs() {
+                        return this.form_ztys.cjzmj_bs
+                    },
+                    cjbl_bsqd() {
+　　            　      return this.form_ztys.cjbl_bsqd
+　　                },
+                    mj1() {
+                        return this.form_yfys.mj1
+                    },
+                    mj2() {
+                        return this.form_yfys.mj2
+                    },
+                    mj3() {
+                        return this.form_yfys.mj3
+                    },
+                    mj4() {
+                        return this.form_yfys.mj4
+                    },
+                    mj5() {
+                        return this.form_yfys.mj5
+                    },
+                    mj6() {
+                        return this.form_yfys.mj6
+                    },
+                    mj7() {
+                        return this.form_yfys.mj7
+                    },
+                    mj8() {
+                        return this.form_yfys.mj8
+                    },
+                    mj9() {
+                        return this.form_yfys.mj9
+                    },
+                    mj10() {
+                        return this.form_yfys.mj10
+                    },
+                    mj11() {
+                        return this.form_yfys.mj11
+                    },
+                    mj12() {
+                        return this.form_yfys.mj12
+                    },
+                }
+            });
+    </script>
 </html>
