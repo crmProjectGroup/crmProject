@@ -173,13 +173,12 @@ for(CCObject project:projectlist){
 }
 String sftb=Oppojsonarr.toString();
 
-
 </cc>
 <html>
 <head>
-	<script src="//unpkg.com/vue/dist/vue.js"></script>
-	<script src="//unpkg.com/vue-easytable/umd/js/index.js"></script>
-	<link rel="stylesheet" href="https://unpkg.com/vue-easytable/umd/css/index.css">
+    <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> <!--引入内部vue -->
+    <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css"/>
 	<STYLE TYPE="text/css"> 
 	
        </STYLE> 
@@ -191,15 +190,107 @@ String sftb=Oppojsonarr.toString();
 <button onclick='tableToExcel()'>导出</button>
 <div id="app">
 <template>
-<v-table 
-is-horizontal-resize style="width:100%" 
-:width="1100"
-:columns="columns"
-:table-data="tableData"
-even-bg-color="#f4f4f4"
-row-hover-color="#eee"
-row-click-color="#edf7ff"
-></v-table>
+<el-table 
+    is-horizontal-resize style="width:100%" 
+    :width="1100"
+    :data="tableData"
+    even-bg-color="#f4f4f4"
+    row-hover-color="#eee"
+    row-click-color="#edf7ff"
+    >
+    <el-table-column
+        prop="projectname"
+        label="项目"
+        width="120"
+        isFrozen: true
+        >
+    </el-table-column>
+    <el-table-column
+        prop="khnm"
+        label="客户"
+        width="120"
+        isFrozen: true
+        >
+    </el-table-column>
+    <el-table-column
+        prop="ownerid"
+        label="成交人"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="cjdw"
+        label="成交单位"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="cjmj"
+        label="成交面积"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="cjdj"
+        label="成交单价"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="cjzj"
+        label="成交总价"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="cjsj"
+        label="成交时间"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="dlfjsbl"
+        label="结算比例"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="dlfjsje"
+        label="结算金额"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="jyzt"
+        label="结算状态"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="ykpbl"
+        label="已开票比例"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="kpd"
+        label="对应开票单"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="spzt"
+        label="审批状态"
+        width="80"
+        >
+    </el-table-column>
+    <el-table-column
+        prop="hkzt"
+        label="回款状态"
+        width="80"
+        >
+    </el-table-column>
+</el-table>
 </template>
 </div>
 <!-- <cc:outprint>projectid_list</cc:outprint>
@@ -212,26 +303,9 @@ var Main = {
         name: 'frozen-title-columns',
         data(){
             return {
-                     tableData: <cc:outprint>sftb</cc:outprint>,
+                     tableData: <cc:outprint>sftb</cc:outprint>
                   //{"projectid":"a05201895750531u4bBv","projectname":"星港同创汇","oppoid":"002201904B74842IjFQM","opnm":"星港同创汇_江苏新云汉光电科技有限公司_20190727",
                     //"khmc":"0012019FC6A9139M93Wp","khnm":"江苏新云汉光电科技有限公司","cjdw":"219-220","cjmj":174.12,"cjdj":65,"cjzj":11317.8,"cjsj":"2019-08-08","ownerid":"虞美红"}
-                    columns: [
-                           {field: 'projectname', title:'项目', width: 120, titleAlign: 'center',columnAlign:'center', isFrozen: true},
-                           {field: 'khnm', title: '客户', width: 120, titleAlign: 'center',columnAlign:'center', isFrozen: true},
-                           {field: 'ownerid', title: '成交人', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'cjdw', title: '成交单位', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'cjmj', title: '成交面积', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'cjdj', title: '成交单价', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'cjzj', title: '成交总价', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'cjsj', title: '成交时间', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'dlfjsbl', title: '结算比例', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'dlfjsje', title: '结算金额', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'jyzt', title: '结算状态', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'ykpbl', title: '已开票比例', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'kpd', title: '对应开票单', width: 100, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'spzt', title: '审批状态', width: 80, titleAlign: 'center',columnAlign:'center'},
-                           {field: 'hkzt', title: '回款状态', width: 80, titleAlign: 'center',columnAlign:'center'}
-                    ]
             }
         }
     }

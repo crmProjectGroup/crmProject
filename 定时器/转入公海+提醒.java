@@ -1,10 +1,19 @@
 /*
+description:转入公海+提醒 
 version: 2.0
 date:20190527
 author:tom
+log:
+1.20181225
 Old version: 遍历所有成交和丢单的业务机会, 遍历相关的跟进记录, 按创建时间排序, 判断最新的一次与现实时间的差距, 分成有建过跟进和没建过跟进(取客户创建时间), 分别对7天和14天做提醒和跳公客提醒;   弊病:同一个客户可能对应多个业务机会
 
 New version: 剔除成交和丢单,转介,进线客户, 公客,(这里可以用业务机会的数量控制转介客户,业务机会数>0) , 以客户id去找跟进记录.  其他逻辑与旧版一致.
+2.20201110 大客户的客户不跳入公客;控制只有企业顾问的客户不跟进才会跳公客
+3.20210302 数组下标越界( 
+	if(ccuserlist1.size()<0){ 原本是 >  , 会出现数组越界, 改为 <
+            break;
+        }
+ )
 */
 
 //-------------------获取系统当前时间-------------------
@@ -17,9 +26,26 @@ CCService cs = new CCService((UserInfo)userInfo);
 List<CCObject> list = cs.cqlQuery("Account","select a.id, a.name, a.ownerid, a.createdate, a.xmmc from Account a where (select count(*) from Opportunity o where o.khmc=a.id and o.is_deleted='0' and (jieduan = '成交' or jieduan = '未成交')) = 0 and (select count(*) from Opportunity o where o.khmc=a.id and o.is_deleted='0') > 0 and a.is_deleted='0' and a.xmmc not in ('a052018F7FCFA55YIdRp','a05201955D07905hz3vm') and a.ghkh = '否' and a.sfzjkh='否'");
 
 if(list.size()>0){
+	
 	for(CCObject item:list){
 		String id = item.get("id")==null?"":item.get("id")+"";//客户id
-		String ownerid = item.get("ownerid")==null?"":item.get("ownerid")+"";//所有人
+        String ownerid = item.get("ownerid")==null?"":item.get("ownerid")+"";//所有人
+
+        List<CCObject> ccuserlist1 = cs.cqlQuery("ccuser","select profile from ccuser where id='"+ ownerid +"' and isusing='1'");//判断所有人是不是业务员
+        // if(ccuserlist1.size()>0){
+        //     break;
+        // }
+		// begin xiongpanfeng  数组下标越界问题修改
+		if(ccuserlist1.size()==0){ // 修改 运算符号
+            continue;
+        }
+		// end xiongpanfeng
+		String profid = ccuserlist1.get(0).get("profile")==null?"":ccuserlist1.get(0).get("profile")+"";
+        if(!"aaa201723453E5EBNtzU".equals(profid)){
+			 //break;
+            continue;  // 去掉 break 加入continue
+        }
+
 		//String khmc = item.get("khmc")==null?"":item.get("khmc")+"";//客户id
 		String xmmc = item.get("xmmc")==null?"":item.get("xmmc")+"";//项目id
 		String accountname = item.get("name")==null?"":item.get("name")+"";//客户名
