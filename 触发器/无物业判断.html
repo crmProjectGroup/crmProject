@@ -4,6 +4,8 @@ version: 1.0
 date:20200915
 author:tom
 log:
+
+20210428 新公寓布局类型，不需要判断物业信息  公寓进线 也不需要判断物业
 */
 
 String xsywyqk = record_new.get("xsywyqk")==null?"":record_new.get("xsywyqk")+"";//现物业使用情况(销售/租赁)
@@ -14,8 +16,9 @@ String spzt= record_new.get("spzt")==null?"":record_new.get("spzt")+"";//审批�
 
 //if(true) trigger.addErrorMessage(spzt);
 
+// 2021A6974399AE59RKpF  20210428 调整新的公寓属性与布局   202106851B81E2CJ2pos 新公寓进线类型
 if("草稿".equals(spzt)){
-	if(!"新成立物业".equals(xsywyqk) && !"2018525F215221DtlTXV".equals(recordtype) && !"2020F8FFFACC18DmPXQ1".equals(recordtype)){  //新增公寓客户 2020F8FFFACC18DmPXQ1
+	if(!"新成立物业".equals(xsywyqk) && !"2018525F215221DtlTXV".equals(recordtype) && !"2020F8FFFACC18DmPXQ1".equals(recordtype) && !"2021A6974399AE59RKpF".equals(recordtype) && !"202106851B81E2CJ2pos".equals(recordtype)){  //新增公寓客户 2020F8FFFACC18DmPXQ1  
 		String xbgwyjgzl = record_new.get("xbgwyjgzl")==null?"":record_new.get("xbgwyjgzl")+"";//现办公物业价格
 		String xbgwyjgxs = record_new.get("xbgwyjgxs")==null?"":record_new.get("xbgwyjgxs")+"";//销售物业价格
 		String xbgqy = record_new.get("xbgqy")==null?"":record_new.get("xbgqy")+"";//现办公区域

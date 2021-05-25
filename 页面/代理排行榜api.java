@@ -82,15 +82,17 @@ try {
             double xfcblje = cjfcobj.get("xfcblje")==null?0.0:Double.valueOf(cjfcobj.get("xfcblje")+ ""); 
             out.print("!2^^"+xfcblje);
             // 获取结算单 begin
-            String jsmxsql = "select dlfjsbl,dlfjsje from dljsmxb where is_deleted = '0' and ywjh = '"+oid+"'";
+            String jsmxsql = "select dlfjsbl,dlfjsje,xfcje from dljsmxb where is_deleted = '0' and ywjh = '"+oid+"'";
             // out.print("1^"+jsmxsql);
             List<CCObject> jsmxlist = cs.cqlQuery("dljsmxb",jsmxsql);
             double jsdbl = 0.0;
             double jsdjine=0.0;
             String kaipiao = "否";
+            double xfcje = 0.0;
             if(jsmxlist.size()>0) {
                 kaipiao = "是";
                 double dlfjsbl = jsmxlist.get(0).get("dlfjsbl")==null?0.0:Double.valueOf(jsmxlist.get(0).get("dlfjsbl")+ ""); // 结算单里的---结算比例
+                xfcje = jsmxlist.get(0).get("xfcje")==null?0.0:Double.valueOf(jsmxlist.get(0).get("xfcje")+ ""); // 需要分出金额
                 // double dlfjsje = jsmxlist.get(0).get("dlfjsje")==null?0.0:Double.valueOf(jsmxlist.get(0).get("dlfjsje")+ ""); //  结算单里的---结算金额
                 // out.print(dlfjsbl +"^^"+dlfjsje);
                 xfcblje=dlfjsbl; // 如果有结算单, 按照结算单里的比例
@@ -102,7 +104,7 @@ try {
             // 业绩分成表 
             String yjfcsql = "select y.szxm,y.fcyh1,y.fcbl1,y.szxm2,y.fcyh2,y.fcbl2,y.szxm3,y.fcyh3,y.fcbl3  from yjfc y where y.is_deleted='0' and ywjkmc='"+oid+"'"; 
             List<CCObject> yjfclist = cs.cqlQuery("yjfc",yjfcsql); // 根据业务机会的 id , 获取业绩分成的数据
-            if (yjfclist.size()==1) { // 一个业务机会, 对应一个分成比例
+            if (yjfclist.size()>=1) { // 一个业务机会, 对应一个分成比例
                 // 封装业务机会数据begin
                 cjfcjson.put("oid",oid); // 业务机会的id
                 cjfcjson.put("cname",cname); // 所有人名称
@@ -134,7 +136,8 @@ try {
                     cjfcjson.put("jsmj",cjmj*huansuan);// 结算面积
                     cjfcjson.put("jsyj",zongjia*(xfcblje*0.01)); // 结算佣金
                     cjfcjson.put("jsbl",xfcblje); // 结佣比例
-                    cjfcjson.put("chuangyong",zongjia*(xfcblje*0.01)*huansuan); // 结算创佣
+                    cjfcjson.put("xfcje",xfcje); // 需分出金额
+                    cjfcjson.put("chuangyong",(zongjia*(xfcblje*0.01)-xfcje)*huansuan); // 结算创佣
                     cjfcjson.put("kaipiao",kaipiao); // 是否开票
                     cjfcjsonarray.add(cjfcjson);
                     userset.add(fcyh1);
@@ -149,7 +152,8 @@ try {
                     cjfcjson.put("jsmj",cjmj*huansuan);// 结算面积
                     cjfcjson.put("jsyj",zongjia*(xfcblje*0.01)); // 结算佣金
                     cjfcjson.put("jsbl",xfcblje); // 结佣比例
-                    cjfcjson.put("chuangyong",zongjia*(xfcblje*0.01)*huansuan); // 结算创佣
+                    cjfcjson.put("xfcje",xfcje); // 需分出金额
+                    cjfcjson.put("chuangyong",(zongjia*(xfcblje*0.01)-xfcje)*huansuan); // 结算创佣
                     cjfcjson.put("kaipiao",kaipiao); // 是否开票
                     cjfcjsonarray.add(cjfcjson);
                     userset.add(fcyh2);
@@ -164,7 +168,8 @@ try {
                     cjfcjson.put("jsmj",cjmj*huansuan);// 结算面积
                     cjfcjson.put("jsyj",zongjia*(xfcblje*0.01)); // 结算佣金
                     cjfcjson.put("jsbl",xfcblje); // 结算比例
-                    cjfcjson.put("chuangyong",zongjia*(xfcblje*0.01)*huansuan); // 结算创佣
+                    cjfcjson.put("xfcje",xfcje); // 需分出金额
+                    cjfcjson.put("chuangyong",(zongjia*(xfcblje*0.01)-xfcje)*huansuan); // 结算创佣
                     cjfcjson.put("kaipiao",kaipiao); // 是否开票
                     cjfcjsonarray.add(cjfcjson);
                     userset.add(fcyh3);
@@ -190,12 +195,14 @@ try {
                 if (xfcblje > 0) {
                     out.print("进来了^^");
                     cjfcjson.put("jsbl",xfcblje); // 结算比例
+                    cjfcjson.put("xfcje",xfcje); // 需分出金额
                     cjfcjson.put("jsyj",zongjia*(xfcblje*0.01)); // 结算佣金
-                    cjfcjson.put("chuangyong",zongjia*(xfcblje*0.01)); // 结算创佣
+                    cjfcjson.put("chuangyong",zongjia*(xfcblje*0.01)-xfcje); // 结算创佣
                 } else {
                     cjfcjson.put("jsyj",zongjia); // 结算佣金
                     cjfcjson.put("jsbl",100); // 结算比例
-                    cjfcjson.put("chuangyong",zongjia); // 结算创佣
+                    cjfcjson.put("xfcje",xfcje); // 需分出金额
+                    cjfcjson.put("chuangyong",zongjia-xfcje); // 结算创佣
                 }
                 cjfcjson.put("kaipiao",kaipiao); // 是否开票
                 cjfcjsonarray.add(cjfcjson);
@@ -273,7 +280,7 @@ try {
             // 业绩分成表 
             String yjfcsql = "select y.szxm,y.fcyh1,y.fcbl1,y.szxm2,y.fcyh2,y.fcbl2,y.szxm3,y.fcyh3,y.fcbl3  from yjfc y where y.is_deleted='0' and ywjkmc='"+oid+"'"; 
             List<CCObject> yjfclist = cs.cqlQuery("yjfc",yjfcsql); // 根据业务机会的 id , 获取业绩分成的数据
-            if (yjfclist.size()==1) { // 一个业务机会, 对应一个分成比例
+            if (yjfclist.size() >= 1) { // 一个业务机会, 对应一个分成比例
                 String szxm = yjfclist.get(0).get("szxm")==null?"":yjfclist.get(0).get("szxm")+ ""; // 所属项目1的id
                 String fcyh1 = yjfclist.get(0).get("fcyh1")==null?"":yjfclist.get(0).get("fcyh1")+ ""; // 分成用户1的id
                 String fcbl1 = yjfclist.get(0).get("fcbl1")==null?"":yjfclist.get(0).get("fcbl1")+ ""; // 分成比例1

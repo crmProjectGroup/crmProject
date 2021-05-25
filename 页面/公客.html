@@ -7,6 +7,7 @@
         author:tom
         log:
         1.20190918 取数sql修改(攀峰)
+		2.20210460 增加sql，过滤朗峻广场客户，不和租赁销售客户放在一起 and xmmc not in ('a0520206562E5ECNVIbC') （攀峰）
         */
         
 		/**
@@ -44,7 +45,7 @@
 		//	}
 		//}
 		//String projectlist_1 = sb.toString(); // 将sb里的数据转换成字符串，放在下面的sql中
-		String accSql = "SELECT a.id as id, a.name as name, a.xylx as industry, CASE a.recordtype when '20186166515AE4A8ZfOc' then '租赁客户' when '2018525F215221DtlTXV' then '进线客户' else '销售客户' end as type,  a.khdj as level , a.khlyqy as area FROM Account a inner join ccuser b on a.ownerid = b.id WHERE a.createbyid <> a.ownerid and a.ghkh = '是' and a.ownerid <> '005201852146611JQCTr' and b.profile = 'aaa2018A38306ED9syVe'  and a.lxrdh not like '%0000%' and a.is_deleted = '0' and a.id not in (SELECT khmc FROM Opportunity,account a WHERE khmc = a.id AND jieduan = '成交')";	
+		String accSql = "SELECT a.id as id, a.name as name, a.xylx as industry, CASE a.recordtype when '20186166515AE4A8ZfOc' then '租赁客户' when '2018525F215221DtlTXV' then '进线客户'  when '2020F8FFFACC18DmPXQ1' then '公寓客户'  when '202106851B81E2CJ2pos' then '公寓进线'  when '2021A6974399AE59RKpF' then '新公寓客户'  else '销售客户' end as type,  a.khdj as level , a.khlyqy as area FROM Account a inner join ccuser b on a.ownerid = b.id WHERE a.createbyid <> a.ownerid and a.ghkh = '是' and a.ownerid <> '005201852146611JQCTr' and b.profile = 'aaa2018A38306ED9syVe'  and a.lxrdh not like '%0000%' and a.is_deleted = '0' and xmmc not in ('a0520206562E5ECNVIbC') and a.id not in (SELECT khmc FROM Opportunity,account a WHERE khmc = a.id AND jieduan = '成交')";	
 		// out.print(accSql+"---");
 		List<CCObject> Accountlist = cs.cqlQuery("Account",accSql); 
 			//创建json集合
@@ -55,15 +56,26 @@
 
 		</cc>
 		<html>
+            <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> <!--引入内部vue -->
+            <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610421146863OvDibIa5"></script> <!--引入内部vueeasytable index.js -->
+            <link rel="stylesheet" href="/staticResource.action?m=getResource&resourceId=1610421475927o17PeITR"/> <!-- 引入内部vue-easytable@1.7.2 index.css  -->
+
+
+
+
+            <!-- <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> 引入内部vue  -->
 			<head>
 				<!--<meta http-equiv="refresh" content="5">-->
-				<script src="//unpkg.com/vue/dist/vue.js"></script>
-				<script src="//unpkg.com/vue-easytable/umd/js/index.js"></script>
-				<style type="text/css">
+                <!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
+                <!-- <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> 引入内部vue  -->
+                <!-- <script src="//unpkg.com/vue-easytable/umd/js/index.js"></script> -->
+                <!-- <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610421146863OvDibIa5"></script> 引入内部vueeasytable index.js  -->
+                <!-- <link rel="stylesheet" href="/staticResource.action?m=getResource&resourceId=1610421475927o17PeITR"/>引入内部vue-easytable@1.7.2 index.css  -->
+				<!-- <style type="text/css">
 
 					@import url("//unpkg.com/vue-easytable/umd/css/index.css");
 
-				</style>
+				</style> -->
 			</head>
 			<body>
 

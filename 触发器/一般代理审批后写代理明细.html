@@ -86,6 +86,7 @@ if("审批通过".equals(spzt) && "审批中".equals(spzt_old)){
 	this.insert(dljsmxb);//添加记录
 
 	//更新人员绩效
+    //当大客户的时候,
 	double grdywcyjs = 0.00;//个人当月完成业绩数
 	List<CCObject> list = this.cquery("ryjx","nd='"+year+"' and yf='"+month+"' and bkhr = '"+ownerid+"' and recordtype='201884204B9C199odbgA'");
 	if(list.size()==1){
@@ -93,9 +94,21 @@ if("审批通过".equals(spzt) && "审批中".equals(spzt_old)){
 		list.get(0).put("grdywcyjs",grdywcyjs+cjmj);
 		this.update(list.get(0));
 	}else if(list.size()==0){
-		trigger.addErrorMessage("本月未创建考核目标!或者考核目标审批未通过!");
+        //如果是大客户部,没有业务员的可以直接跳过该判断,如果普通项目,则报错未创建业务员绩效考核
+        if(!"a05201955D07905hz3vm".equals(ywyszxm)){
+            trigger.addErrorMessage("本月未创建企业顾问考核目标!"); 
+        }
 	}
-	List<CCObject> ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '审批通过' and nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+ywyszxm+"' and recordtype = '2018ED6B4DF92033DeWs' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+ownerid+"' and is_deleted = '0')");
+    //为大客户部可能出现经理的情况判断
+    List<CCObject> ryjxlist =null;
+    if("005201827888B25tm2iq".equals(ownerid) && "a05201955D07905hz3vm".equals(ywyszxm)){
+        //String sql01="select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '审批通过' and nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+ywyszxm+"' and recordtype = '2018ED6B4DF92033DeWs' and is_deleted = '0' and bkhr='"+ownerid+"'";
+        //trigger.addErrorMessage(sql01);
+        ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '审批通过' and nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+ywyszxm+"' and recordtype = '2018ED6B4DF92033DeWs' and is_deleted = '0' and bkhr='"+ownerid+"'");
+    } else{
+        ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '审批通过' and nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+ywyszxm+"' and recordtype = '2018ED6B4DF92033DeWs' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+ownerid+"' and is_deleted = '0')");
+    }
+	//List<CCObject> ryjxlist = this.cqlQuery("ryjx","select id,ifnull(tddyyjwcs,0) as yj from ryjx where spzt = '审批通过' and nd = '"+year+"' and yf = '"+month+"' and xmmc ='"+ywyszxm+"' and recordtype = '2018ED6B4DF92033DeWs' and is_deleted = '0' and bkhr=(select manager from ccuser where id='"+ownerid+"' and is_deleted = '0')");
 	if(ryjxlist.size()==1){
 		double yj = ryjxlist.get(0).get("yj")==null?0.0:Double.valueOf(ryjxlist.get(0).get("yj")+"");
 		ryjxlist.get(0).put("tddyyjwcs",yj+cjmj);

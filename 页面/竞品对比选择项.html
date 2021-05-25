@@ -1,0 +1,568 @@
+    <cc:page type="normal" style="standard" showSidebar="false" showHeader="false" isELIgnored="false" />
+    <cc!>
+        /*
+        20210301 新增竞品对比页面
+        */
+
+        /** * 将ISO-8859-1编码格式的字符串转码为UTF-8 *
+        * * @param parameterValue
+        * * @return
+        * * @throws UnsupportedEncodingException
+        * */
+        private static String encodeParameters(String parameterValue) throws UnsupportedEncodingException {
+        if (parameterValue != null && parameterValue.length()> 0) {
+        byte[] iso = parameterValue.getBytes("ISO-8859-1");
+        if (parameterValue.equals(new String(iso, "ISO-8859-1"))) {
+        parameterValue= new String(iso, "UTF-8");
+        return parameterValue;
+        }
+        }
+        return parameterValue;
+        }
+        </cc>
+        <cc>
+            CCService cs = new CCService(userInfo);
+            String uid = userInfo.getUserId();//当前登录用户id
+            List<CCObject> ccuserl = cs.cqlQuery("ccuser","SELECT loginname as name FROM ccuser WHERE id = '"+uid+"'");
+            //登录人的账号
+            String userName =ccuserl.get(0).get("name")==null?"":ccuserl.get(0).get("name")+""; //账号用于获取bindingcode
+            String profid = userInfo.getProfileId();//getProfileId当前登录用户的简档id,后续对查询数据权限控制用
+            // 获取瑞信行代理中的项目 begin
+            String sql1 = "select id,name from Project where is_deleted='0'  and xmzt='代理中'";
+            List<CCObject> options = cs.cqlQuery("Project",sql1); //下拉框数据源
+            JSONArray projectjsonarr = new JSONArray(); 
+            for(CCObject item:options){
+                JSONObject projson= new JSONObject();
+                String value = item.get("id")==null?"":item.get("id")+ "";  //id
+                String lable = item.get("name")==null?"":item.get("name")+ "";  //name
+                projson.put("value",value); 
+                projson.put("lable",lable); 
+                projectjsonarr.add(projson);
+            }
+            String prostr=projectjsonarr.toString();
+            //out.print("^rxharray"+prostr);
+            // 获取瑞信行代理中的项目 end
+            String sql2 = "select id,name from scpy where is_deleted='0'";
+            List<CCObject> options2 = cs.cqlQuery("scpy",sql2); //下拉框数据源
+            JSONArray scpyjsonarr = new JSONArray(); 
+            for(CCObject item:options2){
+                JSONObject scpyjson= new JSONObject();
+                String value = item.get("id")==null?"":item.get("id")+ "";  //id
+                String lable = item.get("name")==null?"":item.get("name")+ "";  //name
+                scpyjson.put("value",value); 
+                scpyjson.put("lable",lable); 
+                scpyjsonarr.add(scpyjson);
+            }
+            String scpystr=scpyjsonarr.toString();
+            //out.print("^scpy"+scpystr);
+        </cc>
+
+        <html>
+        <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> <!--引入内部vue -->
+        <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610359371060HP6AYHCZ"></script> <!--引入内部axios -->
+        <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css" />
+        <script src="https://cdn.bootcdn.net/ajax/libs/dom-to-image/2.6.0/dom-to-image.js"></script>
+        <script src="https://cdn.bootcss.com/html2canvas/0.5.0-beta4/html2canvas.js"></script>
+        <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1616145026342JnVeUPwj"></script> <!--引入内部Canvas2Image.js -->
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+        <!-- <script src="//g.alicdn.com/mtb/lib-windvane/2.1.8/windvane.js"></script> -->
+        <style type="text/css">
+            .el-dropdown-link {
+                cursor: pointer;
+                color: #409eff;
+            }
+
+            .el-icon-arrow-down {
+                if font-size: 12px;
+            }
+            td{
+                /* line-height:3em; */
+                text-align:center;
+                word-wrap:break-word;
+                word-break:break-all;
+            }
+            input{
+                text-align: center;
+            }
+            
+        </style>
+
+        <body>
+            <div id="app">
+                <!--<div> {{rxharray}}</div> 打印java--> 
+            </br>
+        </br>
+    </br>
+                <template>
+                    瑞信行项目: <el-select v-model="rxhvalue"   placeholder="请选择" filterable  style="width: 130px;">
+                        <el-option
+                            v-for="item in rxharray"
+                            :key="item.value"
+                            :label="item.lable"
+                            :value="item.value">
+                        </el-option>
+                    </el-select>
+                </br></br>
+                    市场盘源项目: <el-select v-model="scpyvalue"   placeholder="请选择" filterable  style="width: 130px;">
+                        <el-option
+                            v-for="item in scpyarray"
+                            :key="item.value"
+                            :label="item.lable"
+                            :value="item.value">
+                        </el-option>
+                    </el-select>
+                </br></br>
+                    <el-select v-model="value1" multiple placeholder="项目对比项">  
+                    <el-option
+                        v-for="item in options"
+                        :key="item.value"
+                        :label="item.lable"
+                        :value="item.value"
+                        :disabled="item.disabled">
+                    </el-option>
+                    </el-select>
+                    <el-button style="width: 80px;" @click="tjoption">查询</el-button>
+                </template>
+                </br></br>
+                <template>
+                    <table style="width:90%" class="myTable" border="1" id="tableOne">
+                        <tr v-for="(item,i) in statDatas" :key="i" >
+                            <td class="column"  align="center">{{ item.name }}</td>
+                            <td class="column"  align="center">{{ item.rxhvalue }}</td>
+                            <td class="column"  align="center">{{ item.scpyvalue }}</td>
+                        </tr>
+                    </table>
+                    <img id="img" class="img"/>
+                    <!-- <input type="button" onclick="saveImage()" value="保存图片" style="float: right;margin: 0 10%;"/> -->
+                    <input type="button" onclick="toExcel()" value="下载Excel" />
+                    <el-button style="width: 80px;" @click="saveImage" id="saveImg">下载图片</el-button>
+                </template>
+            </br></br></br>
+                <div class="table-container">
+                    <!-- <table style="width: auto;" class="suanTable" border="1" id="suantable"> -->
+                        <table style="table-layout: fixed;" border="1" width="100%" cellspacing="0" cellpadding="1" class="tdFixed" id="tdFixed">
+                        <tr>
+                            <td class="column" colspan="3">选择面积</td>
+                        </tr>
+                        <tr>
+                            <td class="column" >楼层/单元</td>
+                            <td class="column" ><input style="width: 99.5%; height: 100%;border: 0px;outline:none;" ></td>
+                            <td class="column" ><input style="width: 99.5%; height: 100%;border: 0px;outline:none;" ></td>
+                        </tr>
+                        <tr>
+                            <td class="column" >建筑面积(平方米)</td>
+                            <td class="column" ><input style="width: 99.5%; height: 100%;border: 0px;outline:none;" id="jzmj1"></td>
+                            <td class="column" ><input style="width: 99.5%; height: 100%;border: 0px;outline:none;" id="jzmj2"></td>
+                        </tr>
+                        <tr>
+                            <td class="column" >实用率(百分比)</td>
+                            <td class="column" ><input style="width: 99.5%; height: 100%;border: 0px;outline:none;" ></td>
+                            <td class="column" ><input style="width: 99.5%; height: 100%;border: 0px;outline:none;" ></td>
+                        </tr>
+                        <tr>
+                            <td class="column" colspan="3">租赁条款</td>
+                        </tr>
+                        <tr>
+                            <td class="column" >租金单价</td>
+                            <td class="column" ><input style="width: 99.5%; height: 100%;border: 0px;outline:none;" id="zjdj1"></td>
+                            <td class="column" ><input style="width: 99.5%; height: 100%;border: 0px;outline:none;" id="zjdj2"></td>
+                        </tr>
+                        <tr>
+                            <td class="column" >递增率</td>
+                            <td class="column" >
+                                <input style="width: 99.5%; height: 99%;border: 0px;outline:none;" id="dzl1">
+                            </td>
+                            <td class="column" id="scpydzl">
+                                <input style="width: 99.5%; height: 99%;border: 0px;outline:none;" id="dzl2">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="column" >租期(月)</td>
+                            <td class="column" ><input style="width: 99.5%; height: 100%;border: 0px;outline:none;" id="zq1"></td>
+                            <td class="column" ><input style="width: 99.5%; height: 100%;border: 0px;outline:none;" id="zq2"></td>
+                        </tr>
+                        <tr>
+                            <td class="column" >1~<label id="dzname"></label>年租金</td>
+                            <td class="column" >
+                                <template>
+                                    <el-table
+                                    :data="rxhyeartable"
+                                    border>
+                                    <el-table-column
+                                        prop="date"
+                                        label="日期">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="dzl"
+                                        label="递增率">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="zujing"
+                                        label="租金(元)">
+                                    </el-table-column>
+                                    </el-table>
+                                </template>
+                            </td>
+                            <td class="column" >
+                                <template>
+                                    <el-table
+                                    :data="scpyyeartable"
+                                    border >
+                                    <el-table-column
+                                        prop="date"
+                                        label="日期">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="dzl"
+                                        label="递增率">
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="zujing"
+                                        label="租金(元)">
+                                    </el-table-column>
+                                    </el-table>
+                                </template>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="column" >管理费(元/月/每平方米)</td>
+                            <td class="column">
+                                <table style="table-layout: fixed;"  width="100%" cellspacing="0" cellpadding="1">
+                                    <tr>
+                                        <td><input style="width: 99.5%; height: 99%;" id="glfmonthpin1"></td>
+                                        <td><input style="width: 99.5%; height: 99%;" id="glfmonthpin2"></td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td class="column">
+                                <table style="table-layout: fixed;"  width="100%" cellspacing="0" cellpadding="1">
+                                    <tr>
+                                        <td><input style="width: 99.5%; height: 99%;" id="glfmonthpin3"></td>
+                                        <td><input style="width: 99.5%; height: 99%;" id="glfmonthpin4"></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="column" >免租期(月)</td>
+                            <td class="column" ><input style="width: 99.5%; height: 99%;border: 0px;outline:none;" id="mzq1"></td>
+                            <td class="column" ><input style="width: 99.5%; height: 99%;border: 0px;outline:none;" id="mzq2"></td>
+                        </tr>
+                        <tr>
+                            <td class="column" >管理费(元/月)</td>
+                            <td class="column">
+                                <table style="table-layout: fixed;"  width="100%" cellspacing="0" cellpadding="1">
+                                    <tr>
+                                        <td><input style="width: 99.5%; height: 99%;BORDER-TOP-STYLE: none; BORDER-RIGHT-STYLE: solid; BORDER-LEFT-STYLE: none; BORDER-BOTTOM-STYLE: none" id="glfmonth1" disabled='disabled'></td>
+                                        <td><input style="width: 99.5%; height: 99%;BORDER-TOP-STYLE: none; BORDER-RIGHT-STYLE: none; BORDER-LEFT-STYLE: solid; BORDER-BOTTOM-STYLE: none" id="glfmonth2" disabled='disabled'></td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td class="column">
+                                <table style="table-layout: fixed;"  width="100%" cellspacing="0" cellpadding="1">
+                                    <tr>
+                                        <td><input style="width: 99.5%; height: 99%;BORDER-TOP-STYLE: none; BORDER-RIGHT-STYLE: solid; BORDER-LEFT-STYLE: none; BORDER-BOTTOM-STYLE: none" id="glfmonth3" disabled='disabled'></td>
+                                        <td><input style="width: 99.5%; height: 99%;BORDER-TOP-STYLE: none; BORDER-RIGHT-STYLE: none; BORDER-LEFT-STYLE: solid; BORDER-BOTTOM-STYLE: none" id="glfmonth4" disabled='disabled'></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="column" >首月租金(人民币)</td>
+                            <td class="column" ><label style="width: 99.5%; height: 100%;border: 0px;outline:none;" id="onezujing1"></td>
+                            <td class="column" ><label style="width: 99.5%; height: 100%;border: 0px;outline:none;" id="onezujing2"></td>
+                        </tr>
+                        <tr>
+                            <td class="column" colspan="3"><label id="nianfei"></label>年费用</td>
+                        </tr>
+                        <tr>
+                            <td class="column" ><label id="zujinconte"></label>年租金总额(人民币)</td>
+                            <td class="column" ><label style="width: 100%; height: 100%;border: 0px;outline:none;" id='yearcontzj1'></td>
+                            <td class="column" ><label style="width: 100%; height: 100%;border: 0px;outline:none;" id="yearcontzj2"></td>
+                        </tr>
+                        <tr>
+                            <td class="column" ><label id="guanlinconte"></label>年管理费总额(人民币)</td>
+                            <td class="column" ><label style="width: 100%; height: 100%;border: 0px;outline:none;" id="yeargl1"></td>
+                            <td class="column" ><label style="width: 100%; height: 100%;border: 0px;outline:none;" id="yeargl2"></td>
+                        </tr>
+                        <tr>
+                            <td class="column" ><label id="zujinconteguanli"></label>年租金+管理费总额(人民币)</td>
+                            <td class="column" ><label style="width: 100%; height: 100%;border: 0px;outline:none;" id="zujorgl1" ></td>
+                            <td class="column" ><label style="width: 100%; height: 100%;border: 0px;outline:none;" id="zujorgl2" ></td>
+                        </tr>
+                    </table>
+                    <el-button style="width: 80px;" @click="select">查询</el-button>
+                    <el-button style="width: 80px;" @click="daochujingp">导出竞品</el-button>
+                    <!-- <input type="button" onclick="select()" value="计算" style="float: right;margin: 0 10%;"/> -->
+                </div>
+            </div>
+
+            <br>
+            <br>
+            <br>
+            <script>
+                function toExcel(){ // 导出Excel
+                    //获取表格
+                    var exportFileContent = document.getElementById("tableOne").outerHTML;                
+                    var blob = new Blob([exportFileContent], {type: "text/plain;charset=utf-8"});         //解决中文乱码问题
+                    blob =  new Blob([String.fromCharCode(0xFEFF), blob], {type: blob.type});
+                    //设置链接
+                    var link = window.URL.createObjectURL(blob); 
+                    var a = document.createElement("a");    //创建a标签
+                    a.download = "竞品对比Excel表.xls";  //设置被下载的超链接目标（文件名）
+                    a.href = link;                            //设置a标签的链接
+                    document.body.appendChild(a);            //a标签添加到页面
+                    a.click();                                //设置a标签触发单击事件
+                    document.body.removeChild(a);            //移除a标签
+                }
+
+                function saveImage() { // 导出图片 png格式
+                domtoimage.toPng(document.getElementById("table")).then(function (dataUrl) {
+                    var link = document.createElement("a");
+                    link.download = "竞品对比图片";
+                    link.href = dataUrl;
+                    link.click();
+                    });
+                }
+            </script>
+
+            <script>
+                var Main =  {
+                data() {
+                    return {
+                        options:[
+                            {
+                                value: 'name',
+                                lable: '项目名称',
+                                disabled:true,
+                            }, {
+                                value: 'grade',
+                                lable: '写字楼等级'
+                            }, {
+                                value: 'ltgd',
+                                lable: '楼体高度(m)'
+                            }, {
+                                value: 'syl',
+                                lable: '实用率(百分比)'
+                            }, {    
+                                value: 'dmtj',
+                                lable: '地面停车(个)'
+                            }
+                        ],
+                            value1:'',
+                            statDatas:[], // 对比表格
+                            rxhvalue:'',
+                            rxharray:<cc:outprint>prostr</cc:outprint>,//瑞信行项目
+                            scpyvalue:'',
+                            scpyarray:<cc:outprint>scpystr</cc:outprint>,//市场盘源项目
+                            rxhyeartable:[], // 瑞信行租金排列
+                            scpyyeartable:[],// 市场盘源租金排列
+                    }
+                },
+                created: function() {
+                    this.getBinding()
+                    },
+                methods: {
+                    getBinding: function() {
+                        var that = this;
+                            axios.get('/distributor.action', {
+                                params: {
+                                    serviceName: 'cssoLogin',
+                                    userName: that.userName,
+                                    authCode: '6b42a467259407218c0e6acdfc978c01'
+                            }
+                        })
+                        .then(function (response) {
+                            that.bindingcode = response.data.binding;
+                            //console.log(this.bindingcode);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                    },
+                    tjoption: function(){  // 获取选项
+                        debugger
+                        var that = this;
+                        var rxharray = that.rxharray;
+                        var scpyarray = that.scpyarray;
+                        var data1= that.options;
+                        var values = that.value1;
+                        for (var z=0;z<values.length;z++) {
+                            if(z==0) {
+                                var valuescopy=[];
+                                valuescopy.push("name");
+                            }
+                            valuescopy.push(values[z]);
+                        }
+                        values = valuescopy;
+                        var str=[];
+                        for (var j=0;j<values.length;j++) {
+                            var v1 = values[j];
+                            for(var i=0;i<data1.length;i++){
+                                var v2 = data1[i].value;
+                                if(values[j]==data1[i].value){
+                                    str.push(data1[i]);
+                                    break;
+                                }
+                            }
+                        }
+                        str.join(',');
+                        var rxhpro = that.rxhvalue; // 瑞信行的项目
+                        var scpypro = that.scpyvalue; // 市场盘源的项目
+                        axios.get('/controller.action', {
+                            params: {
+                                name: 'jpdbapi', // 接口名称
+                                type: 'jingpin', // 类型
+                                options:encodeURI(JSON.stringify(str)), // 选择的项
+                                rxhpro:rxhpro,
+                                scpypro:scpypro,
+
+                            }
+                        })
+                        .then(function (response) {
+                            debugger
+                            Vue.set(that,'statDatas', response.data.data);
+                            that.$forceUpdate();
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                    },
+                    // 创建表格的方法
+                    gettable:function(yearzu1,arr1,zjdj1,tablename,countzuj,jzmj1,mzq1){
+                        var that = this;
+                        debugger
+                        var arrone=0;
+                        var arrtwo=0;
+                        var arrthree=0;
+                        // 从递增率中获取到的数字,传给接口计算
+                        if(arr1 != null && arr1.length != 0){
+                            arrone = arr1[0];
+                            arrtwo = arr1[1];
+                            arrthree = arr1[2];
+                        }
+                        axios.get('/controller.action', {
+                            params: {
+                                name: 'jpdbapi', // 接口名称
+                                type: 'sjtable', // 类型
+                                yearzu1:yearzu1, // 选择的项
+                                zjdj1:zjdj1,
+                                arrone:arrone,
+                                arrtwo:arrtwo,
+                                arrthree:arrthree,
+                                jzmj1:jzmj1,
+                                mzq1:mzq1,
+                            }
+                        })
+                        .then(function (response) {
+                            debugger
+                            document.getElementById(countzuj).innerHTML=response.data.countzuj;
+                            // 总的租金 + 总的管理费
+                            var yearzuj1 = document.getElementById('yearcontzj1').innerHTML*1;
+                            var yeargl1 = document.getElementById('yeargl1').innerHTML*1;
+                            document.getElementById('zujorgl1').innerHTML = yearzuj1+yeargl1;
+
+                            var yearzuj2 = document.getElementById('yearcontzj2').innerHTML*1;
+                            var yeargl2 = document.getElementById('yeargl2').innerHTML*1;
+                            document.getElementById('zujorgl2').innerHTML = yearzuj2+yeargl2;
+                            Vue.set(that,tablename, response.data.data);
+                            that.$forceUpdate();
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                    },
+                    // 计算表格里的数据
+                    select:function(){ 
+                        debugger
+                        // 建筑面积 和 对应的管理费 begin
+                        var jzmj1=document.getElementById('jzmj1').value;
+                        var glfmonthpin1=document.getElementById('glfmonthpin1').value;
+                        var glfmonthpin2=document.getElementById('glfmonthpin2').value;
+                        document.getElementById('glfmonth1').value=jzmj1*glfmonthpin1;
+                        document.getElementById('glfmonth2').value=jzmj1*glfmonthpin2;
+                        
+                        var jzmj2=document.getElementById('jzmj2').value;
+                        var glfmonthpin3=document.getElementById('glfmonthpin3').value;
+                        var glfmonthpin4=document.getElementById('glfmonthpin4').value;
+                        document.getElementById('glfmonth3').value=jzmj2*glfmonthpin3;
+                        document.getElementById('glfmonth4').value=jzmj2*glfmonthpin4;
+                        // // 建筑面积 和 对应的管理费 end
+
+                        // 租金单价 \ 递增率  \ 租期(多少个月) \ 几年的租金明细
+                        var zjdj1=document.getElementById('zjdj1').value; // 租金单价1
+                        var zjdj2=document.getElementById('zjdj2').value; // 租金单价2
+                        debugger
+                        var dzl1=document.getElementById('dzl1').value; // 递增率1
+                        var arr1 = dzl1.match(/\d+(.\d+)?/g); // 取文字中的数字,便于计算每年租金详情
+                        var dzl2=document.getElementById('dzl2').value; // 递增率2
+                        var arr2 = dzl2.match(/\d+(.\d+)?/g); // 取文字中的数字,便于计算每年租金详情
+
+                        var zq1=document.getElementById('zq1').value; // 租期1  
+                        var yearzu1=parseInt(zq1/12); // 得到年租
+                        document.getElementById('dzname').innerHTML=yearzu1;  // 1~ 几年 租期
+                        document.getElementById('nianfei').innerHTML=yearzu1;  // 1~ 几年 租期
+                        document.getElementById('zujinconte').innerHTML=yearzu1;  // 1~ 几年 租期
+                        document.getElementById('guanlinconte').innerHTML=yearzu1;  // 1~ 几年 租期
+                        document.getElementById('zujinconteguanli').innerHTML=yearzu1;  // 1~ 几年 租期
+                        // var monyzu1 = zq1-(yearzu*12); // 得到月租
+                        var zq2=document.getElementById('zq2').value; // 租期2
+                        var yearzu2=parseInt(zq2/12); // 得到年租
+                        // var monyzu2=zq1-(yearzu2*12); // 得到月租
+
+                        // 获取免租期
+                        var mzq1=document.getElementById('mzq2').value;
+                        var mzq2=document.getElementById('mzq2').value;
+                        /// 年数 / 递增率字符串 / 租金单价 / 表格名称 / 建筑面积 / 免租期
+                        this.gettable(yearzu1,arr1,zjdj1,'rxhyeartable','yearcontzj1',jzmj1,mzq1); // 瑞信行table计算
+                        this.gettable(yearzu2,arr2,zjdj2,'scpyyeartable','yearcontzj2',jzmj2,mzq2); // 市场table计算
+                       
+
+
+                        // 首月租金(建筑面积 * 租金单价)
+                        document.getElementById('onezujing1').innerHTML =jzmj1*zjdj1;
+                        document.getElementById('onezujing2').innerHTML =jzmj2*zjdj2;
+
+
+                        // 多少年的管理费
+                        debugger
+                        var avgyear1 = parseInt(yearzu1/2);     //   租金  * 低管理费   * 年数 *12 + 租金 * 高管理费 * 年数+1  == 年数可能不是整数 
+                        if (yearzu1%2 == 0) {
+                            document.getElementById('yeargl1').innerHTML=jzmj1*glfmonthpin1*avgyear1*12+jzmj1*glfmonthpin2*avgyear1*12; // 年数是整数时
+                        } else {
+                            document.getElementById('yeargl1').innerHTML=jzmj1*glfmonthpin1*avgyear1*12+jzmj1*glfmonthpin2*(avgyear1+1)*12;
+                        }
+                        var avgyear2 = parseInt(yearzu2/2);
+                        if (yearzu2%2 == 0) {
+                            document.getElementById('yeargl2').innerHTML=jzmj2*glfmonthpin3*avgyear2*12+jzmj2*glfmonthpin4*avgyear2*12;
+                        } else {
+                            document.getElementById('yeargl2').innerHTML=jzmj2*glfmonthpin3*avgyear2*12+jzmj2*glfmonthpin4*(avgyear2+1)*12;
+                        }
+                    },
+                    // 算价下载图片方法
+                daochujingp:function(){
+                    domtoimage.toPng(document.getElementById('tdFixed')).then(function (dataUrl) {
+					var img = new Image();
+					img.src = dataUrl;
+                    img.style.backgroundColor = '#FFFFFF';
+					document.body.appendChild(img);
+					var a=document.createElement('a')
+					a.setAttribute('href',dataUrl)
+					a.setAttribute('download',"1.png")
+					a.click()
+                    }).catch(function (error) {
+                        console.error('转图片失败!', error);
+                    });
+               },
+            }
+        };
+            var Ctor = Vue.extend(Main)
+            new Ctor().$mount('#app')
+            </script>
+
+        </body>
+
+        </html>

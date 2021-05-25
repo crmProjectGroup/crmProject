@@ -160,7 +160,7 @@ if(qyztmc.length()>0){
     if ((!"".equals(zlrkd)) && (!"暂未了解;".equals(zlrkd)) && (!"暂未了解".equals(zlrkd))) { //认可点
         bwksl += 1.0;
     }
-
+    
     if (bwksl >= 3) {
         khdj = "A";
     } else if (0 < bwksl && bwksl < 3) {
@@ -168,5 +168,113 @@ if(qyztmc.length()>0){
     } else {
         khdj = "C";
     } 
+} else if ("2021A6974399AE59RKpF".equals(jllx)) { // 20210510 新增公寓布局设置级别
+// 填写16大类及以上，且诚意登记情况必须有填写，为A类客户；
+// 填写12大类及以上，但不足16大类，为B类客户；
+// 填写10大类及以上，但不足12大类，为C类客户；
+// 填写不足10大类，为D类客户
+    boolean cydj = false;
+    String age = record_new.get("age")==null?"":record_new.get("age")+"";//年龄
+    String familyStructure = record_new.get("familyStructure")==null?"":record_new.get("familyStructure")+"";//家庭结构
+    String gyClientType = record_new.get("gyClientType")==null?"":record_new.get("gyClientType")+"";//客户类型
+    String xjzxq = record_new.get("xjzxq")==null?"":record_new.get("xjzxq")+"";//居住区域--现居住小区
+    String ybgqy = record_new.get("ybgqy")==null?"":record_new.get("ybgqy")+"";//工作区域--主要事业所在地
+    String lfcs = record_new.get("lfcs")==null?"":record_new.get("lfcs")+"";//来访次数
+    String gjfk = record_new.get("gjfk")==null?"":record_new.get("gjfk")+"";//跟进反馈
+    String gyNewCoChannel = record_new.get("gyNewCoChannel")==null?"":record_new.get("gyNewCoChannel")+"";//认知途径3
+        if (!"".equals(age)) { // 年龄
+            bwksl += 1.0;
+        }
+        if (!"".equals(familyStructure)) { // 家庭结构
+            bwksl += 1.0;
+        }
+        if (!"".equals(gyClientType)) { // 客户类型
+            bwksl += 1.0;
+        }
+        if (!"".equals(xjzxq)) { // 居住区域--现居住小区
+            bwksl += 1.0;
+        }
+        if (!"".equals(ybgqy)) { // 工作区域--主要事业所在地
+            bwksl += 1.0;
+        }
+        if (!"".equals(lfcs)) { // 来访次数
+            bwksl += 1.0;
+        }
+        if (!"".equals(gjfk)) { // 跟进反馈
+            bwksl += 1.0;
+        }
+        if (!"".equals(gyNewCoChannel)) { // 认知途径3
+            bwksl += 1.0;
+        }
+    String yzkhqk = record_new.get("yzkhqk")==null?"":record_new.get("yzkhqk")+"";//诚意登记情况
+        if (!"".equals(yzkhqk)) { // 诚意登记情况
+            bwksl += 1.0;
+            cydj = true;
+        }
+
+    String jzqy = record_new.get("jzqy")==null?"":record_new.get("jzqy")+"";//具体居住区域
+    String jzdd = record_new.get("jzdd")==null?"":record_new.get("jzdd")+"";//具体居住地点
+    String jzqybz = record_new.get("jzqybz")==null?"":record_new.get("jzqybz")+"";//具体居住备注
+        if ((!"".equals(jzqy)) || (!"".equals(jzdd)) || (!"".equals(jzqybz))) { // 具体居住
+            bwksl += 1.0;
+        }
+
+    String gzqy = record_new.get("gzqy")==null?"":record_new.get("gzqy")+"";//具体工作区域
+    String gzdd = record_new.get("gzdd")==null?"":record_new.get("gzdd")+"";//具体工作地点
+    String gzqybz = record_new.get("gzqybz")==null?"":record_new.get("gzqybz")+"";//具体工作备注
+        if ((!"".equals(gzqy)) || (!"".equals(gzdd)) || (!"".equals(gzqybz))) { // 具体工作
+            bwksl += 1.0;
+        }
+
+    String cshy = record_new.get("cshy")==null?"":record_new.get("cshy")+"";// 从事行业
+    String gzcpmjd = record_new.get("gzcpmjd")==null?"":record_new.get("gzcpmjd")+"";// 关注产品面积段
+    String lcyx = record_new.get("lcyx")==null?"":record_new.get("lcyx")+"";// 楼层意向
+    String zymd = record_new.get("zymd")==null?"":record_new.get("zymd")+"";// 置业目的
+    String gyResistance = record_new.get("gyResistance")==null?"":record_new.get("gyResistance")+"";// 抗性点公寓
+    String sfgzwlxx = record_new.get("sfgzwlxx")==null?"":record_new.get("sfgzwlxx")+"";// 是否关注未来
+    String gyProActiv = record_new.get("gyProActiv")==null?"":record_new.get("gyProActiv")+"";// 是否有兴趣参与项目举办的暖场活动
+        if (!"".equals(cshy)) { // 从事行业
+            bwksl += 1.0;
+        }
+        if (!"".equals(gzcpmjd)) { // 关注产品面积段
+            bwksl += 1.0;
+        }
+        if (!"".equals(lcyx)) { // 楼层意向
+            bwksl += 1.0;
+        }
+        if (!"".equals(zymd)) { // 置业目的
+            bwksl += 1.0;
+        }
+        if (!"".equals(gyResistance)) { // 抗性点公寓
+            bwksl += 1.0;
+        }
+        if (!"".equals(sfgzwlxx)) { // 是否关注未来
+            bwksl += 1.0;
+        }
+        if (!"".equals(gyProActiv)) { // 是否有兴趣参与项目举办的暖场活动
+            bwksl += 1.0;
+        }
+
+    String rtdian = record_new.get("rtdian")==null?"":record_new.get("rtdian")+"";// 认同点(价值)
+    String rentongdian = record_new.get("rentongdian")==null?"":record_new.get("rentongdian")+"";// 认同点
+    if ((!"".equals(rtdian)) || (!"".equals(rentongdian))) { // 认同点(价值)  认同点
+        bwksl += 1.0;
+    }
+    
+// 设置级别
+// 填写16大类及以上，且诚意登记情况必须有填写，为A类客户；
+// 填写12大类及以上，但不足16大类，为B类客户；
+// 填写10大类及以上，但不足12大类，为C类客户；
+// 填写不足10大类，为D类客户
+    if (bwksl >= 16 && cydj) {
+        khdj = "A";
+    } else if (12 <= bwksl) {
+        khdj = "B";
+    } else if (10 <= bwksl && bwksl < 12){
+        khdj = "C";
+    } else {
+        khdj = "D";
+    }
+    
 }
  record_new.put("khdj",khdj);

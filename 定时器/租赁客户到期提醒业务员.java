@@ -19,6 +19,7 @@ for(CCObject item:list){
      cal.setTime(sdf.parse(zlkssj));
      cal.add(Calendar.DATE,(int)zlnx*365);
      String txday = cal.get(Calendar.YEAR)+"-"+(cal.get(Calendar.MONTH)+1)+"-"+cal.get(Calendar.DAY_OF_MONTH);
+     
      long time1 = sdf.parse(txday).getTime();
      long time2 = sdf.parse(nowday).getTime();
      long day = (time1-time2)/(24*60*60*1000);
@@ -77,7 +78,7 @@ for(CCObject item:list){
                        }
        
                    }
-
-            
      }
+
+
 }

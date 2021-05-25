@@ -7,6 +7,9 @@ log:
 20190711 修改了上门进线的模板,进线也假如满意度回复
 20201203 如果是vip企业顾问,创建的客户,都需要发短信
 20210106 加入百度发送短信
+20210514 bug vip顾问在大客户部， 又加入到 项目的销售小组中 ，需要取两次， 销售小组取一次项目地址， 大客户又取一次地址
+兼容了两种情况： 1. 员工只在 大客户部
+                2. 员工在 大客户部，又在项目的销售团队中。
 */
 
 String dh = record_new.get("lxrdh")==null?"":record_new.get("lxrdh")+"";//获取电话
@@ -53,9 +56,10 @@ if(list.size()==1){
            trigger.addErrorMessage("请选择客户所属项目!");
        }
 
-       List<CCObject> projectlist = this.cqlQuery("Project","select name from Project where id = '"+xmmc+"'");
+       List<CCObject> projectlist = this.cqlQuery("Project","select name,lpdz from Project where id = '"+xmmc+"'");
        if(projectlist.size()>0){
            Projectname = projectlist.get(0).get("name")==null?"":projectlist.get(0).get("name")+"";//项目名称
+           ProjectAddress = projectlist.get(0).get("lpdz")==null?"":projectlist.get(0).get("lpdz")+"";//项目地址
        }
 } else if ("aaa201858C360ADNceRX".equals(profileid)) { // 如果简档是 运营中心 (vip企业顾问简档) begin
      if ("".equals(xmmc)) { // 如果是大客户人员创建客户, 必须填写项目名称
@@ -100,6 +104,9 @@ if("aaa201858C360ADNceRX".equals(profileid) || "a0520206562E5ECNVIbC".equals(xmm
           } else {
                zuncheng = "先生/女士";
           }
+//            if(true){  // 打印日志
+//         trigger.addErrorMessage(String.valueOf(ProjectAddress)); 
+//     }
           txt = lxrxm+zuncheng+"您好!我是瑞信行大客户经理:"+username+".很高兴能为您服务!请您对本次服务进行满意度评分，可直接回复数字（1满意;2不满意）。感谢您的回复！公司地址："+ProjectAddress;
      } else {
           if ("a052018119B8FB52E6PM".equals(xmmc)) {  // 百度国际大厦项目

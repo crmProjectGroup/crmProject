@@ -626,9 +626,11 @@ for(CCObject item3:list3){
         // out.print("(" + accountSql+")");
         // out.print("开拓了多少个项目" + accountList.size());
         for (CCObject acc:accountList) {
-            // if(khkt < 40) { // 判断客户开拓分数不能超过 40 分
-            khkt += 15; //累加 客户 开拓分数
-            // }
+            if(khkt < 40) { // 判断客户开拓分数不能超过 40 分
+                khkt += 15; //累加 客户 开拓分数
+            } else {
+                khkt = 40;
+            }
             boolean rs = false; // 判断电话号是否正确
             String id = acc.get("id")==null?"":acc.get("id")+""; // 客户的id
             String lxrdh = acc.get("lxrdh")==null?"":acc.get("lxrdh")+"";//客户 联系人电话
@@ -652,7 +654,7 @@ for(CCObject item3:list3){
             khkt = (khkt + nrList.size() * 15) > 40 ? 40 : (khkt + nrList.size() * 15);
         }
         // 遍历完所有的客户, 且 手机号正确 &&　都有跟进信息
-        if ((kaiguan == 0) && (accountList.size() != 0)) {
+        if ((kaiguan == 0) && (accountList.size() != 0) && (nrList.size() >= accountList.size())) {
             // out.print("^^1" + kaiguan +"^^2"+accountList.size());
             khxx = 20;// 客户信息分数
         }// 获取 获取跟进记录 / 含重复拜访 end

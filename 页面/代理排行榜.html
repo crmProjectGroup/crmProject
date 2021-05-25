@@ -46,8 +46,9 @@ throws UnsupportedEncodingException {
 
 
     //获取上月最后一天
-    cal.set(Calendar.DAY_OF_MONTH, 1); 
-    cal.add(Calendar.DATE, -1);
+    // cal.set(Calendar.MONTH, 1); 
+    // cal.add(Calendar.DATE, -1);
+    cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
     String nowday = df.format(cal.getTime());
 	
 	
@@ -115,7 +116,7 @@ throws UnsupportedEncodingException {
         </br>
         </br>
             <el-tabs v-model="activeName" type="card" @tab-click="handleClickTab">
-                <el-tab-pane label="成交分成" name="monthkh">
+                <el-tab-pane label="成交分成" name="monthkh"  id="tab1">
                     <template>
                         <el-table
                           :data="tableData1"
@@ -218,9 +219,10 @@ throws UnsupportedEncodingException {
                             width="100">
                           </el-table-column>
                         </el-table>
+                        <el-button  @click="getchjfc(tab1)">导出分成</el-button>
                     </template>
                 </el-tab-pane>
-                <el-tab-pane label="成交数据汇总" name="seasonkh">
+                <el-tab-pane label="成交数据汇总" name="seasonkh" id="tab2">
                     <template>
                         <el-table
                           :data="tableData2"
@@ -269,16 +271,6 @@ throws UnsupportedEncodingException {
                             width="100">
                           </el-table-column>
                           <el-table-column
-                            prop="jsbl"
-                            label="结佣比例"
-                            width="100">
-                          </el-table-column>
-                          <el-table-column
-                            prop="jsyj"
-                            label="佣金"
-                            width="100">
-                          </el-table-column>
-                          <el-table-column
                             prop="fcyh1"
                             label="分成用户1"
                             sortable
@@ -295,6 +287,21 @@ throws UnsupportedEncodingException {
                             width="100">
                           </el-table-column>
                           <el-table-column
+                            prop="jsyj"
+                            label="佣金"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="jsbl"
+                            label="结佣比例"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
+                            prop="xfcje"
+                            label="需分出金额"
+                            width="100">
+                          </el-table-column>
+                          <el-table-column
                             prop="chuangyong"
                             label="创佣"
                             width="100">
@@ -305,9 +312,10 @@ throws UnsupportedEncodingException {
                             width="100">
                           </el-table-column>
                         </el-table>
+                        <el-button  @click="getchjfc(tab2)">导出分成汇总</el-button>
                     </template>
                 </el-tab-pane>
-                <el-tab-pane label="排行榜" name="ranking">
+                <el-tab-pane label="排行榜" name="ranking" id="tab3">
                   <template>
                     <el-row>
                         <el-col :span="12">  
@@ -359,6 +367,7 @@ throws UnsupportedEncodingException {
                         </el-table>
                     </el-col>
                 </el-row>
+                <el-button  @click="getchjfc(tab3)">导出排行表</el-button>
                   </template>
               </el-tab-pane>
             <el-tabs>
@@ -555,6 +564,29 @@ throws UnsupportedEncodingException {
 				});
       };
     },
+    // 导出Excel
+    getchjfc(tablesid){ // 导出成交分成Excel
+              debugger
+              //获取表格
+              var exportFileContent = tablesid.outerHTML;                
+              var blob = new Blob([exportFileContent], {type: "text/plain;charset=utf-8"});         //解决中文乱码问题
+              blob =  new Blob([String.fromCharCode(0xFEFF), blob], {type: blob.type});
+              //设置链接
+              var link = window.URL.createObjectURL(blob); 
+              var a = document.createElement("a");    //创建a标签
+              if (tablesid.id == 'tab1') {
+                a.download = "成交分成.xls";  //设置被下载的超链接目标（文件名）  
+              } else if (tablesid.id == 'tab2') {
+                a.download = "成交汇总.xls";  //设置被下载的超链接目标（文件名）
+              } else {
+                a.download = "排行榜.xls";  //设置被下载的超链接目标（文件名）
+              }
+              a.href = link;                            //设置a标签的链接
+              document.body.appendChild(a);            //a标签添加到页面
+              a.click();                                //设置a标签触发单击事件
+              document.body.removeChild(a);            //移除a标签
+    },
+
 },
 });
   </script>

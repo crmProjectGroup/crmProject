@@ -8,6 +8,7 @@ author:tom
 log:
 1.20190828 运营转介的问题处理
 2.20200330 渠道限制造成转介审批不通过的问题处理,将认知途径1,2写为转介,瑞信行联动转介
+3.20201221 更具体业务员选取绩效时候的项目,避免业务员调动或者多项目时候审批报错
 */
 
 java.text.SimpleDateFormat sdf= new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -183,7 +184,7 @@ if(!"aaa201858C360ADNceRX".equals(ccuserlist.get(0).get("profile"))){
 
  
        //List<CCObject> zjlist = this.cquery("ryjx","nd='"+year+"' and yf='"+month+"' and recordtype='201884204B9C199odbgA' and bkhr = '"+ownerid+"' and is_deleted = '0'"); //2018823B69C69F6L92FH
-	   List<CCObject> zjlist = this.cquery("ryjx","nd='"+year+"' and yf='"+month+"' and recordtype in ('201884204B9C199odbgA','2018823B69C69F6L92FH') and bkhr = '"+ownerid+"' and is_deleted = '0'");
+	   List<CCObject> zjlist = this.cquery("ryjx","nd='"+year+"' and yf='"+month+"' and recordtype in ('201884204B9C199odbgA','2018823B69C69F6L92FH') and bkhr = '"+ownerid+"' and 	xmmc = '"+szxm+"' and is_deleted = '0'");
        if(zjlist.size()==1){
               CCObject obj = zjlist.get(0);
               double xmdyldsmps = zjlist.get(0).get("xmdyldsmps")==null?0.0:Double.valueOf(zjlist.get(0).get("xmdyldsmps")+"");

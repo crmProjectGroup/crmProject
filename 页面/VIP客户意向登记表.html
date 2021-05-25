@@ -1,0 +1,311 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="true" />
+<cc!>
+<!--
+    岗位登记表录入
+    2020-11-05
+-->
+</cc>
+    <html>
+    <!-- <script src="//unpkg.com/vue/dist/vue.js"></script> -->
+    <!-- <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script> -->
+    <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610358808662R8dsqYJG"></script> <!--引入内部vue -->
+    <script type="text/javascript" src="/staticResource.action?m=getResource&resourceId=1610359371060HP6AYHCZ"></script> <!--引入内部axios -->
+    <script src="//unpkg.com/element-ui@2.13.2/lib/index.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"></script> -->
+    <!-- <link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.2/lib/theme-chalk/index.css" /> -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui@2.14.1/lib/theme-chalk/index.css" />
+    <!-- <script type='text/javascript' src='/js/lib/jquery/jquery.validate.js'></script> -->
+    <style type="text/css">
+        #tableheadle{
+            font-size: 25px; 
+            color: #171718;
+            font-weight:bold;
+            text-align: center;
+        }
+    </style>
+    <%@ page contentType="text/html; charset=UTF-8"%>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta charset="utf-8">
+        <title>岗位登记表</title>
+    </head>
+
+    <body>
+        <div id="app">
+            <img src="/staticResource.action?m=getResource&resourceId=1528269981968dEZx6YNR" style="display: inline;padding-left: 30%; height: 40px; width: 158.491px;">
+            <!-- <img id="cclogo" src="https://k8mm1amta1700adb471ba12b.cloudcc.com/getApplogo.action?appId=ace201702B7AA713fdY9&amp;topType=light" style="display: inline;padding-left: 30%; height: 40px; width: 158.491px;"> -->
+            <p id="tableheadle">
+                人员档案登记表</p>
+            <template>
+                <el-row type="flex" justify="center">
+                    <el-form ref="formData" :model="formData" label-width="90px" @keyup.enter.native="login()">
+
+                            <el-form-item prop="name" label="姓名">
+                                <el-input v-model="formData.name"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="xb" label="性别">
+                                <el-input v-model="formData.xb"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="csrq" label="出生日期">
+                                <el-date-picker type="date" placeholder="选择出生日期" v-model="formData.csrq" :editable="false"></el-date-picker>
+                                <!-- <el-input v-model="formData.csrq"  clearable></el-input> -->
+                            </el-form-item>
+                            <el-form-item prop="sfzh" label="身份证号">
+                                <el-input v-model="formData.sfzh" id="sfzh" placeholder="身份证号为必填项"  clearable></el-input>
+                            </el-form-item>
+                            <!-- <el-form-item prop="xp" label="相片">
+                                <el-upload
+                                    class="upload-demo"
+                                    action="https://jsonplaceholder.typicode.com/posts/"
+                                    :on-preview="handlePreview"
+                                    :on-remove="handleRemove"
+                                    :file-list="fileList"
+                                    list-type="picture"
+                                    v-model="formData.xp">
+                                    <el-button size="small" type="primary">点击上传</el-button>
+                                    <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+                                </el-upload>
+                                <el-input v-model="formData.xp"   clearable></el-input>
+                            </el-form-item> -->
+                            <el-form-item prop="hyzk" label="婚姻状况" >
+                                <el-radio-group v-model="formData.hyzk">
+                                    <el-radio label="未婚"></el-radio>
+                                    <el-radio label="已婚"></el-radio>
+                                    <el-radio label="已育"> 已育
+                                        <el-input class ="hzid" v-model="formData.baby" placeholder="请输入宝宝年龄" :disabled="formData.hyzk=='已育'?false:true" ></el-input>
+                                    </el-radio>
+                                </el-radio-group>
+                                <!-- <el-input v-model="formData.hyzk"  clearable></el-input> -->
+                            </el-form-item>
+                            <el-form-item prop="mz" label="民族">
+                                <el-input v-model="formData.mz"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="sg" label="身高">
+                                <el-input v-model="formData.sg"  clearable ><span slot="suffix" style="color: #171718;">CM</span></el-input>
+                            </el-form-item>
+                            <el-form-item prop="jg" label="籍贯">
+                                <el-input v-model="formData.jg"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="hkszd" label="户口所在地">
+                                <el-input v-model="formData.hkszd"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="hjlx" label="户籍类型">
+                                <el-radio-group v-model="formData.hjlx">
+                                    <el-radio label="城镇"></el-radio>
+                                    <el-radio label="农村"></el-radio>
+                                </el-radio-group>
+                                <!-- <el-input v-model="formData.hjlx"   clearable></el-input> -->
+                            </el-form-item>
+                            <el-form-item prop="chmxjb" label="曾患慢性疾病/重大疾病">
+                                <el-radio-group v-model="formData.chmxjb" style="height: 55px;padding-top: 25px;">
+                                    <el-radio label="是"></el-radio>
+                                    <el-radio label="否"></el-radio>
+                                </el-radio-group>
+                                <!-- <el-input v-model="formData.chmxjb"  clearable></el-input> -->
+                            </el-form-item>
+                            <el-form-item prop="mqjkzk" label="目前健康状况">
+                                <el-input v-model="formData.mqjkzk"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="cnjynwsyjh" label="承诺近一年无生育计划">
+                                <el-radio-group v-model="formData.cnjynwsyjh" style="height: 55px;padding-top: 25px;">
+                                    <el-radio label="是"></el-radio>
+                                    <el-radio label="否"></el-radio>
+                                </el-radio-group>
+                                <!-- <el-input v-model="formData.cnjynwsyjh"  clearable></el-input> -->
+                            </el-form-item>
+                            <el-form-item prop="zgxl" label="最高学历">
+                                <el-input v-model="formData.zgxl"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="zy" label="专业">
+                                <el-input v-model="formData.zy"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="gznx" label="工作年限">
+                                <el-input v-model="formData.gznx"   clearable></el-input>
+                            </el-form-item>
+
+                            <el-form-item prop="lxdh" label="联系电话">
+                                <el-input v-model="formData.lxdh"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="dzyx" label="电子邮箱">
+                                <el-input v-model="formData.dzyx"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="mqzz" label="目前住址">
+                                <el-input v-model="formData.mqzz"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="wxh" label="微信号">
+                                <el-input v-model="formData.wxh"  clearable></el-input>
+                            </el-form-item>
+                            <!-- [ 网络/媒体;人才中介/市场; 朋友/员工推荐(需要填写推荐人);猎头公司;校园招聘;其他(需要写哪里推荐) ] -->
+                            <el-form-item prop="yptj" label="应聘途径:">
+                                <el-radio-group v-model="formData.yptj">
+                                    <el-radio label="网络/媒体"></el-radio>
+                                    <el-radio label="人才中介/市场"></el-radio>
+                                    <el-radio label="朋友/员工推荐"></el-radio>
+                                    <el-radio label="猎头公司"></el-radio>
+                                    <el-radio label="校园招聘"></el-radio>
+                                    <el-radio label="其他"></el-radio>
+                                </el-radio-group>
+                                 <!-- <el-input v-model="formData.yptj"   clearable></el-input> -->
+                            </el-form-item>
+                            <el-form-item prop="jsjsp" label="计算机水平">
+                                <el-input v-model="formData.jsjsp"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="jszz" label="驾驶执照">
+                                <el-radio-group v-model="formData.jszz">
+                                    <el-radio label="A照"></el-radio>
+                                    <el-radio label="B照"></el-radio>
+                                    <el-radio label="C照"></el-radio>
+                                </el-radio-group>
+                                <!-- <el-input v-model="formData.jszz"   clearable></el-input> -->
+                            </el-form-item>
+
+                            <el-form-item prop="yysp" label="英语水平">
+                                <el-input v-model="formData.yysp"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="yueysp" label="粤语水平">
+                                <el-input v-model="formData.yueysp"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="yyah" label="业余爱好">
+                                <el-input v-model="formData.yyah"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="tc" label="特长">
+                                <el-input v-model="formData.tc"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="jjlxr" label="紧急联系人姓名">
+                                <el-input v-model="formData.jjlxr"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="jjrgx" label="紧急人关系">
+                                <el-input v-model="formData.jjrgx"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="jjrdh" label="紧急人电话">
+                                <el-input v-model="formData.jjrdh"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="jjrdz" label="紧急人地址">
+                                <el-input v-model="formData.jjrdz"   clearable></el-input>
+                            </el-form-item>
+
+                            <el-form-item prop="rxhhyxm" label="瑞信行好友姓名">
+                                <el-input v-model="formData.rxhhyxm"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="rxhhygx" label="瑞信行好友关系">
+                                <el-input v-model="formData.rxhhygx"   clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="rxhhydh" label="瑞信行好友电话">
+                                <el-input v-model="formData.rxhhydh"  clearable></el-input>
+                            </el-form-item>
+                            <el-form-item prop="xqah" label="兴趣爱好">
+                                <el-input type="textarea" v-model="formData.xqah"></el-input>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" class="btn" @click="login(formData)" icon="el-icon-upload">下一页</el-button>
+                            </el-form-item>
+                    </el-form>
+                </el-row>
+            </template>
+        </div>
+<script type="text/javascript" language='javascript'>
+    var VM = new Vue({
+        el: "#app",
+        data: {
+            bindingcode:'',
+            userName:'lirwei@risingestate.com.cn',
+            url: 'http://k8mm1amta1700adb471ba12b.cloudcc.com/ssologin.action?serviceName=cssoLogin',
+            formData:{
+                name:"",
+                xb:"",
+                csrq:"",
+                hyzk:"",
+                mz:"",
+                sg:"",
+                jg:"",
+                hkszd:"",
+                hjlx:"",
+                chmxjb:"",
+                mqjkzk:"",
+                cnjynwsyjh:"",
+                zgxl:"",
+                zy:"",
+                gznx:"",
+                lxdh:"",
+                dzyx:"",
+                sfzh:"",
+                mqzz:"",
+                wxh:"",
+                yptj:"",
+                jsjsp:"",
+                jszz:"",
+                yysp:"",
+                yueysp:"",
+                yyah:"",
+                tc:"",
+                jjlxr:"",
+                jjrgx:"",
+                jjrdh:"",
+                jjrdz:"",
+                rxhhyxm:"",
+                rxhhygx:"",
+                rxhhydh:"",
+                xqah:"",
+            },
+         },
+        created: function(){	
+            this.getBinding()
+        },
+        
+        methods: {
+            getBinding:function(){
+                var that=this;
+                axios.get('/distributor.action', {
+                    params: {
+                        serviceName: 'cssoLogin',
+                        userName:this.userName,
+                        authCode:'6b42a467259407218c0e6acdfc978c01'
+                        
+                    }
+                })
+                .then(function (response) {
+                    that.bindingcode=response.data.binding;
+                    //console.log(this.bindingcode);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+            },
+            
+             // 保存提交
+             login(formData) {
+                 debugger
+                 if(formData.csrq == "") {
+                    alert("请填写出生日期!");
+                    return;
+                 }
+                 if (formData.sfzh == "") {
+                    alert("请填写身份证号码!");
+                    return;
+                 }
+                axios({
+                    url:'/customize/page/9291p1140/gwdjapi.jsp?type=gwdj',
+                    method: 'post',
+                    params:formData,
+                    headers: {
+                      'Content-type': 'application/x-www-form-urlencoded',
+                     },
+                })
+                .then(function (response) {
+                    debugger
+                    window.location.href = "https://k8mm1amta1700adb471ba12b.cloudcc.com/customize/page/9291p1140/gwdjjybj.jsp?sfzh="+formData.sfzh;
+                    that.gridData1 = response.data;
+                    console.log(that.gridData1);
+                    
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+                
+            },
+        }
+    });
+    </script>
+    </body>
+
+    </html>

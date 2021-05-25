@@ -1,0 +1,92 @@
+<cc:page type="normal" style="standard" showSidebar="false" showHeader="false" />
+<style>
+.tdTitle { text-align:center}
+.tdTitle_h { text-align:center}
+.dataCell_h {text-align:center }
+</style>
+<cc>
+CCService cs = new CCService(userInfo);
+//String ksrq = request.getParameter("ksrq") == null ? "" :request.getParameter("ksrq");
+//String jsrq = request.getParameter("jsrq") == null ? "" :request.getParameter("jsrq");
+//String datetime = "and TO_CHAR(createdate,'YYYY-MM-DD')>=TO_CHAR(TO_DATE('"+ksrq+"','YYYY-MM-DD'),'YYYY-MM-DD') and TO_CHAR(createdate,'YYYY-MM-DD')<=TO_CHAR(TO_DATE('"+jsrq+"','YYYY-MM-DD'),'YYYY-MM-DD')";
+List<CCObject> list = cs.cqlQuery("jdkh","select j.bkhr as bkhr,j.id as id,j.nd as nd,j.yf as yf,ROUND(j.dyjdf,2) as dyjdf,ROUND(j.deydf,2) as deydf,ROUND(j.dsydf,2) as dsydf,ROUND(j.jddf,2) as jddf,c.name as name,j.bkhr as bkhr from jdkh j left join ccuser c on j.bkhr = c.id where j.is_deleted ='0' order by nd,yf desc");
+//double mjtotal = 0.0;//面积总计
+for(CCObject item:list){ 
+    String bkhr = item.get("bkhr")==null?"":item.get("bkhr")+"";
+    String year = item.get("nd")==null?"":item.get("nd")+"";
+    String month = item.get("yf")==null?"":item.get("yf")+"";
+    String[] monarr = month.split(",");
+    for(int i =0;i<3;i++){
+        List<CCObject> monyjlist = cs.cqlQuery("ryjx","select ROUND(grcymb,2) as grcymb,ROUND(grcywcz,2) as grcywcz,ROUND(tdcywcz,2) as tdcywcz,recordtype from ryjx where is_deleted ='0' and nd = '"+year+"' and yf= '"+monarr[i]+"' and bkhr = '"+bkhr+"'");
+        if(monyjlist.size()>0){
+            //记录类型项目经理 2018ED6B4DF92033DeWs
+            String recordtype = monyjlist.get(0).get("recordtype")==null?"":monyjlist.get(0).get("recordtype")+"";
+            Double mb = monyjlist.get(0).get("grcymb")==null?0.0:Double.parseDouble(monyjlist.get(0).get("grcymb")+"");
+            item.put("mb"+(i+1),mb);
+            if("2018ED6B4DF92033DeWs".equals(recordtype)){
+                //item.put("mb"+(i+1),mb);
+                Double wcz = monyjlist.get(0).get("tdcywcz")==null?0.0:Double.parseDouble(monyjlist.get(0).get("tdcywcz")+"");
+                item.put("wcz"+(i+1),wcz);
+            } else{
+                //item.put("mb"+(i+1),mb);
+                Double wcz = monyjlist.get(0).get("grcywcz")==null?0.0:Double.parseDouble(monyjlist.get(0).get("grcywcz")+"");
+                item.put("wcz"+(i+1),wcz);
+            }
+        } else{
+            item.put("mb"+(i+1),0);
+            item.put("wcz"+(i+1),0);
+        }
+    }
+}
+String file_name = new String("季度考核.xls".getBytes(), "ISO-8859-1");
+response.setHeader("Content-disposition","attachment;filename="+file_name);
+response.setContentType("application/vnd.ms-excel;charset=UTF-8");
+</cc>
+<html>
+<head>
+<title></title>
+</head>
+<body>
+<div class="cloudbox3" >
+<table id="showtable" border="1" class="cloudbiaoge" cellspacing="0" cellspadding="0" width="100%">
+<tr class="tabtitle">
+    <!-- 姓名,年度,月份,第一月得分,第二月得分,第三月得分,季度得分 -->
+    <td NOWRAP="NOWRAP" class="tdTitle">姓名</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">年度</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">月份</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">第一月目标</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">第一月完成</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">第一月得分</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">第二月目标</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">第二月完成</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">第二月得分</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">第三月目标</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">第三月完成</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">第三月得分</td>
+    <td NOWRAP="NOWRAP" class="tdTitle">季度得分</td>
+ </tr>
+    <cc>
+    for(CCObject item:list){            
+              </cc>
+                <tr>
+                 <td class="dataCell_h"><cc:outprint>item.get("name")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("nd")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("yf")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("mb1")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("wcz1")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("dyjdf")==null?0.0:Double.valueOf(item.get("dyjdf")+"")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("mb2")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("wcz2")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("deydf")==null?0.0:Double.valueOf(item.get("deydf")+"")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("mb3")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("wcz3")</cc:outprint></td>
+                 <td class="dataCell_h"><cc:outprint>item.get("dsydf")==null?0.0:Double.valueOf(item.get("dsydf")+"")</cc:outprint> </td>
+                 <td class="dataCell_h"><cc:outprint>item.get("jddf")==null?0.0:Double.valueOf(item.get("jddf")+"")</cc:outprint> </td>
+                </tr>
+                <cc>
+                    }           
+                              </cc>
+</table>
+</div>
+</body>
+</html>

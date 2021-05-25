@@ -4,10 +4,10 @@ description:临时处理大客户分数
 
 CCService cs = new CCService((UserInfo)userInfo);
 //日期的处理
-String year = "2020"; // 年度
-String month = "12"; // 月度
-String nowday = "2020-11-30"; // 月底
-String begin_day="2020-11-01"; // 月初
+String year = "2021"; // 年度
+String month = "5"; // 月度
+String nowday = "2021-05-24"; // 月底
+String begin_day="2021-05-01"; // 月初
 
 // 大客户绩效分数修改-- 每日会重新统计这个月的数据-- 修改到ryjx表中 begin
     // 当月 1 号 至今
@@ -30,9 +30,11 @@ String begin_day="2020-11-01"; // 月初
         // out.print("(" + accountSql+")");
         // out.print("开拓了多少个项目" + accountList.size());
         for (CCObject acc:accountList) {
-            // if(khkt < 40) { // 判断客户开拓分数不能超过 40 分
-            khkt += 15; //累加 客户 开拓分数
-            // }
+            if(khkt < 40) { // 判断客户开拓分数不能超过 40 分
+                khkt += 15; //累加 客户 开拓分数
+            } else {
+                khkt = 40;
+            }
             boolean rs = false; // 判断电话号是否正确
             String id = acc.get("id")==null?"":acc.get("id")+""; // 客户的id
             String lxrdh = acc.get("lxrdh")==null?"":acc.get("lxrdh")+"";//客户 联系人电话
@@ -48,6 +50,9 @@ String begin_day="2020-11-01"; // 月初
                 }
             }  
         }// 获取客户开拓分数end
+        // if(true){  // 打印日志
+        //     trigger.addErrorMessage(String.valueOf(khkt));
+        // }
 // 2. 获取 获取跟进记录 / 含重复拜访 begin
         // 获取 根据 客户id,判断有没有客户跟进信息
         List<CCObject> nrList = cs.cqlQuery("ywjhgjmx","select a.nr from ywjhgjmx a where a.is_deleted = '0' and (a.nr is not null or a.nr !='') and a.createbyid = '"+userid+"'" + datetimeone);
@@ -56,7 +61,7 @@ String begin_day="2020-11-01"; // 月初
             khkt = (khkt + nrList.size() * 15) > 40 ? 40 : (khkt + nrList.size() * 15);
         }
         // 遍历完所有的客户, 且 手机号正确 &&　都有跟进信息
-        if ((kaiguan == 0) && (accountList.size() != 0)) {
+        if ((kaiguan == 0) && (accountList.size() != 0) && (nrList.size() >= accountList.size())) {
             // out.print("^^1" + kaiguan +"^^2"+accountList.size());
             khxx = 20;// 客户信息分数
         }// 获取 获取跟进记录 / 含重复拜访 end
