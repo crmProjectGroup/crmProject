@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<%@ page contentType="text/html; charset=UTF-8"%>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" href="/platform/weiXin_leshi/css/le.css">
+    <link rel="stylesheet" href="/platform/weiXin_leshi/css/leCommon.css">
+    <link rel="stylesheet" href="/platform/weiXin_leshi/css/le.css">
+    <link rel="stylesheet" href="/platform/weiXin_leshi/css/leNewpage.css">
+    <link rel="stylesheet" href="/platform/weiXin_leshi/css/time.css">
+    <link rel="stylesheet" href="/platform/weiXin_leshi/css/webToCloudcc.css">
+    <link rel="stylesheet" href="/platform/weiXin_leshi/css/jquery.mobile-1.3.0.min.css">
+    <script type="text/javascript" src="/platform/weiXin/js/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="/platform/weiXin/js/jquery.mobile-1.3.0.min.js"></script>
+    <script type="text/javascript" src="/platform/weiXin_leshi/js/le.js"></script>
+    <script type="text/javascript" src="/platform/weiXin_leshi/lib/iScroll.js"></script>
+    <script type="text/javascript" src="/platform/weiXin_leshi/lib/time.js?v=0301"></script>
+    <script type="text/javascript" src="/platform/weiXin_leshi/js/leNewpage.js"></script>
+    <script type="text/javascript" src="/platform/weiXin_leshi/js/mobileCommon.js?v=0301"></script>
+    <script type="text/javascript" src="/platform/weiXin_leshi/js/webToCloudcc.js"></script>
+    <!--[if lte IE 9]><link rel="stylesheet" href="/platform/weiXin_leshi/css/webToCloudccIE.css"> <![endif]-->
+</head>
+
+<body>
+    <script type="text/javascript">
+        function saveWeiXinpage(button) {
+            var index = 0;
+            if (null != document.getElementById("ffe20209A5AD7982h4e7").value && "" != document.getElementById("ffe20209A5AD7982h4e7").value) {
+                document.getElementById("name_error").innerHTML = "";
+            } else {
+                index++;
+                document.getElementById("name_error").innerHTML = "请填写该信息！";
+            }
+            if (null != document.getElementById("ffe2020651C028436tfF").value && "" != document.getElementById("ffe2020651C028436tfF").value) {
+                document.getElementById("sfzh_error").innerHTML = "";
+            } else {
+                index++;
+                document.getElementById("sfzh_error").innerHTML = "请填写该信息！";
+            }
+            if (index == 0) {
+                if ($(button).hasClass('disabled')) { return false; } else { $(button).addClass('disabled'); $(button).find('p').text('处理中' + '...'); } document.getElementById('the_form').submit();
+            }
+        } 
+    </script>
+    <div data-role="page" id="customer_create_page" data-theme="b">
+        <div class="le-header">
+            <h1 class="le-title">岗位登记表</h1>
+        </div>
+        <div class="header-bg"></div>
+        <div data-role="content" style="margin-bottom:40px;">
+            <form method="post" id="the_form" action="./webToCloudcc.action">
+                <input type="hidden" name="extraparams"
+                    value='<%=request.getParameter("extraparams")==null?"":request.getParameter("extraparams") %>'>
+                <input type="hidden" name="orgId" value="cc201803239291p1140">
+                <input type="hidden" name="objApiName" value="gwdjb">
+                <input type="hidden" name="rtnURL"
+                    value="https://k8mm1amta1700adb471ba12b.cloudcc.com/customize/page/9291p1140/gwdjjybj.jsp?serviceName=cssoLogin">
+                <div class="field-label" for="name" id="ffe20209A5AD7982h4e7_flb"> <span style="color:red;">*</span>
+                    姓名</div>
+                <div class="field-value "><input type="text" maxlength="255" data-role="none" name="name"
+                        id="ffe20209A5AD7982h4e7" value=""> </div>
+                <div class="errorMsg" id="name_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="xb" id="ffe2020B37A12E6zA5Rg_flb">性别</div>
+                <div style="display:none; " id="Selectffe2020B37A12E6zA5Rg">
+                    <li class="title"><span> </span><img onclick="selectCancel();"
+                            src="/platform/weiXin_leshi/img/Close@2x.png"></li>
+                    <div class="web-scroll">
+                        <li value="男" index="0" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> 男</p>
+                        </li>
+                        <li value="女" index="1" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> 女</p>
+                        </li>
+                    </div>
+                </div>
+                <div class="field-value web-lookup" onclick="openSelect('ffe2020B37A12E6zA5Rg');"><a href="#"
+                        data-role="none" id="ffe2020B37A12E6zA5RgLabel" href=""></a></div>
+                <div class="a-arrow">></div><input type="hidden" fieldType="Select" name="xb" id="ffe2020B37A12E6zA5Rg"
+                    value="">
+                <div class="errorMsg" id="xb_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="csrq" id="ffe2020595C36ADzitSx_flb">出生日期</div>
+                <input type="date" id="ffe2020595C36ADzitSx_div" class="field-value  date-only app-date"
+                    data-role="none" style="direction: ltr;" fid="ffe2020595C36ADzitSx" onchange="syncDT(this)" /><input
+                    type="hidden" data-role="none" class="hidden-date-only" style="direction: ltr;"
+                    id="ffe2020595C36ADzitSx" name="csrq" value="" />
+                <div data-role="none" fid="ffe2020595C36ADzitSx" class="field-value date-only iscroll-date"
+                    frame-showed="false" size=20></div>
+                <div class="errorMsg" id="csrq_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="hyzk" id="ffe20201838384ASy1Of_flb">婚姻状况</div>
+                <div style="display:none; " id="Selectffe20201838384ASy1Of">
+                    <li class="title"><span> </span><img onclick="selectCancel();"
+                            src="/platform/weiXin_leshi/img/Close@2x.png"></li>
+                    <div class="web-scroll">
+                        <li value="未婚" index="0" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> 未婚</p>
+                        </li>
+                        <li value="已婚" index="1" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> 已婚</p>
+                        </li>
+                        <li value="已育" index="2" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> 已育</p>
+                        </li>
+                    </div>
+                </div>
+                <div class="field-value web-lookup" onclick="openSelect('ffe20201838384ASy1Of');"><a href="#"
+                        data-role="none" id="ffe20201838384ASy1OfLabel" href=""></a></div>
+                <div class="a-arrow">></div><input type="hidden" fieldType="Select" name="hyzk"
+                    id="ffe20201838384ASy1Of" value="">
+                <div class="errorMsg" id="hyzk_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="mz" id="ffe202091EE3FF4Rzo2V_flb">民族</div>
+                <div class="field-value "><input type="text" maxlength="100" data-role="none" name="mz"
+                        id="ffe202091EE3FF4Rzo2V" value=""> </div>
+                <div class="errorMsg" id="mz_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="sg" id="ffe202005613411OV4gR_flb">身高</div>
+                <div class="field-value "><input type="text" maxlength="100" data-role="none" name="sg"
+                        id="ffe202005613411OV4gR" value=""> </div>
+                <div class="errorMsg" id="sg_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="jg" id="ffe20206BF085DB1BdxJ_flb">籍贯</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="jg"
+                        id="ffe20206BF085DB1BdxJ" value=""> </div>
+                <div class="errorMsg" id="jg_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="hkszd" id="ffe20209696A3C80k9Sf_flb">户口所在地</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="hkszd"
+                        id="ffe20209696A3C80k9Sf" value=""> </div>
+                <div class="errorMsg" id="hkszd_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="hklx" id="ffe2020D3C06066hDnyz_flb">户口类型</div>
+                <div style="display:none; " id="Selectffe2020D3C06066hDnyz">
+                    <li class="title"><span> </span><img onclick="selectCancel();"
+                            src="/platform/weiXin_leshi/img/Close@2x.png"></li>
+                    <div class="web-scroll">
+                        <li value="城镇" index="0" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> 城镇</p>
+                        </li>
+                        <li value="农村" index="1" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> 农村</p>
+                        </li>
+                    </div>
+                </div>
+                <div class="field-value web-lookup" onclick="openSelect('ffe2020D3C06066hDnyz');"><a href="#"
+                        data-role="none" id="ffe2020D3C06066hDnyzLabel" href=""></a></div>
+                <div class="a-arrow">></div><input type="hidden" fieldType="Select" name="hklx"
+                    id="ffe2020D3C06066hDnyz" value="">
+                <div class="errorMsg" id="hklx_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="chmxjb" id="ffe20209D1FFC55mArUe_flb">曾患慢性疾病/重大疾病</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="chmxjb"
+                        id="ffe20209D1FFC55mArUe" value=""> </div>
+                <div class="errorMsg" id="chmxjb_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="mqjkzk" id="ffe202076AA2A2FHkWmF_flb">目前健康状况</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="mqjkzk"
+                        id="ffe202076AA2A2FHkWmF" value=""> </div>
+                <div class="errorMsg" id="mqjkzk_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="cnjynwsyjh" id="ffe2020BB6653D8XNvG1_flb">承诺近一年无生育计划</div>
+                <div style="display:none; " id="Selectffe2020BB6653D8XNvG1">
+                    <li class="title"><span> </span><img onclick="selectCancel();"
+                            src="/platform/weiXin_leshi/img/Close@2x.png"></li>
+                    <div class="web-scroll">
+                        <li value="是" index="0" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> 是</p>
+                        </li>
+                        <li value="否" index="1" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> 否</p>
+                        </li>
+                    </div>
+                </div>
+                <div class="field-value web-lookup" onclick="openSelect('ffe2020BB6653D8XNvG1');"><a href="#"
+                        data-role="none" id="ffe2020BB6653D8XNvG1Label" href=""></a></div>
+                <div class="a-arrow">></div><input type="hidden" fieldType="Select" name="cnjynwsyjh"
+                    id="ffe2020BB6653D8XNvG1" value="">
+                <div class="errorMsg" id="cnjynwsyjh_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="zgxl" id="ffe20204ECDC686Ebk0Z_flb">最高学历</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="zgxl"
+                        id="ffe20204ECDC686Ebk0Z" value=""> </div>
+                <div class="errorMsg" id="zgxl_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="zy" id="ffe2020AA355D3B8edcA_flb">专业</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="zy"
+                        id="ffe2020AA355D3B8edcA" value=""> </div>
+                <div class="errorMsg" id="zy_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="gznx" id="ffe202083FCC1B9wG79k_flb">工作年限</div>
+                <div class="field-value "><input type="text" maxlength="100" data-role="none" name="gznx"
+                        id="ffe202083FCC1B9wG79k" value=""> </div>
+                <div class="errorMsg" id="gznx_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="lxdh" id="ffe2020F129EFADUqina_flb">联系电话</div>
+                <div class="field-value "><input type="text" maxlength="255" data-role="none" name="lxdh"
+                        id="ffe2020F129EFADUqina" value=""> </div>
+                <div class="errorMsg" id="lxdh_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="dzyx" id="ffe20202ADD3A38vyfnx_flb">电子邮箱</div>
+                <div class="field-value "><input type="text" maxlength="255" data-role="none" name="dzyx"
+                        id="ffe20202ADD3A38vyfnx" value=""> </div>
+                <div class="errorMsg" id="dzyx_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="sfzh" id="ffe2020651C028436tfF_flb"> <span style="color:red;">*</span>
+                    身份证号</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="sfzh"
+                        id="ffe2020651C028436tfF" value=""> </div>
+                <div class="errorMsg" id="sfzh_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="mqzz" id="ffe2020D3E87C62rmRt7_flb">目前住址</div>
+                <div class="field-value "><input type="text" maxlength="255" data-role="none" name="mqzz"
+                        id="ffe2020D3E87C62rmRt7" value=""> </div>
+                <div class="errorMsg" id="mqzz_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="wxh" id="ffe2020FD694826or9IE_flb">微信号</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="wxh"
+                        id="ffe2020FD694826or9IE" value=""> </div>
+                <div class="errorMsg" id="wxh_error"></div>
+
+                <div class="bottom-line"></div>
+                <div class="cls"></div>
+                <div class="field-label" for="yptj" id="ffe20201D304C65q24xX_flb">应聘途径( 网络/媒体;&nbsp;人才中介/市场;&nbsp;朋友/员工推荐;&nbsp;猎头公司;&nbsp;校园招聘;&nbsp;其他)</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="yptj"
+                        id="ffe20201D304C65q24xX" value="" placeholder = "请根据上面提示填写对应的信息!"> </div>
+                <div class="errorMsg" id="yptj_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="jsjsp" id="ffe202085D5BC49rGpin_flb">计算机水平</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="jsjsp"
+                        id="ffe202085D5BC49rGpin" value=""> </div>
+                <div class="errorMsg" id="jsjsp_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="jsjz" id="ffe20208B42064Fmn45N_flb">驾驶驾照</div>
+                <div style="display:none; " id="Selectffe20208B42064Fmn45N">
+                    <li class="title"><span> </span><img onclick="selectCancel();"
+                            src="/platform/weiXin_leshi/img/Close@2x.png"></li>
+                    <div class="web-scroll">
+                        <li value="A照" index="0" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> A照</p>
+                        </li>
+                        <li value="B照" index="1" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> B照</p>
+                        </li>
+                        <li value="C照" index="2" class="web-select-single "><span class="ticked-icon"></span>
+                            <p class="ui-li-desc"> C照</p>
+                        </li>
+                    </div>
+                </div>
+                <div class="field-value web-lookup" onclick="openSelect('ffe20208B42064Fmn45N');"><a href="#"
+                        data-role="none" id="ffe20208B42064Fmn45NLabel" href=""></a></div>
+                <div class="a-arrow">></div><input type="hidden" fieldType="Select" name="jsjz"
+                    id="ffe20208B42064Fmn45N" value="">
+                <div class="errorMsg" id="jsjz_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="yysp" id="ffe2020FDFB9994cSNh0_flb">英语水平</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="yysp"
+                        id="ffe2020FDFB9994cSNh0" value=""> </div>
+                <div class="errorMsg" id="yysp_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="yueysp" id="ffe202078C35C94xTDfd_flb">粤语水平</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="yueysp"
+                        id="ffe202078C35C94xTDfd" value=""> </div>
+                <div class="errorMsg" id="yueysp_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="yyah" id="ffe2020561589777soKN_flb">业余爱好</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="yyah"
+                        id="ffe2020561589777soKN" value=""> </div>
+                <div class="errorMsg" id="yyah_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="tc" id="ffe202033461A1DewMzA_flb">特长</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="tc"
+                        id="ffe202033461A1DewMzA" value=""> </div>
+                <div class="errorMsg" id="tc_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="jjlxr" id="ffe2020E7ECAA38W27J3_flb">紧急联系人姓名</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="jjlxr"
+                        id="ffe2020E7ECAA38W27J3" value=""> </div>
+                <div class="errorMsg" id="jjlxr_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="jjrgx" id="ffe202048E8B6A03QtGD_flb">紧急人关系</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="jjrgx"
+                        id="ffe202048E8B6A03QtGD" value=""> </div>
+                <div class="errorMsg" id="jjrgx_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="jjrdh" id="ffe202099F838F8eFjtr_flb">紧急人电话</div>
+                <div class="field-value "><input type="text" maxlength="255" data-role="none" name="jjrdh"
+                        id="ffe202099F838F8eFjtr" value=""> </div>
+                <div class="errorMsg" id="jjrdh_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="jjrdz" id="ffe2020C1114C2CmPuky_flb">紧急人地址</div>
+                <div class="field-value "><input type="text" maxlength="255" data-role="none" name="jjrdz"
+                        id="ffe2020C1114C2CmPuky" value=""> </div>
+                <div class="errorMsg" id="jjrdz_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="rxhhyxm" id="ffe2020A4DC57FFMODyw_flb">瑞信行好友姓名</div>
+                <div class="field-value "><input type="text" maxlength="255" data-role="none" name="rxhhyxm"
+                        id="ffe2020A4DC57FFMODyw" value=""> </div>
+                <div class="errorMsg" id="rxhhyxm_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="rxhhygx" id="ffe2020BB59999CrmZCU_flb">瑞信行好友关系</div>
+                <div class="field-value "><input type="text" maxlength="200" data-role="none" name="rxhhygx"
+                        id="ffe2020BB59999CrmZCU" value=""> </div>
+                <div class="errorMsg" id="rxhhygx_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="rxhhydh" id="ffe20207E4D4864mCMAZ_flb">瑞信行好友电话</div>
+                <div class="field-value "><input type="text" maxlength="255" data-role="none" name="rxhhydh"
+                        id="ffe20207E4D4864mCMAZ" value=""> </div>
+                <div class="errorMsg" id="rxhhydh_error"></div>
+
+
+                <div class="cls"></div>
+                <div class="field-label" for="xqah" id="ffe2020C2E20C03UNzwY_flb">兴趣爱好</div>
+                <textarea id="ffe2020C2E20C03UNzwY" name="xqah" maxlength="2000" data-role="none" class="field-textarea"
+                    placeholder="请在此输入，最多可输入32000字符"></textarea>
+                <div class="errorMsg" id="xqah_error"></div>
+
+
+                <div class="cls"></div>
+            </form>
+        </div>
+        <div class="save-bg" id="save-bg">
+            <div id="btnSave" data-role="none" class="save-button" onclick="javascript:saveWeiXinpage(this);">
+                <p>下一页</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="selectOne" class="type-list-items" style="display: none; ">
+        <div class="cls"></div>
+        <div id="selectOneDataDiv" class="type-items"></div>
+    </div>
+    <div id="datePlugin"></div>
+    <script>
+    var Main = {
+        created: function(){			
+            this.getBinding()
+            //this.getFollws()       //定义方法
+        },
+      methods: {
+        getBinding:function(){
+            var that=this;
+            axios.get('/distributor.action', {
+                params: {
+                    serviceName: 'cssoLogin',
+                    userName:this.userName,
+                    authCode:'6b42a467259407218c0e6acdfc978c01'
+                    
+                }
+            })
+            .then(function (response) {
+                that.bindingcode=response.data.binding;
+                //console.log(this.bindingcode);
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        },
+    }
+};
+    </script>
+</body>
+
+</html>

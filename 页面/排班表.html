@@ -6,6 +6,8 @@ version: 1.0
 date:20190531
 author:tom
 log:
+20210331 假如导出功能
+20210401 在提交后增加状态变化,已提示已经做过排班
 
 */
 
@@ -49,7 +51,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 	
 	JSONArray jsonArray = JSONArray.fromObject(projectlist); 
     String projectlist_1=jsonArray.toString();
-    out.print("项目列表java:"+projectlist_1);
+    //out.print("项目列表java:"+projectlist_1);
 
     
     // //获取项目信息
@@ -110,6 +112,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
     }
 </style>
 <div id="app">
+    <br />
   <template>
     <!-- <div style="margin-top: 20px">
       <div @click="lastweek">上一周</div>
@@ -147,9 +150,9 @@ private static String encodeParameters(String parameterValue) throws Unsupported
     </el-row>
     <el-row>
         <div style="margin-top: 20px">
-            <el-col :span="3"><el-button @click="lastweek">上一周</el-button></el-col>
-            <el-col :span="3"><el-button @click="nextweek">下一周</el-button> </el-col>
-            <el-col :span="18">
+            <el-col :span="5"><el-button @click="lastweek">上一周</el-button></el-col>
+            <el-col :span="5"><el-button @click="nextweek">下一周</el-button> </el-col>
+            <el-col :span="14">
                 <div>
                     <span>{{thismonday}}</span>
                     <span>星期一</span>
@@ -290,11 +293,23 @@ private static String encodeParameters(String parameterValue) throws Unsupported
       <el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button>
       <el-button @click="toggleSelection()">取消选择</el-button>
     </div> -->
-    <el-button @click="submitkq">提交</el-button>
-    <div>{{this.tableData}}</div>
+    <el-button @click="submitkq" :loading="btnstatus">{{this.insStatus?"更新":"提交"}}</el-button>
+    <el-button @click="dc" v-if="uid==='0052018FF9F7905NEd6u'">导出</el-button>
+    <div style="color:red">{{this.insStatus?"已做排班":""}}</div>
+    <!-- <div>{{this.tableData}}</div>
     <div>{{this.thisweek}}</div>
-    <div>{{this.outarrary}}</div>
+    <div>{{this.outarrary}}</div> -->
   </template>
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
 </div>
 
 <script> 
@@ -302,6 +317,7 @@ private static String encodeParameters(String parameterValue) throws Unsupported
         data() {
             return {
                 userName:'<cc:outprint>userName</cc:outprint>',
+                uid:'<cc:outprint>uid</cc:outprint>',
                 tableData:[],
                 // tableData: [{
                 //   id: '00520189B4D0562UAl9O',
@@ -398,6 +414,9 @@ private static String encodeParameters(String parameterValue) throws Unsupported
                           value: '年',
                           label: '年'
                         },{
+                          value: '空',
+                          label: '空'
+                        },{
                           value: '休',
                           label: '休'
                         },{
@@ -406,11 +425,12 @@ private static String encodeParameters(String parameterValue) throws Unsupported
                         }],
                 projectnm:<cc:outprint>projectlist_1</cc:outprint>,
                 projectid:'',
-                kaoqinmonth:'2020-06',
+                kaoqinmonth:'',
                 mmt_monday:null,
                 outarrary:[],
                 bindingcode:'',
                 insStatus: false,
+                btnstatus:false,
             }
         },
 
@@ -419,15 +439,15 @@ private static String encodeParameters(String parameterValue) throws Unsupported
             this.getBinding();
             //document.write("项目选择"+this.projectid);
             var weekOfday = moment().format('E');//计算今天是这周第几天
-            document.write(weekOfday);
+            //document.write(weekOfday);
             this.mmt_monday = moment().subtract(weekOfday-1, 'days');
-            document.write(this.mmt_monday.format('YYYY/MM/DD'));
+            //document.write(this.mmt_monday.format('YYYY/MM/DD'));
             this.compute_days();
 
             //给一个初始的项目选项
             this.projectid = this.projectnm[0].id;
             //根据id获取人员
-            this.getSales(this.projectid);
+            this.getSalesn(this.projectid);
         }, 
  
         methods: {
@@ -468,8 +488,11 @@ private static String encodeParameters(String parameterValue) throws Unsupported
                 this.thissatday = moment(this.mmt_monday).add(5,'days').format('YYYY/MM/DD');
                 this.thissunday = moment(this.mmt_monday).add(6,'days').format('YYYY/MM/DD');
                 this.thisweek = new Array(this.thismonday,this.thistuesday,this.thiswednesday,this.thisthrusday,this.thisfriday,this.thissatday,this.thissunday);
+                this.kaoqinmonth = moment(this.mmt_monday).format('YYYY/MM');
             },
             submitkq(){
+                var that = this;
+                this.btnstatus=true;
                 this.outarrary =[]; 
                 //document.write(this.tableData.length);
                 for(var i=0;i<this.tableData.length;i++){
@@ -526,11 +549,19 @@ private static String encodeParameters(String parameterValue) throws Unsupported
                 //       'Content-type': 'application/x-www-form-urlencoded'
                 // })
 				.then(function (response) {
-					alert("ok!");
+                    that.$message({
+                      message: '排班成功',
+                      type: 'success'
+                    });
+                    that.btnstatus=false;
+                    that.insStatus=true;
+					//alert("ok!");
 					//that.list_sjjb=response.data.data;
 				})
 				.catch(function (error) {
+                    that.$message.error('出错了,联系管理员!');
 					console.log(error);
+                    that.btnstatus=false;
 				});
             },
             getSales(val){
@@ -612,6 +643,9 @@ private static String encodeParameters(String parameterValue) throws Unsupported
 				.catch(function (error) {
 					console.log(error);
 				});
+            },
+            dc(){
+                window.location.href = "pbbdc.jsp?rq="+ this.kaoqinmonth;
             }
         }
       }
