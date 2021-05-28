@@ -172,10 +172,11 @@
                 } 
                 String userid  = useridlist.get(0).get("id")==null?"":useridlist.get(0).get("id")+"";
                 String datetime = " and createdate >= str_to_date('"+sb+" 00:00:00', '%Y-%m-%d %H:%i:%s') AND createdate<= str_to_date('"+sb+" 23:59:59', '%Y-%m-%d %H:%i:%s')";
-                String rbsql = "select * from DailyReport where ownerid='"+userid+"' and is_deleted='0' "+datetime; // 根据crm账户的id，和 昨天的时间，查询到系统昨天默认创建的日志
+                String rbsql = "select id,jrclsy,mrgzjh,bz,ownerid,lastmodifybyid,lastmodifydate from DailyReport where ownerid='"+userid+"' and is_deleted='0' "+datetime; // 根据crm账户的id，和 昨天的时间，查询到系统昨天默认创建的日志
                 List<CCObject> rbcrmlist = cs.cqlQuery("DailyReport",rbsql); // 根据企业微信，查询crm里的日报数据，在将企业微信里填写的日报，修改到crm日报中
                 for(CCObject rbcrm:rbcrmlist) {
-                  if ("".equals(rbcrm.get("jrclsy")) || rbcrm.get("jrclsy")==null) { // 如果有值，就不更新
+                  String id = rbcrm.get("id")+"";
+                  if ("".equals(rbcrm.get("jrclsy")) || rbcrm.get("jrclsy")==null) {
                       rbcrm.put("jrclsy",rbdata.get("jinrb0")); // 设置到crm里的字段， 今日工作
                   }
                   if ("".equals(rbcrm.get("mrgzjh")) || rbcrm.get("mrgzjh")==null) {
@@ -187,11 +188,13 @@
                   rbcrm.put("ownerid",userid); // 所有人
                   rbcrm.put("lastmodifybyid",userid); // 最后修改人
                   rbcrm.put("lastmodifydate",rbdata.get("getdate")); // 最后修改时间
-                  this.update(rbcrm);
-                  break;
+                  String updaisql = "update DailyReport set jrclsy='"+rbcrm.get("jrclsy")+"',mrgzjh='"+rbcrm.get("mrgzjh")+"',bz='"+rbcrm.get("bz")+"',ownerid='"+rbcrm.get("ownerid")+"',lastmodifybyid='"+rbcrm.get("lastmodifybyid")+"',lastmodifydate='"+rbcrm.get("lastmodifydate")+"' where id='"+id+"'";
                 //   if(true){  // 打印日志
-                //       trigger.addErrorMessage(String.valueOf(rbcrm.toString())+"^^"+rbsql);
+                //       trigger.addErrorMessage(String.valueOf(updaisql.toString()));
                 //   }
+                  cs.cqlQuery("DailyReport",updaisql);
+                //   this.update(rbcrm); 由于系统自带的修改方式，没有修改最后修改人和最后修改时间
+                  break; //  如果系统里，一天创建了多个日报，只修改一个
                 }
                 if (rbconnec != null) {
                     rbconnec.disconnect();
